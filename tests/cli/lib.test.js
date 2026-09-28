@@ -27,6 +27,16 @@ test("express is the lightest lane and full is every gate", () => {
   assert.deepStrictEqual(lanes.gatesForLane("full"), lanes.ALL_GATES);
 });
 
+test("controller ruling A: hotfix enforces G2 (retroactive), G6/G7 (immediate) and G9 (mandatory postmortem)", () => {
+  assert.deepStrictEqual(lanes.gatesForLane("hotfix"), ["G2", "G6", "G7", "G9"]);
+  assert.deepStrictEqual(lanes.LANES.hotfix.deferred, ["G2"]);
+  assert.deepStrictEqual(lanes.LANES.hotfix.mandatory, ["G9"]);
+  // express, standard and full are untouched by this ruling.
+  assert.deepStrictEqual(lanes.gatesForLane("express"), ["G2", "G6", "G7"]);
+  assert.deepStrictEqual(lanes.gatesForLane("standard"), ["G1", "G2", "G3", "G5", "G6", "G7", "G8"]);
+  assert.deepStrictEqual(lanes.gatesForLane("full"), lanes.ALL_GATES);
+});
+
 test("unknown lane is rejected", () => {
   assert.strictEqual(lanes.isLane("standrd"), false);
   assert.throws(() => lanes.gatesForLane("standrd"), /unknown lane 'standrd'/);
