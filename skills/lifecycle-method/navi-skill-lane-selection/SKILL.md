@@ -41,12 +41,18 @@ lane it was proposed under.
 6. Take `express` only when the change alters no behaviour a test could distinguish beyond
    the literal string, value or flag being changed — copy, a config value, a flag flip.
 7. Never widen a lane in place. `state.lane` is not edited by hand. A change that outgrows
-   its lane is archived or abandoned and re-proposed under the correct lane.
-8. Record the reason for the lane in `proposal.md` alongside the declaration. A lane chosen
+   its lane is closed out and re-proposed under the correct lane.
+8. Close out a change that must be abandoned by **waiving every unsettled gate, then
+   archiving**. There is no `abandon` command, and `archive` refuses while any lane gate is
+   pending or any artifact is stale, so a waiver per unsettled gate is the only legal exit.
+   Name the abandonment and the superseding change in each waiver reason, and set an expiry
+   that is real — the waiver is the audit record of why this change stopped. A dedicated
+   `abandon` verb is a future convenience; it does not exist today.
+9. Record the reason for the lane in `proposal.md` alongside the declaration. A lane chosen
    without a stated reason is not reviewable.
-9. Where two lanes both plausibly fit, take the wider one. The cost of an unnecessary gate is
-   hours; the cost of a missing gate is an incident.
-10. A `hotfix` defers G2 but never drops it. The deferral is a waiver with a real expiry —
+10. Where two lanes both plausibly fit, take the wider one. The cost of an unnecessary gate is
+    hours; the cost of a missing gate is an incident.
+11. A `hotfix` defers G2 but never drops it. The deferral is a waiver with a real expiry —
     see `navi-skill-waivers-and-deferrals`.
 
 ## Decision table
@@ -65,6 +71,7 @@ lane it was proposed under.
 | Flips an existing feature flag whose both states are already tested | `express` |
 | Changes a config value inside a range the system already handles | `express` |
 | Two of the above disagree | Take the wider lane |
+| A change in flight turns out to need a lane it was not proposed under | Waive each unsettled gate naming the abandonment, archive, then re-propose under the wider lane |
 
 ## Template
 
@@ -122,8 +129,24 @@ in the table. A two-line change that adds a PII column is `full`.
 
 **Lane widened in place.** Editing `lane: standard` to `lane: full` in `proposal.md` and
 `state.json` after G4 turns out to be needed. The gates already recorded were recorded
-against a different gate set, and the event log no longer describes what happened. Archive or
-abandon the change and re-propose under `full`.
+against a different gate set, and the event log no longer describes what happened. Close the
+change out and re-propose:
+
+```bash
+# Every gate the lane still has pending must be settled before archive will act.
+navi-delivery gate G5 --waive \
+  "Abandoned: change needs the full lane for G4 (adds a column to customers); \
+superseded by 'theme-persistence-full'" --expires 2026-10-05
+navi-delivery gate G6 --waive "Abandoned: see G5 waiver; superseded by 'theme-persistence-full'" --expires 2026-10-05
+navi-delivery gate G7 --waive "Abandoned: see G5 waiver; superseded by 'theme-persistence-full'" --expires 2026-10-05
+navi-delivery gate G8 --waive "Abandoned: see G5 waiver; superseded by 'theme-persistence-full'" --expires 2026-10-05
+
+navi-delivery archive theme-persistence
+navi-delivery propose theme-persistence-full --lane full
+```
+
+The waivers are the record of why the change stopped, and each one is logged to
+`events.jsonl`. Settle them by closing the superseding change, not by letting them expire.
 
 **Hotfix for urgency.** A deadline is not an incident. `hotfix` exists to let a live outage be
 repaired before the specification catches up; using it for a change that is merely late

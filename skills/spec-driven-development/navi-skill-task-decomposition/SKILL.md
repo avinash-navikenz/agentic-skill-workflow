@@ -71,7 +71,7 @@ implements it, or `tasks.md` is under review before G5-BUILD.
 | Two tasks depending on each other | Merge them, or move the shared piece into a third task that precedes both |
 | A task named "investigate X" | Name the artifact it produces and time-box it |
 | A task whose requirement is not in the spec | Stop — amend the spec first, then add the task |
-| Every task depends on `TASK-001` | Probably a layer slice wearing a dependency; re-check the slicing |
+| More than half the tasks name the same single `Depends on:` task | A layer slice wearing a dependency — that one task is the whole vertical and the rest are its layers. Re-slice so each task carries its own end-to-end path |
 | A task checked off with a failing test | Uncheck it; G5 reads this file |
 
 ## Template

@@ -70,7 +70,7 @@ G1-INTENT is recorded.
 | The lane is declared with no reason | Add the reason per `navi-skill-lane-selection` |
 | `gates:` disagrees with `navi-delivery status` | `state.json` is truth — correct `proposal.md` |
 | A placeholder remains | Fill it in; G1 does not pass on a template |
-| `propose` reports a change already active | Archive or finish that change first |
+| `propose` reports a change already active | Finish that change, or close it out — waive each unsettled gate naming the abandonment, then `archive`. There is no `abandon` command |
 | The proposal exceeds two pages | Move detail into the spec |
 
 ## Template

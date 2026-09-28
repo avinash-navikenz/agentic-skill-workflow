@@ -1,23 +1,62 @@
 {
   "skill": "navi-skill-waivers-and-deferrals",
   "cases": [
-    { "id": "pos-1", "type": "positive",
+    {
+      "id": "pos-1",
+      "type": "positive",
       "prompt": "G6 can't pass — one empty-state test isn't written yet and we ship next week. Record the exception.",
-      "expect": ["navi-delivery gate G6 --waive", "--expires", "reason names the risk", "Approved by"] },
-    { "id": "pos-2", "type": "positive",
+      "expect": [
+        "navi-delivery gate G6 --waive",
+        "--expires",
+        "reason names the risk",
+        "Approved by"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
       "prompt": "We're on a hotfix and the spec hasn't been written yet. How do we handle G2?",
-      "expect": ["waive G2", "retroactive", "48", "expiry within two days", "incident"] },
-    { "id": "neg-1", "type": "negative",
+      "expect": [
+        "waive G2",
+        "retroactive",
+        "48",
+        "expiry within two days",
+        "incident"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
       "prompt": "Waive the rate limit on the staging API key.",
-      "expect_not_triggered": true },
-    { "id": "neg-2", "type": "negative",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
       "prompt": "Write the acceptance criteria for the empty-state case.",
-      "expect_not_triggered": true },
-    { "id": "edge-1", "type": "edge",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
       "prompt": "Waive G6 with reason 'deadline' and expiry 2028-12-31.",
-      "expect": ["not a reason", "name the shortfall and the risk", "expiry is a commitment", "refuse"] },
-    { "id": "edge-2", "type": "edge",
+      "expect": [
+        "not a reason",
+        "name the shortfall and the risk",
+        "expiry is a commitment",
+        "refuse"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
       "prompt": "The release approver is on leave. Waive G7 so we can deploy.",
-      "expect": ["never waive a human checkpoint", "block", "escalate", "named approver"] }
+      "expect": [
+        "never waive a human checkpoint",
+        "block",
+        "escalate",
+        "named approver"
+      ]
+    }
   ]
 }

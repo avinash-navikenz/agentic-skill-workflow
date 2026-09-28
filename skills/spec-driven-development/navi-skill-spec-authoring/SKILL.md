@@ -132,7 +132,8 @@ the browser over a 24-hour window on the production traffic mix.
 
 ### Security and privacy
 The theme preference is not personal data under the project's classification. It is stored
-against the user id and is never written to logs. Not applicable — no new data category.
+against the user id and is never written to logs. No new data category is introduced, so the
+existing retention and deletion policy applies unchanged.
 
 ### Reliability
 A preference-store outage degrades to the light theme, never to an error page. Availability
@@ -145,6 +146,16 @@ paint. An alert fires when the 28-day objective is at risk.
 ### Accessibility and compatibility
 The high-contrast theme is reachable by keyboard alone. Behaviour is identical on the two
 most recent major versions of the supported browsers.
+
+<!-- Every section above is populated, because on this change every one of them applies.
+     A section that genuinely does not apply takes the other form — the single line and
+     nothing else, like this:
+
+         ### Security and privacy
+         Not applicable — no data is read, written or transmitted by this change.
+
+     Populated or the one N/A line. Never a substantive answer followed by an N/A line:
+     a reader cannot tell which of the two the author meant. -->
 
 ## Assumptions
 

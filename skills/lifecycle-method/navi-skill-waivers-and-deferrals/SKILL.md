@@ -52,9 +52,12 @@ change needs its deferred G2 recorded.
 10. Settle a waiver before its expiry by re-recording the gate: `gate <G#> --pass --evidence <path>`.
     The event carries `previous: waived`, so the log shows the exception closing.
 11. Treat an expired, unsettled waiver as a blocking defect. Stop new work on the change and
-    settle the gate; do not extend the expiry by recording a second waiver for the same gate
-    with a later date unless the original reason has materially changed, and say so in the new
-    reason if it has.
+    settle the gate. A second waiver for the same gate is legal only when its reason names,
+    in its own text, the specific fact that changed since the first — the new blocker, the new
+    date's cause. A reason that repeats the first waiver's, or that says only that more time is
+    needed, is a renewal, and a renewal removes the one control a waiver has. Two waivers for
+    one gate whose reasons do not differ on their face is a defect a reviewer can catch by
+    reading `waivers.md`, and the Validation script below flags it.
 12. Fill the `Approved by` column by hand after the CLI writes the row. The CLI leaves it
     empty; a waiver nobody owns is a waiver nobody will settle.
 
@@ -169,32 +172,63 @@ navi-delivery status                     # shows each gate as pass / fail / waiv
 cat delivery/.adlc/waivers.md   # every waiver, its reason, expiry and approver
 ```
 
-List every waiver that has expired without being settled:
+List every waiver that is still live and has a problem. A waiver whose gate has since been
+re-recorded as `pass` is history, not a finding, so the script reads `events.jsonl` to learn
+each gate's current verdict and reports only the ones still in force:
 
 ```bash
 python3 - <<'PY'
-import datetime, pathlib, sys
+import datetime, json, pathlib, sys
+
 today = datetime.date.today()
-rows = [l for l in pathlib.Path("delivery/.adlc/waivers.md").read_text().splitlines()
-        if l.startswith("|") and not l.startswith("|--") and "Expires" not in l]
-stale = []
+adlc = pathlib.Path("delivery/.adlc")
+
+# Current verdict per (change, gate) is the last event recorded for it. A
+# waiver whose gate was later re-recorded as pass is settled: it stays in
+# waivers.md as the record of the exception, and is not a live finding.
+current = {}
+events = adlc / "events.jsonl"
+if events.exists():
+    for line in events.read_text().splitlines():
+        if line.strip():
+            e = json.loads(line)
+            if e.get("gate"):
+                current[(e.get("change"), e["gate"])] = e.get("verdict")
+
+# Parse the table by position, never by looking for header words: the first
+# two table lines are the header and its separator, whatever they contain.
+table = [l for l in (adlc / "waivers.md").read_text().splitlines() if l.lstrip().startswith("|")]
+rows = table[2:]
+
+problems, seen_reasons = [], {}
 for line in rows:
-    cells = [c.strip() for c in line.strip("|").split("|")]
+    cells = [c.strip() for c in line.strip().strip("|").split("|")]
     if len(cells) < 6:
+        problems.append("malformed waiver row: " + line.strip())
         continue
-    date, change, gate, reason, expires, approver = cells[:6]
-    try:
-        exp = datetime.date.fromisoformat(expires)
-    except ValueError:
-        stale.append(f"{change} {gate}: unparseable expiry '{expires}'"); continue
-    if exp < today:
-        stale.append(f"{change} {gate}: expired {expires} (approved by: {approver or 'NOBODY'})")
+    _date, change, gate, reason, expires, approver = cells[:6]
+
+    key = (change, gate)
+    if current.get(key) != "waived":
+        continue  # settled or superseded: historical record, not a live finding
+
     if not approver:
-        stale.append(f"{change} {gate}: no approver recorded")
-for s in stale:
-    print(s)
-print(f"{len(stale)} waiver problem(s)")
-sys.exit(1 if stale else 0)
+        problems.append(f"{change} {gate}: no approver recorded")
+    try:
+        if datetime.date.fromisoformat(expires) < today:
+            problems.append(f"{change} {gate}: expired {expires}, still unsettled")
+    except ValueError:
+        problems.append(f"{change} {gate}: unparseable expiry {expires!r}")
+
+    prior = seen_reasons.setdefault(key, [])
+    if reason in prior:
+        problems.append(f"{change} {gate}: re-waived with an unchanged reason (a renewal, not a new waiver)")
+    prior.append(reason)
+
+for problem in problems:
+    print(problem)
+print(f"{len(problems)} live waiver problem(s)")
+sys.exit(1 if problems else 0)
 PY
 ```
 

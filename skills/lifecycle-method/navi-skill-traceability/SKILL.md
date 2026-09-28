@@ -41,9 +41,15 @@ An artifact with an ID is being written or reviewed, or `validate` is reporting 
 7. Write the task marker in bold — `**TASK-001**`. An unbolded task id is invisible to the
    validator and its `Implements:` line is never checked.
 8. Never invent an upstream ID. An `Implements:` line naming a requirement that no `spec.md`
-   heading declares is rule T3, and T3 is always a defect in one of the two files.
-9. Fold a change's delta spec into `delivery/specs/` at archive. Until then a requirement that
-   exists only in `changes/<name>/specs/` is invisible to the validator — see Validation.
+   heading declares anywhere is rule T3, and T3 is always a defect in one of the two files —
+   the task names the wrong id, or the requirement was never written.
+9. Write a change's new requirements in its delta spec at
+   `delivery/changes/<name>/specs/<capability>/spec.md`. The validator scans both
+   `delivery/specs/**/spec.md` and `delivery/changes/*/specs/**/spec.md`, so a requirement is
+   traceable from the moment it is written, and stays traceable when `archive` folds the delta
+   into `delivery/specs/`. A requirement carries the same weight from either location: T2
+   demands a criterion for it, and `--strict` T4 demands a task implementing it, while the
+   change is still open.
 10. Every shipped capability has an `SLI-###` in `delivery/ops/slo.md` naming the `REQ-###` it
     measures. A capability that is live and unmeasured is untraceable to its outcome.
 11. Every `INSIGHT-###` names its destination — product backlog or skill amendment — and the
@@ -58,7 +64,7 @@ An artifact with an ID is being written or reviewed, or `validate` is reporting 
 | `T0 ... file is not readable` | The file is not valid UTF-8, or the path is broken | Repair or remove the file; a validator that cannot read it has not checked it |
 | `T1 TASK-### has no 'Implements: REQ-###' line` | The task is not bolded, or the line is more than three lines below the marker | Move the `Implements:` line directly under the task, and bold the task id |
 | `T2 REQ-### has no acceptance criteria` | No `AC-###` appears between this requirement's heading and the next | Write at least one criterion per `navi-skill-acceptance-criteria` |
-| `T3 TASK-### implements unknown REQ-###` | No `spec.md` heading in `delivery/specs/` declares that requirement | Fix the typo, or fold the delta spec, or write the requirement |
+| `T3 TASK-### implements unknown REQ-###` | The requirement is declared on a heading in neither `delivery/specs/` nor any `delivery/changes/*/specs/` | Fix the mistyped id, or write the requirement in the change's delta spec |
 | `T4 REQ-### is implemented by no task` (strict only) | A requirement nothing is building | Add a task, or move the requirement to a later change |
 | A requirement heading with no `#` | Invisible to the validator; it silently is not a requirement | Put the id on a heading line |
 | An `AC-###` under the wrong requirement heading | Credits the wrong requirement; T2 stays clean while the real one is uncovered | Move the criterion under its own requirement |
@@ -167,18 +173,20 @@ python3 scripts/validate_traceability.py delivery/ --strict   # adds T4
 navi-delivery validate --strict                                # runs all three validators
 ```
 
-Zero findings is the only passing result. `--strict` adds T4 and is what runs before archive.
+Zero findings is the only passing result. `--strict` adds T4.
 
-**Known limitation — in-flight requirements.** `validate_traceability.py` reads requirements
-only from `delivery/specs/**/spec.md`. A requirement that exists only in the change's delta
-spec at `delivery/changes/<name>/specs/<capability>/spec.md` is not seen, so a task
-implementing it reports T3 until `archive` folds the delta into `delivery/specs/`. While a
-change is in flight, verify the delta spec directly:
+**Nothing runs this automatically.** `navi-delivery archive` invokes no validator — it reads
+`state.gates` and `state.stale` and refuses only when a lane gate is unsettled or an artifact
+is stale. A change with a dozen orphans archives cleanly if its gates are recorded. Traceability
+is enforced by running `validate` as a gate's own evidence, most naturally at G2-SPEC (T2) and
+G5-BUILD (T1, T3, T4) — see `navi-skill-phase-gate-protocol`. Run it before recording those
+gates, and keep the output as the evidence file.
+
+Requirements are read from both locations, so the check is complete while a change is open:
 
 ```bash
-grep -rnE '^#+.*REQ-[0-9]{3,}' --include=spec.md delivery/changes/<name>/specs
-grep -n 'Implements:' delivery/changes/<name>/tasks.md
+grep -rnE '^#+.*REQ-[0-9]{3,}' --include=spec.md delivery/specs delivery/changes
 ```
 
-Every `Implements:` target must appear in one of the two greps. Treat a T3 finding as real
-unless both the delta spec and `delivery/specs/` have been checked by hand.
+Every id an `Implements:` line names must appear in that listing. One that does not is a real
+T3 — the id is mistyped, or the requirement was never written.

@@ -1,23 +1,63 @@
 {
   "skill": "navi-skill-phase-gate-protocol",
   "cases": [
-    { "id": "pos-1", "type": "positive",
+    {
+      "id": "pos-1",
+      "type": "positive",
       "prompt": "QA finished testing the theme change. How do I record G6?",
-      "expect": ["navi-delivery gate G6", "--evidence", "pass", "status"] },
-    { "id": "pos-2", "type": "positive",
+      "expect": [
+        "navi-delivery gate G6",
+        "--evidence",
+        "pass",
+        "status"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
       "prompt": "G5 failed. What happens now and what do I have to do before we can release?",
-      "expect": ["stale", "gate:G5", "re-record", "rework", "validate"] },
-    { "id": "neg-1", "type": "negative",
+      "expect": [
+        "stale",
+        "gate:G5",
+        "re-record",
+        "rework",
+        "validate"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
       "prompt": "Add a feature flag to the checkout page.",
-      "expect_not_triggered": true },
-    { "id": "neg-2", "type": "negative",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
       "prompt": "Write acceptance criteria for the login timeout requirement.",
-      "expect_not_triggered": true },
-    { "id": "edge-1", "type": "edge",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
       "prompt": "Record G6 as a conditional pass — two tests are still failing but we ship Friday.",
-      "expect": ["no conditional pass", "fail", "waiver", "expiry", "refuse"] },
-    { "id": "edge-2", "type": "edge",
+      "expect": [
+        "no conditional pass",
+        "fail",
+        "waiver",
+        "expiry",
+        "refuse"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
       "prompt": "Archive this change; G8 is still pending but nobody owns it.",
-      "expect": ["archive refuses", "pass or waived", "escalate", "do not edit state.json"] }
+      "expect": [
+        "archive refuses until every lane gate is pass or waived",
+        "settle or waive each outstanding gate",
+        "waiver needs a reason and a future expiry",
+        "never edit state.json by hand"
+      ]
+    }
   ]
 }

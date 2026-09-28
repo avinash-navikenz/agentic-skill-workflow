@@ -24,16 +24,37 @@ A requirement exists and needs criteria, or criteria exist and need review.
 
 ## Rules
 
-1. One criterion per behaviour. Never bundle two behaviours into one AC.
-2. Write every criterion as `Given <state>, when <action>, then <observable outcome>`.
-3. Number criteria `AC-###`, sequential within the capability, never reused after deletion.
-4. Every criterion names an observable outcome. Reject adjectives without a threshold.
-5. Each criterion states its requirement in an `Implements: REQ-###` line.
-6. A criterion that cannot be observed by a test or an instrument is not a criterion — record it as an open question instead.
-7. Write every `AC-###` under the heading of the `REQ-###` it implements, in the same `spec.md`. Rule T2 reads the file positionally: an AC placed under a different requirement's heading counts for that requirement, not for this one.
-8. Every requirement carries at least one criterion before G2-SPEC is recorded as pass.
-9. Name the negative path. Every criterion set covers at least one failure, rejection or empty-state case alongside the happy path.
-10. State the measurement instrument for any threshold — the percentile, the window, and the environment. A threshold with no instrument is not observable.
+1. Write one criterion per behaviour. A criterion whose `then` clause joins two outcomes is
+   two criteria: it needs two tests, and a single pass/fail verdict over both hides which one
+   broke. Split it before numbering.
+2. Write every criterion as `Given <state>, when <action>, then <observable outcome>` — all
+   three clauses, in that order, every time. `Given` names the state the system is already in,
+   not the action; `when` names one action by one actor; `then` names what an observer sees
+   afterwards. A criterion missing its `Given` is a criterion whose precondition is a guess.
+3. Number criteria `AC-###` with at least three digits, sequential within the capability, and
+   never reused after a deletion. A deleted `AC-014` leaves a permanent gap. Reuse silently
+   repoints every test name, handoff envelope and event-log line that referred to the old one.
+4. Name an observable outcome in every `then`. Observable means a test or an instrument can
+   read it without asking a person's opinion. An adjective carrying no number is not an
+   outcome — reject it and write the number, or send the statement to open questions.
+5. Bind every criterion to its requirement with an `Implements: REQ-###` line of its own. The
+   line is what survives the criterion being moved, quoted in a handoff, or read on its own in
+   a test file.
+6. Record a statement that no test and no instrument can observe as a `Q-###` open question,
+   not as a criterion. Writing it as a criterion anyway produces a gate that cannot be
+   honestly passed, which is how G2 starts getting recorded on judgment instead of evidence.
+7. Write every `AC-###` under the heading of the `REQ-###` it implements, in the same
+   `spec.md`. Rule T2 reads the file positionally, so a criterion placed under another
+   requirement's heading credits *that* requirement — the intended one still reports as
+   uncovered, and the `Implements:` line does not override the position.
+8. Write at least one criterion for every requirement before G2-SPEC is recorded as pass. A
+   requirement with none cannot be verified at G6 and cannot be tested at all.
+9. Name the negative path. Every criterion set covers at least one failure, rejection or
+   empty-state case alongside the happy path, because that is where the behaviour is actually
+   undecided and where the implementation will otherwise invent something.
+10. State the measurement instrument for any threshold — the percentile, the window, and the
+    environment it is measured in. A threshold with no instrument is not observable: two
+    engineers will measure it two ways and both will be able to claim a pass.
 
 ## Decision table
 
@@ -47,6 +68,10 @@ A requirement exists and needs criteria, or criteria exist and need review.
 | "should", "may", "ideally" | Decide: either a criterion with a threshold, or delete it |
 | "handles errors gracefully" | Name each error class and its observable response |
 | a criterion with no `Implements:` line | Add one, or delete the criterion as orphaned |
+| "scalable", "robust", "reliable" | Replace with the load, the failure mode, or the availability figure meant |
+| a `then` clause naming a table, endpoint or class | Rewrite as what an observer sees; the mechanism belongs in `design.md` |
+| a `Given` clause describing an action | Move it into `when`; `Given` states only what is already true |
+| no criterion covers a failure or empty state | Write one before recording G2 |
 
 ## Template
 
@@ -96,6 +121,10 @@ Implements: REQ-001
 **Happy path only.** `AC-001` covers the signed-in user with a saved preference and nothing else. Add the empty-state case and the store-unavailable case before recording G2.
 
 **Threshold with no instrument.** `then the p95 is under 200ms` — under what load, measured where, over what window? Write `then p95 server response time is under 200ms measured at the load balancer over a 5-minute window at 200 rps`.
+
+**Action in the `Given`.** `Given the user clicks save, when the page reloads, then the theme persists` — the click is the action, so the criterion now has two and the real precondition is unstated. Write `Given a signed-in user who has saved the dark theme, when they load any page, then the dark theme is applied`.
+
+**Criterion that specifies the mechanism.** `then a row is written to the user_preferences table` — this passes even if the user never sees the theme, and it fails the day the storage changes without the behaviour changing. Name what an observer sees; let `design.md` choose the table.
 
 ## Validation
 

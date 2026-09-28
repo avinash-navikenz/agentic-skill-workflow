@@ -1,23 +1,62 @@
 {
   "skill": "navi-skill-traceability",
   "cases": [
-    { "id": "pos-1", "type": "positive",
+    {
+      "id": "pos-1",
+      "type": "positive",
       "prompt": "validate --strict is reporting T1 on TASK-004 and T2 on REQ-006. What do I fix?",
-      "expect": ["Implements: REQ-", "within three lines", "bold", "acceptance criteria", "T2"] },
-    { "id": "pos-2", "type": "positive",
+      "expect": [
+        "Implements: REQ-",
+        "within three lines",
+        "bold",
+        "acceptance criteria",
+        "T2"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
       "prompt": "How do I number and link the tasks for this change so traceability passes?",
-      "expect": ["**TASK-001**", "Implements: REQ-001", "three digits", "never reused"] },
-    { "id": "neg-1", "type": "negative",
+      "expect": [
+        "**TASK-001**",
+        "Implements: REQ-001",
+        "three digits",
+        "never reused"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
       "prompt": "Trace this stack trace back to the function that threw.",
-      "expect_not_triggered": true },
-    { "id": "neg-2", "type": "negative",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
       "prompt": "Should this change take the express lane or the standard lane?",
-      "expect_not_triggered": true },
-    { "id": "edge-1", "type": "edge",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
       "prompt": "T3 says TASK-009 implements unknown REQ-011. REQ-001 exists — can I just point it at that?",
-      "expect": ["do not rename to silence", "defect in one of the two files", "delta spec not scanned", "archive folds"] },
-    { "id": "edge-2", "type": "edge",
+      "expect": [
+        "do not rename to silence",
+        "declared in neither delivery/specs/ nor changes/*/specs/",
+        "write REQ-011 in the delta spec",
+        "or correct the task to the requirement it serves"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
       "prompt": "REQ-004 was deleted last sprint. Can the new requirement reuse the number?",
-      "expect": ["never reused", "permanent gap", "downstream references", "REQ-005"] }
+      "expect": [
+        "never reused",
+        "permanent gap",
+        "downstream references",
+        "REQ-005"
+      ]
+    }
   ]
 }
