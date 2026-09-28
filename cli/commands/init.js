@@ -4,21 +4,21 @@ const path = require("node:path");
 const { deliveryDir } = require("../lib/paths");
 const { newState, writeState } = require("../lib/state");
 const { detectHarness } = require("../lib/capabilities");
-const { findUnreadableTemplate } = require("../lib/templates");
+const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 
 const DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", ".adlc"];
 const GITKEEP_DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems"];
-const TEMPLATES = path.join(__dirname, "..", "..", "templates", "delivery");
 
-// Template name (relative to TEMPLATES) -> destination path relative to delivery/.
+// Template name (relative to the "delivery" templates dir) -> destination
+// path relative to delivery/.
 const TEMPLATE_FILES = [
   { name: "project.md", dest: "project.md" },
   { name: "AGENTS.md", dest: "AGENTS.md" },
   { name: path.join(".adlc", "waivers.md"), dest: path.join(".adlc", "waivers.md") },
 ];
 
-function copyTemplate(name, dest) {
-  fs.writeFileSync(dest, fs.readFileSync(path.join(TEMPLATES, name), "utf8"));
+function copyTemplate(templatesDir, name, dest) {
+  fs.writeFileSync(dest, fs.readFileSync(path.join(templatesDir, name), "utf8"));
 }
 
 function run(argv, cwd, emit = console.log) {
@@ -28,15 +28,19 @@ function run(argv, cwd, emit = console.log) {
     return 1;
   }
 
-  const missing = findUnreadableTemplate(TEMPLATES, TEMPLATE_FILES.map((t) => t.name));
+  // Resolved per-call (not cached at module load) so NAVI_DELIVERY_TEMPLATES
+  // can be set for the duration of a single test — see lib/templates.js.
+  const templates = path.join(templatesRoot(), "delivery");
+
+  const missing = findUnreadableTemplate(templates, TEMPLATE_FILES.map((t) => t.name));
   if (missing) {
-    emit(`cannot init: template '${missing}' is missing or unreadable (expected at ${path.join(TEMPLATES, missing)}). Nothing was created.`);
+    emit(`cannot init: template '${missing}' is missing or unreadable (expected at ${path.join(templates, missing)}). Nothing was created.`);
     return 1;
   }
 
   for (const d of DIRS) fs.mkdirSync(path.join(dir, d), { recursive: true });
   for (const d of GITKEEP_DIRS) fs.writeFileSync(path.join(dir, d, ".gitkeep"), "");
-  for (const { name, dest } of TEMPLATE_FILES) copyTemplate(name, path.join(dir, dest));
+  for (const { name, dest } of TEMPLATE_FILES) copyTemplate(templates, name, path.join(dir, dest));
   writeState(cwd, newState());
 
   emit(`Initialised delivery/ (harness: ${detectHarness(process.env)})`);

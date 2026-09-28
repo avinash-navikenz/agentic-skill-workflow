@@ -8,6 +8,27 @@ const { readState } = require("../../cli/lib/state");
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "nd-init-"));
 
+// The three "template is missing / is a directory" tests below need to
+// mutate a templates tree to provoke the failure they're checking for.
+// Doing that to the repository's own shipped templates/ is unsafe under
+// node:test's default per-file parallelism (see lib/templates.js for the
+// full reasoning), so instead: copy templates/ to a disposable temp
+// directory, point NAVI_DELIVERY_TEMPLATES at the copy, mutate only the
+// copy, and always restore the environment variable afterwards so no test
+// leaks the override to another test in this file.
+function withTemplatesOverride(fn) {
+  const copy = fs.mkdtempSync(path.join(os.tmpdir(), "nd-templates-"));
+  fs.cpSync(path.join(__dirname, "..", "..", "templates"), copy, { recursive: true });
+  const prev = process.env.NAVI_DELIVERY_TEMPLATES;
+  process.env.NAVI_DELIVERY_TEMPLATES = copy;
+  try {
+    fn(copy);
+  } finally {
+    if (prev === undefined) delete process.env.NAVI_DELIVERY_TEMPLATES;
+    else process.env.NAVI_DELIVERY_TEMPLATES = prev;
+  }
+}
+
 test("init creates the full delivery tree", () => {
   const root = tmp();
   assert.strictEqual(init.run([], root, () => {}), 0);
@@ -41,41 +62,30 @@ test("init refuses when delivery/ exists and leaves content untouched", () => {
 // --- Controller ruling: verify templates BEFORE creating any directory ---
 
 test("init with a missing template creates nothing and fails clearly", () => {
-  const root = tmp();
-  const templatesDir = path.join(__dirname, "..", "..", "templates", "delivery");
-  const projectTemplate = path.join(templatesDir, "project.md");
-  const movedAside = projectTemplate + ".test-moved-aside";
-  // Rename rather than read+delete+rewrite: restoration doesn't depend on
-  // faithfully round-tripping file content, only on the rename succeeding.
-  fs.renameSync(projectTemplate, movedAside);
-  try {
+  withTemplatesOverride((templatesCopy) => {
+    const root = tmp();
+    const projectTemplate = path.join(templatesCopy, "delivery", "project.md");
+    fs.rmSync(projectTemplate);
     const lines = [];
     const code = init.run([], root, (s) => lines.push(s));
     assert.strictEqual(code, 1);
     assert.ok(lines.join("\n").includes("project.md"), "error should name the missing template");
     assert.ok(!fs.existsSync(path.join(root, "delivery")), "delivery/ must not exist after a failed init");
-  } finally {
-    fs.renameSync(movedAside, projectTemplate);
-  }
+  });
 });
 
 test("init with a template path that is a directory (not a file) creates nothing and fails clearly", () => {
-  const root = tmp();
-  const templatesDir = path.join(__dirname, "..", "..", "templates", "delivery");
-  const projectTemplate = path.join(templatesDir, "project.md");
-  const movedAside = projectTemplate + ".test-moved-aside";
-  fs.renameSync(projectTemplate, movedAside);
-  fs.mkdirSync(projectTemplate); // stand-in: a directory where a file is expected
-  try {
+  withTemplatesOverride((templatesCopy) => {
+    const root = tmp();
+    const projectTemplate = path.join(templatesCopy, "delivery", "project.md");
+    fs.rmSync(projectTemplate);
+    fs.mkdirSync(projectTemplate); // stand-in: a directory where a file is expected
     const lines = [];
     const code = init.run([], root, (s) => lines.push(s));
     assert.strictEqual(code, 1);
     assert.ok(lines.join("\n").includes("project.md"), "error should name the offending template");
     assert.ok(!fs.existsSync(path.join(root, "delivery")), "delivery/ must not exist after a failed init");
-  } finally {
-    fs.rmdirSync(projectTemplate);
-    fs.renameSync(movedAside, projectTemplate);
-  }
+  });
 });
 
 // --- Additional coverage beyond the brief ---

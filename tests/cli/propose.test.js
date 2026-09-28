@@ -14,6 +14,25 @@ function repo() {
   return root;
 }
 
+// See tests/cli/init.test.js for the full reasoning: mutating the
+// repository's own shipped templates/ tree is unsafe under node:test's
+// default per-file parallelism, so tests that need to provoke a
+// missing/bad-template failure operate on a disposable copy instead, via
+// the NAVI_DELIVERY_TEMPLATES override — restored afterwards so no test
+// leaks the override to another test in this file.
+function withTemplatesOverride(fn) {
+  const copy = fs.mkdtempSync(path.join(os.tmpdir(), "nd-templates-"));
+  fs.cpSync(path.join(__dirname, "..", "..", "templates"), copy, { recursive: true });
+  const prev = process.env.NAVI_DELIVERY_TEMPLATES;
+  process.env.NAVI_DELIVERY_TEMPLATES = copy;
+  try {
+    fn(copy);
+  } finally {
+    if (prev === undefined) delete process.env.NAVI_DELIVERY_TEMPLATES;
+    else process.env.NAVI_DELIVERY_TEMPLATES = prev;
+  }
+}
+
 test("propose creates the change folder and records lane", () => {
   const root = repo();
   assert.strictEqual(propose.run(["add-dark-mode", "--lane", "standard"], root, () => {}), 0);
@@ -114,19 +133,14 @@ test("propose <name> with no --lane flag prints usage and fails", () => {
 
 test("propose with a template path that is a directory (not a file) creates nothing and fails clearly", () => {
   const root = repo();
-  const templatesDir = path.join(__dirname, "..", "..", "templates", "change");
-  const proposalTemplate = path.join(templatesDir, "proposal.md");
-  const movedAside = proposalTemplate + ".test-moved-aside";
-  fs.renameSync(proposalTemplate, movedAside);
-  fs.mkdirSync(proposalTemplate); // stand-in: a directory where a file is expected
-  try {
+  withTemplatesOverride((templatesCopy) => {
+    const proposalTemplate = path.join(templatesCopy, "change", "proposal.md");
+    fs.rmSync(proposalTemplate);
+    fs.mkdirSync(proposalTemplate); // stand-in: a directory where a file is expected
     const lines = [];
     const code = propose.run(["x", "--lane", "full"], root, (s) => lines.push(s));
     assert.strictEqual(code, 1);
     assert.ok(lines.join("\n").includes("proposal.md"), "error should name the offending template");
     assert.ok(!fs.existsSync(path.join(root, "delivery", "changes", "x")), "changes/x must not exist after a failed propose");
-  } finally {
-    fs.rmdirSync(proposalTemplate);
-    fs.renameSync(movedAside, proposalTemplate);
-  }
+  });
 });

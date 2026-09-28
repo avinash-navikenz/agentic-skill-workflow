@@ -4,11 +4,10 @@ const path = require("node:path");
 const { changeDir } = require("../lib/paths");
 const { readState, writeState } = require("../lib/state");
 const { isLane, gatesForLane, LANES } = require("../lib/lanes");
-const { findUnreadableTemplate } = require("../lib/templates");
+const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 const { flagValue } = require("../lib/args");
 
 const FILES = ["proposal.md", "design.md", "tasks.md", "handoffs.md"];
-const TEMPLATES = path.join(__dirname, "..", "..", "templates", "change");
 
 const USAGE = "usage: navi-delivery propose <name> --lane <lane>";
 
@@ -61,21 +60,25 @@ function run(argv, cwd, emit = console.log) {
     return 1;
   }
 
+  // Resolved per-call (not cached at module load) so NAVI_DELIVERY_TEMPLATES
+  // can be set for the duration of a single test — see lib/templates.js.
+  const templates = path.join(templatesRoot(), "change");
+
   // Verify every template is readable BEFORE creating any directory. If a
   // template is missing or unreadable partway through a real propose, we'd
   // leave a half-built changes/<name>/ behind — and since this command
   // refuses to run when that directory already exists, that half-built
   // tree would permanently block retrying the same name.
-  const missing = findUnreadableTemplate(TEMPLATES, FILES);
+  const missing = findUnreadableTemplate(templates, FILES);
   if (missing) {
-    emit(`cannot propose: template '${missing}' is missing or unreadable (expected at ${path.join(TEMPLATES, missing)}). Nothing was created.`);
+    emit(`cannot propose: template '${missing}' is missing or unreadable (expected at ${path.join(templates, missing)}). Nothing was created.`);
     return 1;
   }
 
   fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
   const gates = gatesForLane(lane).join(" · ");
   for (const f of FILES) {
-    const body = fs.readFileSync(path.join(TEMPLATES, f), "utf8")
+    const body = fs.readFileSync(path.join(templates, f), "utf8")
       .replace(/\{\{CHANGE\}\}/g, name)
       .replace(/\{\{LANE\}\}/g, lane)
       .replace(/\{\{GATES\}\}/g, gates);
