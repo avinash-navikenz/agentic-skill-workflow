@@ -3,12 +3,13 @@ import tempfile
 import sys
 from io import StringIO
 from pathlib import Path
-from scripts.navi_lint.registry import Entry
+from scripts.navi_lint.registry import Entry, load_entries
 from scripts.validate_manifests import check, main
 
 def skill(name="navi-skill-alpha", desc="Use when x. Trigger phrases include: alpha.", **meta):
     m = {"version": "0.1.0", "maturity": "draft", "kind": "skill", "discipline": "architecture",
-         "lifecycle_phases": [3], "owner": "OWNER_TBD", "tags": "a", "model": "sonnet"}
+         "lifecycle_phases": [3], "owner": "OWNER_TBD", "tags": "a", "model": "sonnet",
+         "used_by_agents": ["navi-agent-architect"]}
     m.update(meta)
     return Entry(name, "skill", Path(f"skills/architecture/{name}/SKILL.md"),
                  {"name": name, "description": desc, "allowed-tools": "Read", "metadata": m}, "body")
@@ -55,6 +56,43 @@ class TestManifests(unittest.TestCase):
     def test_M6_skill_description_missing_trigger_phrases(self):
         s = skill(desc="Use when x.")
         self.assertIn("M6", rules(check([s, agent()])))
+
+    def test_M7_used_by_agents_agrees_with_the_agents_that_list_it(self):
+        s = skill(used_by_agents=["navi-agent-qa-engineer", "navi-agent-architect"])
+        a1 = agent()
+        a2 = agent(name="navi-agent-qa-engineer")
+        self.assertEqual(check([s, a1, a2]), [])
+
+    def test_M7_skill_claims_an_agent_that_does_not_list_it(self):
+        s = skill(used_by_agents=["navi-agent-architect", "navi-agent-qa-engineer"])
+        findings = check([s, agent()])
+        self.assertIn("M7", rules(findings))
+        self.assertTrue(any("navi-agent-qa-engineer" in f.message and "does not list" in f.message
+                            for f in findings))
+
+    def test_M7_agent_lists_a_skill_absent_from_its_used_by_agents(self):
+        s = skill(used_by_agents=["navi-agent-architect"])
+        findings = check([s, agent(), agent(name="navi-agent-qa-engineer")])
+        self.assertIn("M7", rules(findings))
+        self.assertTrue(any("navi-agent-qa-engineer" in f.message and "absent from" in f.message
+                            for f in findings))
+
+    def test_M7_empty_used_by_agents_on_a_skill_an_agent_lists(self):
+        s = skill(used_by_agents=[])
+        findings = check([s, agent()])
+        self.assertIn("M7", rules(findings))
+        self.assertTrue(any("navi-agent-architect" in f.message and "absent from" in f.message
+                            for f in findings))
+        self.assertNotIn("M5", rules(findings))
+
+    def test_M7_missing_used_by_agents_key_is_treated_as_empty(self):
+        s = skill()
+        del s.meta["metadata"]["used_by_agents"]
+        self.assertIn("M7", rules(check([s, agent()])))
+
+    def test_M7_is_clean_against_the_repo_content(self):
+        entries = load_entries(Path(__file__).resolve().parents[2])
+        self.assertEqual([f for f in check(entries) if f.rule == "M7"], [])
 
     def test_M1_malformed_frontmatter(self):
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -18,6 +18,13 @@ def check(entries: list[Entry]) -> list[Finding]:
     out: list[Finding] = []
     skills = {e.name for e in entries if e.kind == "skill"}
     referenced: set[str] = set()
+    # M7 compares both sides of the used_by_agents/skills invariant, so the agent side is
+    # collected up front rather than during the pass below: entry order is not guaranteed.
+    listed_by: dict[str, set[str]] = {}
+    for e in entries:
+        if e.kind == "agent":
+            for ref in e.meta.get("skills") or []:
+                listed_by.setdefault(ref, set()).add(e.name)
 
     for e in entries:
         for key in REQUIRED_TOP:
@@ -51,6 +58,18 @@ def check(entries: list[Entry]) -> list[Finding]:
     for name in sorted(skills - referenced):
         path = next(e.path for e in entries if e.name == name)
         out.append(Finding("M5", path, f"skill '{name}' is referenced by no agent"))
+
+    for e in entries:
+        if e.kind != "skill":
+            continue
+        declared = set((e.meta.get("metadata") or {}).get("used_by_agents") or [])
+        listed = listed_by.get(e.name, set())
+        # Reported as two directions, because the fix differs: the first means the skill's
+        # claim is stale, the second means the agent acquired the skill without being recorded.
+        for name in sorted(declared - listed):
+            out.append(Finding("M7", e.path, f"used_by_agents names '{name}', which does not list this skill"))
+        for name in sorted(listed - declared):
+            out.append(Finding("M7", e.path, f"agent '{name}' lists this skill but is absent from used_by_agents"))
     return out
 
 def main(argv: list[str]) -> int:
