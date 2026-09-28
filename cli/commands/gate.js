@@ -5,11 +5,7 @@ const { readState, writeState } = require("../lib/state");
 const { appendEvent } = require("../lib/events");
 const { gatesForLane, ALL_GATES } = require("../lib/lanes");
 const { waiversPath } = require("../lib/paths");
-
-function flagValue(argv, flag) {
-  const i = argv.indexOf(flag);
-  return i === -1 ? null : argv[i + 1];
-}
+const { flagValue } = require("../lib/args");
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -51,6 +47,24 @@ function expiryError(str) {
   return null;
 }
 
+// Fix round 1, finding C: a waiver reason is one column in a Markdown
+// table. A literal "|" would shift every later column, silently corrupting
+// the table — so pipes are escaped rather than rejected (punctuation is
+// not a reason to refuse an otherwise legitimate sentence). A newline has
+// no escape that keeps the reason inside a single table row, so that is
+// rejected outright instead.
+function escapeForTableCell(reason) {
+  return reason.replace(/\|/g, "\\|");
+}
+
+// Fix round 1, finding B: gate.js is the only place that sets a gate's own
+// "gate:<X>" stale entry, so it is the only place that gets to clear it.
+// Recording a fresh pass or waiver for a gate means that gate's own prior
+// staleness is resolved; nothing is inferred about any other gate's entry.
+function clearOwnStale(s, gate) {
+  s.stale = s.stale.filter((entry) => entry !== `gate:${gate}`);
+}
+
 function run(argv, cwd, emit = console.log) {
   const gate = argv[0];
   if (!ALL_GATES.includes(gate)) { emit(`unknown gate '${gate}' — valid: ${ALL_GATES.join(", ")}`); return 1; }
@@ -73,23 +87,35 @@ function run(argv, cwd, emit = console.log) {
   // it is never silently overwritten, only ever appended to.
   const previous = s.gates[gate];
 
-  const waiveReason = flagValue(argv, "--waive");
-  if (waiveReason) {
+  const waive = flagValue(argv, "--waive");
+  if (waive.present) {
+    // Fix round 1, finding A: an omitted reason must not silently borrow
+    // the next flag's name (e.g. "--waive --expires 2026-12-31" reading
+    // "--expires" as the reason). flagValue already refuses to treat a
+    // "--"-prefixed token as a value, so a missing reason surfaces here.
+    if (!waive.value) { emit("--waive requires a reason — got none (or the next token looks like a flag)"); return 1; }
+    const waiveReason = waive.value;
+    if (waiveReason.includes("\n")) {
+      emit("waiver reason must not contain a newline — it becomes a single waivers.md table row");
+      return 1;
+    }
+
     const expires = flagValue(argv, "--expires");
-    if (!expires) { emit("a waiver requires --expires <YYYY-MM-DD>"); return 1; }
-    const problem = expiryError(expires);
+    if (!expires.value) { emit("a waiver requires --expires <YYYY-MM-DD>"); return 1; }
+    const problem = expiryError(expires.value);
     if (problem) { emit(problem); return 1; }
 
-    const row = `| ${new Date().toISOString().slice(0, 10)} | ${s.change} | ${gate} | ${waiveReason} | ${expires} | |\n`;
+    const row = `| ${new Date().toISOString().slice(0, 10)} | ${s.change} | ${gate} | ${escapeForTableCell(waiveReason)} | ${expires.value} | |\n`;
     fs.appendFileSync(waiversPath(cwd), row);
     s.gates[gate] = "waived";
+    clearOwnStale(s, gate);
     writeState(cwd, s);
-    const evt = { change: s.change, gate, verdict: "waived", reason: waiveReason, expires };
+    const evt = { change: s.change, gate, verdict: "waived", reason: waiveReason, expires: expires.value };
     if (previous) evt.previous = previous;
     appendEvent(cwd, evt);
     emit(previous
-      ? `${gate} re-recorded: ${previous} -> waived until ${expires}`
-      : `${gate} waived until ${expires}`);
+      ? `${gate} re-recorded: ${previous} -> waived until ${expires.value}`
+      : `${gate} waived until ${expires.value}`);
     return 0;
   }
 
@@ -98,22 +124,30 @@ function run(argv, cwd, emit = console.log) {
   if (passed === failed) { emit("specify exactly one of --pass or --fail"); return 1; }
 
   const evidence = flagValue(argv, "--evidence");
-  if (!evidence) { emit("--evidence is required to record a gate decision"); return 1; }
-  if (!fs.existsSync(path.resolve(cwd, evidence))) { emit(`evidence file not found: ${evidence}`); return 1; }
+  if (!evidence.value) { emit("--evidence is required to record a gate decision"); return 1; }
+  if (!fs.existsSync(path.resolve(cwd, evidence.value))) { emit(`evidence file not found: ${evidence.value}`); return 1; }
 
   const verdict = passed ? "pass" : "fail";
   s.gates[gate] = verdict;
   if (failed) {
-    const idx = ALL_GATES.indexOf(gate);
-    s.stale = [...new Set([...s.stale, ...ALL_GATES.slice(idx).map((g) => `gate:${g}`)])];
+    // Fix round 1, finding D: mark stale only within the current lane's
+    // gate set. ALL_GATES.slice(idx) would mark gates the current lane
+    // never enforces (e.g. G8/G9 on "express"), which can then never be
+    // recorded and so — now that finding B makes gate.js clear its own
+    // stale entries on pass/waive — could never clear either.
+    const idx = laneGates.indexOf(gate);
+    const toMark = laneGates.slice(idx).map((g) => `gate:${g}`);
+    s.stale = [...new Set([...s.stale, ...toMark])];
+  } else {
+    clearOwnStale(s, gate);
   }
   writeState(cwd, s);
-  const evt = { change: s.change, gate, verdict, evidence };
+  const evt = { change: s.change, gate, verdict, evidence: evidence.value };
   if (previous) evt.previous = previous;
   appendEvent(cwd, evt);
   emit(previous
-    ? `${gate} re-recorded: ${previous} -> ${verdict} (evidence: ${evidence})`
-    : `${gate} ${verdict} (evidence: ${evidence})`);
+    ? `${gate} re-recorded: ${previous} -> ${verdict} (evidence: ${evidence.value})`
+    : `${gate} ${verdict} (evidence: ${evidence.value})`);
   if (failed) emit(`rework required — ${s.stale.length} artifact(s) marked stale`);
   return 0;
 }

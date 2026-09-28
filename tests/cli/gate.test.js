@@ -157,3 +157,77 @@ test("a waiver on a gate outside the lane's set is refused", () => {
   assert.strictEqual(readState(root).gates.G4, undefined);
   assert.strictEqual(readEvents(root).length, 0);
 });
+
+// --- Fix round 1 ---
+
+// Finding A: an omitted --waive reason must not silently borrow the next
+// flag's name as the reason.
+test("a waiver with the reason omitted (next token is a flag) is refused, not accepted with garbage", () => {
+  const root = repo();
+  const waiversFile = path.join(root, "delivery", ".adlc", "waivers.md");
+  const before = fs.readFileSync(waiversFile, "utf8");
+  const lines = [];
+  assert.strictEqual(gate.run(["G3", "--waive", "--expires", "2026-12-31"], root, (s) => lines.push(s)), 1);
+  assert.match(lines.join("\n"), /--waive requires a reason/);
+  assert.strictEqual(readState(root).gates.G3, undefined);
+  assert.strictEqual(readEvents(root).length, 0);
+  assert.strictEqual(fs.readFileSync(waiversFile, "utf8"), before, "waivers.md must be unchanged");
+});
+
+// Finding B (+D interaction): failing then re-passing the same gate clears
+// that gate's own stale entry, but leaves other stale entries alone.
+test("re-passing a previously failed gate clears its own stale entry only", () => {
+  const root = repo(); // standard: G1, G2, G3, G5, G6, G7, G8
+  gate.run(["G2", "--pass", "--evidence", "evidence.md"], root, () => {});
+  gate.run(["G6", "--fail", "--evidence", "evidence.md"], root, () => {});
+  let s = readState(root);
+  assert.deepStrictEqual(s.stale.slice().sort(), ["gate:G6", "gate:G7", "gate:G8"]);
+
+  assert.strictEqual(gate.run(["G6", "--pass", "--evidence", "evidence.md"], root, () => {}), 0);
+  s = readState(root);
+  assert.strictEqual(s.gates.G6, "pass");
+  assert.deepStrictEqual(s.stale.slice().sort(), ["gate:G7", "gate:G8"],
+    "gate:G6 must clear once G6 is re-recorded as pass; G7/G8 remain until they are recorded themselves");
+});
+
+// Finding B also applies to waivers: waiving a previously failed gate
+// clears its own stale entry.
+test("waiving a previously failed gate clears its own stale entry", () => {
+  const root = repo();
+  gate.run(["G6", "--fail", "--evidence", "evidence.md"], root, () => {});
+  assert.ok(readState(root).stale.includes("gate:G6"));
+  assert.strictEqual(
+    gate.run(["G6", "--waive", "temporary exception", "--expires", "2026-12-31"], root, () => {}), 0);
+  assert.ok(!readState(root).stale.includes("gate:G6"));
+});
+
+// Finding C: a reason containing a pipe must not corrupt the Markdown table.
+test("a waiver reason containing a pipe is escaped, producing a well-formed table row", () => {
+  const root = repo();
+  assert.strictEqual(
+    gate.run(["G3", "--waive", "no risk | acceptable", "--expires", "2026-12-31"], root, () => {}), 0);
+  const text = fs.readFileSync(path.join(root, "delivery", ".adlc", "waivers.md"), "utf8");
+  const row = text.split("\n").find((l) => l.includes("G3"));
+  assert.ok(row, "expected a waivers.md row for G3");
+  assert.match(row, /^\| \d{4}-\d{2}-\d{2} \| c \| G3 \| no risk \\\| acceptable \| 2026-12-31 \| \|$/);
+});
+
+// Finding C: a reason containing a newline cannot be escaped into one row.
+test("a waiver reason containing a newline is refused", () => {
+  const root = repo();
+  const lines = [];
+  assert.strictEqual(
+    gate.run(["G3", "--waive", "line one\nline two", "--expires", "2026-12-31"], root, (s) => lines.push(s)), 1);
+  assert.match(lines.join("\n"), /newline/);
+  assert.strictEqual(readState(root).gates.G3, undefined);
+});
+
+// Finding D: stale marking must respect the lane's own gate set, not
+// ALL_GATES — express enforces only G2, G6, G7, so failing G6 there must
+// never mark G8/G9 stale (they could never be recorded to clear again).
+test("failing a gate on 'express' marks stale only within that lane's gate set", () => {
+  const root = repo("express"); // gates: G2, G6, G7
+  assert.strictEqual(gate.run(["G6", "--fail", "--evidence", "evidence.md"], root, () => {}), 0);
+  const s = readState(root);
+  assert.deepStrictEqual(s.stale.slice().sort(), ["gate:G6", "gate:G7"]);
+});

@@ -5,6 +5,7 @@ const { changeDir } = require("../lib/paths");
 const { readState, writeState } = require("../lib/state");
 const { isLane, gatesForLane, LANES } = require("../lib/lanes");
 const { findUnreadableTemplate } = require("../lib/templates");
+const { flagValue } = require("../lib/args");
 
 const FILES = ["proposal.md", "design.md", "tasks.md", "handoffs.md"];
 const TEMPLATES = path.join(__dirname, "..", "..", "templates", "change");
@@ -26,22 +27,23 @@ function isValidName(name) {
 
 function run(argv, cwd, emit = console.log) {
   const name = argv[0];
-  const laneIdx = argv.indexOf("--lane");
+  const laneFlag = flagValue(argv, "--lane");
 
-  if (!name || laneIdx === -1) {
+  if (!name || !laneFlag.present) {
     emit(USAGE);
     return 1;
   }
 
-  // Controller ruling 2: distinguish "--lane given with no value" (a usage
-  // error) from "--lane given with an invalid value" (an unknown-lane
-  // error). Without this, "--lane" as the final argument reads argv[i+1]
-  // as undefined and reports the confusing "unknown lane 'undefined'".
-  if (laneIdx === argv.length - 1) {
+  // Controller ruling 2: distinguish "--lane given with no usable value" (a
+  // usage error) from "--lane given with an invalid value" (an unknown-lane
+  // error). Without this, "--lane" as the final argument (or followed by
+  // another flag) reads a bogus value and reports a confusing
+  // "unknown lane" error instead of naming the real problem.
+  if (!laneFlag.value) {
     emit(`--lane requires a value — one of: ${Object.keys(LANES).join(", ")}`);
     return 1;
   }
-  const lane = argv[laneIdx + 1];
+  const lane = laneFlag.value;
 
   if (!isValidName(name)) {
     emit(`invalid change name '${name}' — only lowercase letters, digits, '.', '_' and '-' are allowed, starting with a letter or digit (no '..', '/' or '\\')`);
