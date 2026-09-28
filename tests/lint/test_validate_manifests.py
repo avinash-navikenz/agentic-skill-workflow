@@ -88,7 +88,19 @@ class TestManifests(unittest.TestCase):
     def test_M7_missing_used_by_agents_key_is_treated_as_empty(self):
         s = skill()
         del s.meta["metadata"]["used_by_agents"]
-        self.assertIn("M7", rules(check([s, agent()])))
+        m7 = [f for f in check([s, agent()]) if f.rule == "M7"]
+        self.assertEqual(len(m7), 1)
+        self.assertIn("navi-agent-architect", m7[0].message)
+        self.assertIn("absent from used_by_agents", m7[0].message)
+
+    def test_M7_reports_both_directions_at_once(self):
+        s = skill(used_by_agents=["navi-agent-qa-engineer"])
+        m7 = [f for f in check([s, agent()]) if f.rule == "M7"]
+        self.assertEqual(len(m7), 2)
+        self.assertTrue(any("navi-agent-qa-engineer" in f.message and "does not list" in f.message
+                            for f in m7))
+        self.assertTrue(any("navi-agent-architect" in f.message and "absent from" in f.message
+                            for f in m7))
 
     def test_M7_is_clean_against_the_repo_content(self):
         entries = load_entries(Path(__file__).resolve().parents[2])
