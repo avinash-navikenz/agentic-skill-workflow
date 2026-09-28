@@ -19,6 +19,25 @@ function readState(root) {
   for (const key of REQUIRED) {
     if (!(key in parsed)) throw new StateError(`${p}: missing required key '${key}'`);
   }
+  // Type validation
+  if (typeof parsed.version !== "number") {
+    throw new StateError(`${p}: version must be a number, got ${typeof parsed.version}`);
+  }
+  if (typeof parsed.phase !== "number") {
+    throw new StateError(`${p}: phase must be a number, got ${typeof parsed.phase}`);
+  }
+  if (typeof parsed.change !== "string" && parsed.change !== null) {
+    throw new StateError(`${p}: change must be a string or null, got ${typeof parsed.change}`);
+  }
+  if (typeof parsed.lane !== "string" && parsed.lane !== null) {
+    throw new StateError(`${p}: lane must be a string or null, got ${typeof parsed.lane}`);
+  }
+  if (typeof parsed.gates !== "object" || parsed.gates === null || Array.isArray(parsed.gates)) {
+    throw new StateError(`${p}: gates must be a plain object, got ${Array.isArray(parsed.gates) ? "array" : typeof parsed.gates}`);
+  }
+  if (!Array.isArray(parsed.stale)) {
+    throw new StateError(`${p}: stale must be an array, got ${typeof parsed.stale}`);
+  }
   return parsed;
 }
 

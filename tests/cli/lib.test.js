@@ -86,3 +86,65 @@ test("readEvents() with absent events.jsonl returns empty array", () => {
   const all = events.readEvents(root);
   assert.deepStrictEqual(all, []);
 });
+
+test("gatesForLane returns frozen array, not mutable reference", () => {
+  // Get the array for "standard" lane
+  const gates1 = lanes.gatesForLane("standard");
+  // Attempt to mutate it in strict mode should throw
+  assert.throws(() => {
+    gates1.push("G10");
+  }, /Cannot add property/);
+  // Verify that the internal array was not modified
+  const gates2 = lanes.gatesForLane("standard");
+  assert.deepStrictEqual(gates2, ["G1", "G2", "G3", "G5", "G6", "G7", "G8"], "gates should not be mutated");
+});
+
+test("readState validates that phase is a number", () => {
+  const root = tmpRepo();
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "state.json"),
+    JSON.stringify({ version: 1, change: null, lane: null, phase: "three", gates: {}, stale: [] }));
+  assert.throws(() => state.readState(root), /phase.*must be a number/);
+});
+
+test("readState validates that version is a number", () => {
+  const root = tmpRepo();
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "state.json"),
+    JSON.stringify({ version: "1", change: null, lane: null, phase: 1, gates: {}, stale: [] }));
+  assert.throws(() => state.readState(root), /version.*must be a number/);
+});
+
+test("readState validates that gates is a plain object", () => {
+  const root = tmpRepo();
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "state.json"),
+    JSON.stringify({ version: 1, change: null, lane: null, phase: 1, gates: [], stale: [] }));
+  assert.throws(() => state.readState(root), /gates.*must be a plain object/);
+});
+
+test("readState validates that stale is an array", () => {
+  const root = tmpRepo();
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "state.json"),
+    JSON.stringify({ version: 1, change: null, lane: null, phase: 1, gates: {}, stale: null }));
+  assert.throws(() => state.readState(root), /stale.*must be an array/);
+});
+
+test("readState validates that change is string or null", () => {
+  const root = tmpRepo();
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "state.json"),
+    JSON.stringify({ version: 1, change: 123, lane: null, phase: 1, gates: {}, stale: [] }));
+  assert.throws(() => state.readState(root), /change.*must be a string or null/);
+});
+
+test("readState validates that lane is string or null", () => {
+  const root = tmpRepo();
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "state.json"),
+    JSON.stringify({ version: 1, change: null, lane: 123, phase: 1, gates: {}, stale: [] }));
+  assert.throws(() => state.readState(root), /lane.*must be a string or null/);
+});
+
+test("readEvents handles truncated final line with clear error", () => {
+  const root = tmpRepo();
+  // Write a valid event and a truncated line (process killed mid-write)
+  fs.writeFileSync(path.join(root, "delivery", ".adlc", "events.jsonl"),
+    '{"ts":"2026-09-28T00:00:00Z","gate":"G2"}\n{"ts":"2026-09-28T00:00:01Z","gate"');
+  assert.throws(() => events.readEvents(root), /line \d+.*JSON/);
+});

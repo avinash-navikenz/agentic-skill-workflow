@@ -11,7 +11,14 @@ function appendEvent(root, evt) {
 function readEvents(root) {
   const p = eventsPath(root);
   if (!fs.existsSync(p)) return [];
-  return fs.readFileSync(p, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+  const lines = fs.readFileSync(p, "utf8").split("\n").filter(Boolean);
+  return lines.map((l, idx) => {
+    try {
+      return JSON.parse(l);
+    } catch (err) {
+      throw new Error(`${p}: line ${idx + 1} is not valid JSON — ${err.message}`);
+    }
+  });
 }
 
 module.exports = { appendEvent, readEvents };
