@@ -8,7 +8,7 @@ const init = require("../../cli/commands/init");
 const propose = require("../../cli/commands/propose");
 const gate = require("../../cli/commands/gate");
 const archive = require("../../cli/commands/archive");
-const { readState } = require("../../cli/lib/state");
+const { readState, writeState } = require("../../cli/lib/state");
 
 function repo() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "nd-arch-"));
@@ -142,10 +142,17 @@ test("ruling C: archiving a change that is not the active change is refused and 
   propose.run(["a", "--lane", "express"], root, () => {});
   const ev = evidenceFile(root);
   gate.run(["G2", "--pass", "--evidence", ev], root, () => {});
-  // Propose "b" without archiving "a" first: this makes "b" the active
-  // change and (per propose.js) resets state.gates/state.stale, so "a"'s
-  // gate history is no longer recorded anywhere durable.
-  propose.run(["b", "--lane", "standard"], root, () => {});
+
+  // propose.js now refuses to start a second change while one is active
+  // (fix round 1), so "a" and "b" can no longer both exist this way through
+  // ordinary CLI use. But archive must not simply trust state.json either
+  // — a hand-edited state file, an older on-disk change directory that
+  // predates that guard, or a future bug could still produce exactly this
+  // shape: some other change active in state, with "a"'s directory sitting
+  // un-archived on disk. Simulate that directly to exercise the invariant.
+  const s = readState(root);
+  s.change = "b"; s.lane = "standard"; s.phase = 1; s.gates = {}; s.stale = [];
+  writeState(root, s);
   const before = readState(root);
 
   const lines = [];

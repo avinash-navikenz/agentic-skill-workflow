@@ -33,6 +33,30 @@ function run(argv, cwd, emit = console.log) {
     return 1;
   }
 
+  // Fix round 1 (Task 12 follow-up): state.json has exactly one `change`
+  // field — one change in flight is the model the data already implies.
+  // Before this check, proposing a second change while one was still
+  // active silently overwrote state.change, wiping the first change's
+  // lane/phase/gate history (propose used to reset gates/stale
+  // unconditionally below) while leaving its directory behind on disk,
+  // permanently un-archivable — archive's ruling C rightly refuses to
+  // touch anything that isn't the active change, and by then there was no
+  // recorded history left to check even if it wanted to.
+  //
+  // This runs right after the bare usage-shape check (missing name/--lane
+  // entirely is still the most fundamental problem and is reported first)
+  // but deliberately BEFORE validating this proposal's own --lane value,
+  // name, or checking for a duplicate directory: an active change blocks
+  // *any* new proposal unconditionally, so there is no reason to validate
+  // a proposal that cannot proceed regardless of how well-formed it is.
+  // It also runs well before the first filesystem write (mkdirSync, near
+  // the bottom of this function) — nothing is created on this path.
+  const s = readState(cwd);
+  if (s.change) {
+    emit(`change '${s.change}' is already active — archive it first (navi-delivery archive ${s.change}) before proposing another change`);
+    return 1;
+  }
+
   // Controller ruling 2: distinguish "--lane given with no usable value" (a
   // usage error) from "--lane given with an invalid value" (an unknown-lane
   // error). Without this, "--lane" as the final argument (or followed by
@@ -84,7 +108,6 @@ function run(argv, cwd, emit = console.log) {
       .replace(/\{\{GATES\}\}/g, gates);
     fs.writeFileSync(path.join(dir, f), body);
   }
-  const s = readState(cwd);
   s.change = name; s.lane = lane; s.phase = 1; s.gates = {}; s.stale = [];
   writeState(cwd, s);
   emit(`Created delivery/changes/${name} (lane: ${lane}; gates: ${gates})`);

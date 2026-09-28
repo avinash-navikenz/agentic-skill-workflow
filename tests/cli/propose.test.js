@@ -6,6 +6,8 @@ const os = require("node:os");
 const path = require("node:path");
 const init = require("../../cli/commands/init");
 const propose = require("../../cli/commands/propose");
+const archive = require("../../cli/commands/archive");
+const gate = require("../../cli/commands/gate");
 const { readState } = require("../../cli/lib/state");
 
 function repo() {
@@ -66,7 +68,67 @@ test("an unknown lane is rejected and lists the valid ones", () => {
 test("a duplicate change name is refused", () => {
   const root = repo();
   propose.run(["dup", "--lane", "full"], root, () => {});
+  // Fix round 1 note: since propose now refuses whenever a change is
+  // already active (see below), this second call is actually caught by
+  // that new check first, before it ever reaches the duplicate-directory
+  // check this test was originally written for — "dup" is still active
+  // from the first call, so exit code 1 is guaranteed either way. This
+  // test still holds (a second propose of the same name is refused), but
+  // the genuine duplicate-directory path (no change active, yet the
+  // target directory already exists on disk) is exercised separately
+  // below, since this call no longer reaches it.
   assert.strictEqual(propose.run(["dup", "--lane", "full"], root, () => {}), 1);
+});
+
+test("a duplicate directory with no active change is refused for the original reason", () => {
+  const root = repo();
+  propose.run(["dup2", "--lane", "full"], root, () => {});
+  const ev = path.join(root, "evidence.md");
+  fs.writeFileSync(ev, "proof");
+  for (const g of ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"]) {
+    gate.run([g, "--pass", "--evidence", ev], root, () => {});
+  }
+  assert.strictEqual(archive.run(["dup2"], root, () => {}), 0);
+  // "dup2" is archived (state.change is null again) but its old directory
+  // was renamed away, not left behind — so fabricate a stray directory at
+  // the same path to reach the actual duplicate-name check with no active
+  // change in the way.
+  fs.mkdirSync(path.join(root, "delivery", "changes", "dup2"), { recursive: true });
+  const lines = [];
+  assert.strictEqual(propose.run(["dup2", "--lane", "full"], root, (s) => lines.push(s)), 1);
+  assert.match(lines.join("\n"), /already exists/);
+});
+
+// --- Fix round 1 (Task 12 follow-up): propose refuses a second active change ---
+
+test("proposing while a change is already active is refused and creates no directory", () => {
+  const root = repo();
+  assert.strictEqual(propose.run(["x", "--lane", "express"], root, () => {}), 0);
+  const lines = [];
+  const rc = propose.run(["y", "--lane", "standard"], root, (s) => lines.push(s));
+  assert.strictEqual(rc, 1);
+  assert.match(lines.join("\n"), /'x' is already active/);
+  assert.ok(!fs.existsSync(path.join(root, "delivery", "changes", "y")));
+  // "x" itself is completely untouched.
+  const s = readState(root);
+  assert.strictEqual(s.change, "x");
+  assert.strictEqual(s.lane, "express");
+});
+
+test("proposing succeeds normally once the active change has been archived", () => {
+  const root = repo();
+  propose.run(["x", "--lane", "express"], root, () => {});
+  const ev = path.join(root, "evidence.md");
+  fs.writeFileSync(ev, "proof");
+  for (const g of ["G2", "G6", "G7"]) gate.run([g, "--pass", "--evidence", ev], root, () => {});
+  assert.strictEqual(archive.run(["x"], root, () => {}), 0);
+  assert.strictEqual(readState(root).change, null);
+
+  assert.strictEqual(propose.run(["y", "--lane", "standard"], root, () => {}), 0);
+  assert.ok(fs.existsSync(path.join(root, "delivery", "changes", "y")));
+  const s = readState(root);
+  assert.strictEqual(s.change, "y");
+  assert.strictEqual(s.lane, "standard");
 });
 
 // --- Controller ruling 1: change name must be a safe slug ---
