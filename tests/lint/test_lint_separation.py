@@ -116,5 +116,21 @@ class TestSeparation(unittest.TestCase):
         body = "## Rules\nAs the Architect, weigh coupling against delivery speed.\n"
         self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
 
+    # Tests for second fix round - list marker and blockquote support
+    def test_SEP3_persona_voice_in_bulleted_list(self):
+        # Bulleted persona voice should trigger SEP3
+        body = "## Rules\n- As the Architect, weigh coupling against delivery speed.\n"
+        self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
+
+    def test_SEP3_persona_voice_in_blockquote(self):
+        # Blockquoted persona voice should trigger SEP3
+        body = "## Rules\n> As the Architect, weigh coupling against delivery speed.\n"
+        self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
+
+    def test_SEP3_persona_voice_with_lowercase_role_name(self):
+        # Lowercase role names should still trigger SEP3
+        body = "## Rules\nAs the architect, weigh coupling against delivery speed.\n"
+        self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
+
 if __name__ == "__main__":
     unittest.main()

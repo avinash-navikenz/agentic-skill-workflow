@@ -9,8 +9,8 @@ from scripts.validate_manifests import Finding
 NUMBERED = re.compile(r"^\s*\d{1,2}\.\s+\S", re.M)
 PROC_HEADING = re.compile(r"^##+\s*(Template|Checklist)\b", re.M | re.I)
 PERSONA_VOICE = re.compile(
-    r"(?:^|[.!?]\s+)As the (Architect|Product Owner|Business Analyst|Developer|Data Engineer|"
-    r"ML Engineer|MLOps Engineer|DevOps Engineer|QA Engineer)\b|\b(?:you|You) should weigh\b|\b(?:in|In) my judgment\b",
+    r"(?:(?:^[\s>*+-]*|[.!?]\s+)As the (?i:Architect|Product Owner|Business Analyst|Developer|Data Engineer|"
+    r"ML Engineer|MLOps Engineer|DevOps Engineer|QA Engineer)\b|\b(?:you|You) should weigh\b|\b(?:in|In) my judgment\b)",
     re.M)
 FIRST_PERSON = re.compile(r"(?:^|\s)I\s+(?:prefer|think|decide|weigh|would|favour|favor)\b")
 
