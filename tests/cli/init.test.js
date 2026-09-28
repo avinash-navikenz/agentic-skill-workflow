@@ -59,6 +59,25 @@ test("init with a missing template creates nothing and fails clearly", () => {
   }
 });
 
+test("init with a template path that is a directory (not a file) creates nothing and fails clearly", () => {
+  const root = tmp();
+  const templatesDir = path.join(__dirname, "..", "..", "templates", "delivery");
+  const projectTemplate = path.join(templatesDir, "project.md");
+  const movedAside = projectTemplate + ".test-moved-aside";
+  fs.renameSync(projectTemplate, movedAside);
+  fs.mkdirSync(projectTemplate); // stand-in: a directory where a file is expected
+  try {
+    const lines = [];
+    const code = init.run([], root, (s) => lines.push(s));
+    assert.strictEqual(code, 1);
+    assert.ok(lines.join("\n").includes("project.md"), "error should name the offending template");
+    assert.ok(!fs.existsSync(path.join(root, "delivery")), "delivery/ must not exist after a failed init");
+  } finally {
+    fs.rmdirSync(projectTemplate);
+    fs.renameSync(movedAside, projectTemplate);
+  }
+});
+
 // --- Additional coverage beyond the brief ---
 
 test("AGENTS.md is created and contains the generated-file marker", () => {
