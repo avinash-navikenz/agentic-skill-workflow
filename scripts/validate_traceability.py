@@ -10,14 +10,30 @@ AC = re.compile(r"\b(AC-\d{3,})\b")
 TASK_LINE = re.compile(r"\*\*(TASK-\d{3,})\*\*")
 IMPLEMENTS = re.compile(r"Implements:\s*(REQ-\d{3,})")
 
+# Validators must report the file and a readable message, never raise a
+# traceback (see scripts/navi_lint/frontmatter.py, which applies the same
+# rule to UnicodeDecodeError). read_text(encoding="utf-8") raises
+# UnicodeDecodeError on invalid bytes and can also raise OSError (e.g. a
+# dangling symlink, or the file vanishing between glob() and read) — both
+# are reported as a T0 Finding on that file instead of propagating.
+def _read_text(path: Path) -> tuple[str | None, Finding | None]:
+    try:
+        return path.read_text(encoding="utf-8"), None
+    except (UnicodeDecodeError, OSError) as exc:
+        return None, Finding("T0", path, f"file is not readable: {exc}")
+
 def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
     out: list[Finding] = []
     reqs: dict[str, Path] = {}
     reqs_with_ac: set[str] = set()
 
     for spec in sorted(delivery_root.glob("specs/**/spec.md")):
+        text, finding = _read_text(spec)
+        if finding:
+            out.append(finding)
+            continue
         current = None
-        for line in spec.read_text(encoding="utf-8").splitlines():
+        for line in text.splitlines():
             m = REQ.search(line)
             if m and line.lstrip().startswith("#"):
                 current = m.group(1)
@@ -27,7 +43,11 @@ def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
 
     implemented: set[str] = set()
     for tasks in sorted(delivery_root.glob("changes/*/tasks.md")):
-        lines = tasks.read_text(encoding="utf-8").splitlines()
+        text, finding = _read_text(tasks)
+        if finding:
+            out.append(finding)
+            continue
+        lines = text.splitlines()
         for i, line in enumerate(lines):
             tm = TASK_LINE.search(line)
             if not tm:

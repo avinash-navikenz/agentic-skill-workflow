@@ -102,6 +102,95 @@ class TestTrace(unittest.TestCase):
             self.assertEqual(code, 0)
             self.assertIn("0 traceability finding(s)", output)
 
+    # --- Fix round 1: unreadable files must yield a Finding, never raise ---
+
+    def test_T0_spec_with_invalid_utf8_yields_finding_not_traceback(self):
+        # Mirrors scripts/navi_lint/frontmatter.py's handling of
+        # UnicodeDecodeError: a malformed source file is reported by path
+        # with a readable message, never an uncaught traceback.
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t) / "delivery"
+            (root / "specs" / "theme").mkdir(parents=True)
+            (root / "specs" / "theme" / "spec.md").write_bytes(b"\xff\xfe not valid utf-8 REQ-001\n")
+            (root / "changes" / "c").mkdir(parents=True)
+            (root / "changes" / "c" / "tasks.md").write_text(TASKS_OK, encoding="utf-8")
+            fs = trace_findings(root)  # must not raise
+            self.assertIn("T0", rules(fs))
+            code, output = run_main([str(root)])
+            self.assertEqual(code, 1)
+            self.assertIn("T0", output)
+
+    def test_T0_tasks_with_invalid_utf8_yields_finding_not_traceback(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = Path(t) / "delivery"
+            (root / "specs" / "theme").mkdir(parents=True)
+            (root / "specs" / "theme" / "spec.md").write_text(SPEC_CLEAN, encoding="utf-8")
+            (root / "changes" / "c").mkdir(parents=True)
+            (root / "changes" / "c" / "tasks.md").write_bytes(b"\xff\xfe **TASK-001** not valid utf-8\n")
+            fs = trace_findings(root)  # must not raise
+            self.assertIn("T0", rules(fs))
+            code, output = run_main([str(root)])
+            self.assertEqual(code, 1)
+            self.assertIn("T0", output)
+
+    # --- Fix round 1: pinned, known limitations (parsing logic unchanged) ---
+
+    def test_KNOWN_LIMITATION_acs_grouped_after_all_reqs_misattribute_to_last_req(self):
+        # Known limitation, accepted as-is: the parser attributes any AC-###
+        # line to whichever REQ heading was *most recently seen*, not to the
+        # REQ it is textually associated with. A spec that lists every REQ
+        # heading first and every AC line afterwards (instead of nesting each
+        # AC under its own REQ, as the shipped template does) misattributes
+        # every AC to the last REQ heading in the file. This test documents
+        # that current behaviour; it is not a licence to fix it.
+        # Deliberately avoid the literal text "REQ-001"/"REQ-002" inside the
+        # AC lines themselves — the parser's REQ regex has no notion of
+        # headings vs. body text, only "matches REQ-### and the line starts
+        # with '#'", so restating a REQ id inside an AC line would itself
+        # re-trigger heading detection and mask the very bug under test.
+        spec_all_reqs_then_all_acs = (
+            "# Spec\n"
+            "## REQ-001 First requirement\n"
+            "## REQ-002 Second requirement\n"
+            "### AC-001 Some criterion for the first one\n"
+            "### AC-002 Some criterion for the second one\n"
+        )
+        tasks = (
+            "- [ ] **TASK-001** Do first\n"
+            "  - Implements: REQ-001\n"
+            "- [ ] **TASK-002** Do second\n"
+            "  - Implements: REQ-002\n"
+        )
+        with tempfile.TemporaryDirectory() as t:
+            fs = trace_findings(build(t, spec_all_reqs_then_all_acs, tasks))
+            self.assertIn("T2", rules(fs))
+            # REQ-001 is flagged as having no AC, even though AC-001 is
+            # present in the file — it was attributed to REQ-002 instead,
+            # since REQ-002 was the most recently seen heading.
+            self.assertTrue(any(f.rule == "T2" and "REQ-001" in f.message for f in fs))
+            # REQ-002 is (incorrectly, but consistently) credited with both.
+            self.assertFalse(any(f.rule == "T2" and "REQ-002" in f.message for f in fs))
+
+    def test_KNOWN_LIMITATION_implements_line_beyond_window_is_a_false_positive_T1(self):
+        # Known limitation, accepted as-is: T1 only looks at a 4-line window
+        # starting at the TASK-### line itself (lines[i:i+4]). An
+        # `Implements:` line further than 3 lines below its TASK-### line is
+        # missed, producing a false-positive T1 even though the task does
+        # name a requirement. The shipped template puts `Implements:` on the
+        # very next line, so this does not occur in practice. This test
+        # documents current behaviour; it is not a licence to fix it.
+        tasks_implements_too_far_below = (
+            "- [ ] **TASK-001** Add toggle\n"
+            "  - Some detail one\n"
+            "  - Some detail two\n"
+            "  - Some detail three\n"
+            "  - Implements: REQ-001\n"
+        )
+        with tempfile.TemporaryDirectory() as t:
+            fs = trace_findings(build(t, SPEC_CLEAN, tasks_implements_too_far_below))
+            self.assertIn("T1", rules(fs))
+            self.assertTrue(any("TASK-001" in f.message for f in fs if f.rule == "T1"))
+
 
 if __name__ == "__main__":
     unittest.main()
