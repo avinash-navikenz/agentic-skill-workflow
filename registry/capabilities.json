@@ -1,0 +1,44 @@
+[
+  {
+    "name": "read_file",
+    "claude_code": "Read",
+    "codex": "file read",
+    "cursor": "file read",
+    "fallback": "ask the human to paste the file"
+  },
+  {
+    "name": "write_file",
+    "claude_code": "Write",
+    "codex": "file write",
+    "cursor": "file write",
+    "fallback": "emit the file in a fenced block"
+  },
+  {
+    "name": "run_command",
+    "claude_code": "Bash",
+    "codex": "shell",
+    "cursor": "shell",
+    "fallback": "ask the human to run it and paste output"
+  },
+  {
+    "name": "search",
+    "claude_code": "Grep/Glob",
+    "codex": "search",
+    "cursor": "search",
+    "fallback": "ask for the relevant paths"
+  },
+  {
+    "name": "ask_human",
+    "claude_code": "AskUserQuestion",
+    "codex": "prompt",
+    "cursor": "prompt",
+    "fallback": "ask a plain question, then wait"
+  },
+  {
+    "name": "spawn_subagent",
+    "claude_code": "Agent",
+    "codex": null,
+    "cursor": null,
+    "fallback": "adopt the persona sequentially in this session"
+  }
+]
