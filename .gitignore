@@ -2,3 +2,6 @@ node_modules/
 *.pdf
 .DS_Store
 .superpowers/
+__pycache__/
+*.pyc
+.venv/

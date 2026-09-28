@@ -1,0 +1,7 @@
+{
+  "name": "navi-delivery",
+  "description": "Agentic SDLC framework: persona agents over best-practice skills, plan to monitor",
+  "version": "0.1.0",
+  "author": { "name": "Navikenz" },
+  "keywords": ["sdlc", "adlc", "spec-driven", "agents", "skills"]
+}
