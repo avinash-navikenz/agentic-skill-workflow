@@ -4,6 +4,7 @@ const path = require("node:path");
 const { deliveryDir } = require("../lib/paths");
 const { newState, writeState } = require("../lib/state");
 const { detectHarness } = require("../lib/capabilities");
+const { findUnreadableTemplate } = require("../lib/templates");
 
 const DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", ".adlc"];
 const GITKEEP_DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems"];
@@ -20,31 +21,6 @@ function copyTemplate(name, dest) {
   fs.writeFileSync(dest, fs.readFileSync(path.join(TEMPLATES, name), "utf8"));
 }
 
-// Controller ruling: verify every template is readable BEFORE creating any
-// directory. If a template is missing or unreadable partway through a real
-// init, we'd leave a half-built delivery/ behind — and since this command
-// refuses to run when delivery/ already exists, that half-built tree would
-// make the repo permanently un-initialisable without manual cleanup.
-//
-// A directory at a template's path must be treated the same as a missing
-// template: fs.accessSync(R_OK) alone succeeds for directories too, which
-// would let this check pass and defer the failure to copyTemplate's
-// readFileSync (EISDIR) — after directories have already been created.
-function findUnreadableTemplate() {
-  for (const { name } of TEMPLATE_FILES) {
-    const src = path.join(TEMPLATES, name);
-    let stat;
-    try {
-      fs.accessSync(src, fs.constants.R_OK);
-      stat = fs.statSync(src);
-    } catch {
-      return name;
-    }
-    if (!stat.isFile()) return name;
-  }
-  return null;
-}
-
 function run(argv, cwd, emit = console.log) {
   const dir = deliveryDir(cwd);
   if (fs.existsSync(dir)) {
@@ -52,7 +28,7 @@ function run(argv, cwd, emit = console.log) {
     return 1;
   }
 
-  const missing = findUnreadableTemplate();
+  const missing = findUnreadableTemplate(TEMPLATES, TEMPLATE_FILES.map((t) => t.name));
   if (missing) {
     emit(`cannot init: template '${missing}' is missing or unreadable (expected at ${path.join(TEMPLATES, missing)}). Nothing was created.`);
     return 1;

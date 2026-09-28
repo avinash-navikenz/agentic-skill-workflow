@@ -109,3 +109,24 @@ test("propose <name> with no --lane flag prints usage and fails", () => {
   assert.match(lines.join("\n"), /usage/i);
   assert.ok(!fs.existsSync(path.join(root, "delivery", "changes", "x")));
 });
+
+// --- Fix round 1: template preflight, mirroring init's ---
+
+test("propose with a template path that is a directory (not a file) creates nothing and fails clearly", () => {
+  const root = repo();
+  const templatesDir = path.join(__dirname, "..", "..", "templates", "change");
+  const proposalTemplate = path.join(templatesDir, "proposal.md");
+  const movedAside = proposalTemplate + ".test-moved-aside";
+  fs.renameSync(proposalTemplate, movedAside);
+  fs.mkdirSync(proposalTemplate); // stand-in: a directory where a file is expected
+  try {
+    const lines = [];
+    const code = propose.run(["x", "--lane", "full"], root, (s) => lines.push(s));
+    assert.strictEqual(code, 1);
+    assert.ok(lines.join("\n").includes("proposal.md"), "error should name the offending template");
+    assert.ok(!fs.existsSync(path.join(root, "delivery", "changes", "x")), "changes/x must not exist after a failed propose");
+  } finally {
+    fs.rmdirSync(proposalTemplate);
+    fs.renameSync(movedAside, proposalTemplate);
+  }
+});

@@ -4,6 +4,7 @@ const path = require("node:path");
 const { changeDir } = require("../lib/paths");
 const { readState, writeState } = require("../lib/state");
 const { isLane, gatesForLane, LANES } = require("../lib/lanes");
+const { findUnreadableTemplate } = require("../lib/templates");
 
 const FILES = ["proposal.md", "design.md", "tasks.md", "handoffs.md"];
 const TEMPLATES = path.join(__dirname, "..", "..", "templates", "change");
@@ -55,6 +56,17 @@ function run(argv, cwd, emit = console.log) {
   const dir = changeDir(cwd, name);
   if (fs.existsSync(dir)) {
     emit(`change '${name}' already exists`);
+    return 1;
+  }
+
+  // Verify every template is readable BEFORE creating any directory. If a
+  // template is missing or unreadable partway through a real propose, we'd
+  // leave a half-built changes/<name>/ behind — and since this command
+  // refuses to run when that directory already exists, that half-built
+  // tree would permanently block retrying the same name.
+  const missing = findUnreadableTemplate(TEMPLATES, FILES);
+  if (missing) {
+    emit(`cannot propose: template '${missing}' is missing or unreadable (expected at ${path.join(TEMPLATES, missing)}). Nothing was created.`);
     return 1;
   }
 
