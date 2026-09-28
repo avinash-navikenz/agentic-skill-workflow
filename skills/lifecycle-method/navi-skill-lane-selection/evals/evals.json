@@ -1,0 +1,23 @@
+{
+  "skill": "navi-skill-lane-selection",
+  "cases": [
+    { "id": "pos-1", "type": "positive",
+      "prompt": "We're adding a saved-theme preference to the settings page. Which lane?",
+      "expect": ["standard", "G1", "G7", "declare the lane in proposal.md", "reason"] },
+    { "id": "pos-2", "type": "positive",
+      "prompt": "Change the checkout button label from 'Buy' to 'Place order'. Which lane?",
+      "expect": ["express", "G2", "G6", "G7"] },
+    { "id": "neg-1", "type": "negative",
+      "prompt": "Record G6 as passed with this test report.",
+      "expect_not_triggered": true },
+    { "id": "neg-2", "type": "negative",
+      "prompt": "Which merge strategy should this repo use, squash or rebase?",
+      "expect_not_triggered": true },
+    { "id": "edge-1", "type": "edge",
+      "prompt": "We're on the standard lane and just discovered the change adds a column to the customers table. Can I add G4?",
+      "expect": ["standard cannot record G4", "not in lane", "re-propose", "full", "do not edit state.lane"] },
+    { "id": "edge-2", "type": "edge",
+      "prompt": "It's a one-line copy fix but the release is tomorrow, so let's call it a hotfix.",
+      "expect": ["hotfix is for a production incident", "express", "refuse", "deadline is not an incident"] }
+  ]
+}

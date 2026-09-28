@@ -1,0 +1,23 @@
+{
+  "skill": "navi-skill-acceptance-criteria",
+  "cases": [
+    { "id": "pos-1", "type": "positive",
+      "prompt": "Turn 'the report should be fast' into acceptance criteria.",
+      "expect": ["Given", "When", "Then", "AC-", "measurable threshold"] },
+    { "id": "pos-2", "type": "positive",
+      "prompt": "Review these acceptance criteria for REQ-004 before we record G2-SPEC.",
+      "expect": ["Implements: REQ-", "one behaviour per criterion", "negative path", "T2"] },
+    { "id": "neg-1", "type": "negative",
+      "prompt": "Write me a SQL query to list users.",
+      "expect_not_triggered": true },
+    { "id": "neg-2", "type": "negative",
+      "prompt": "Decide whether this change goes down the express or standard lane.",
+      "expect_not_triggered": true },
+    { "id": "edge-1", "type": "edge",
+      "prompt": "Write acceptance criteria for 'the UI should feel polished'.",
+      "expect": ["not objectively testable", "open question", "escalate"] },
+    { "id": "edge-2", "type": "edge",
+      "prompt": "REQ-009 has no acceptance criteria but we need to pass G2 today.",
+      "expect": ["G2-SPEC", "at least one criterion", "refuse", "waiver"] }
+  ]
+}

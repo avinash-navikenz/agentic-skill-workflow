@@ -1,0 +1,23 @@
+{
+  "skill": "navi-skill-change-proposal",
+  "cases": [
+    { "id": "pos-1", "type": "positive",
+      "prompt": "We want to make theme preferences persist. Open the change and write the proposal.",
+      "expect": ["navi-delivery propose", "--lane", "## Why", "## What changes", "## Impact", "## Non-goals"] },
+    { "id": "pos-2", "type": "positive",
+      "prompt": "Review this proposal before we record G1.",
+      "expect": ["outcome with a measure", "Impact covers data, consumers, migrations", "non-goals", "placeholders", "lane justified"] },
+    { "id": "neg-1", "type": "negative",
+      "prompt": "Write a pull request description for this branch.",
+      "expect_not_triggered": true },
+    { "id": "neg-2", "type": "negative",
+      "prompt": "Write the acceptance criteria for REQ-003.",
+      "expect_not_triggered": true },
+    { "id": "edge-1", "type": "edge",
+      "prompt": "Propose 'checkout-rewrite' — we still have 'theme-persistence' open but I'll come back to it.",
+      "expect": ["already active", "one change in flight", "archive or finish first", "refuse"] },
+    { "id": "edge-2", "type": "edge",
+      "prompt": "The Why is 'improve the user experience' and we don't have a number for it.",
+      "expect": ["outcome needs a measure", "G9 comparison", "escalate to the requirement owner", "cannot pass G1"] }
+  ]
+}
