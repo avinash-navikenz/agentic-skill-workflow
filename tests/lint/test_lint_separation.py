@@ -90,5 +90,31 @@ class TestSeparation(unittest.TestCase):
         body = "## Rules\nAs the Architect, weigh coupling against delivery speed.\n"
         self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
 
+    # False-positive regression tests (from coordinator review)
+    def test_persona_voice_in_descriptive_context_does_not_trigger(self):
+        # "as the Architect" in the middle of a sentence should not trigger
+        body = "## Rules\nThis gate applies to roles such as the Architect, Developer, and QA Engineer.\n"
+        self.assertEqual(separation_findings(ent("skill", body)), [])
+
+    def test_persona_voice_after_verb_does_not_trigger(self):
+        # "as the Architect" after "known as" should not trigger
+        body = "## Rules\nThe lead is commonly known as the Architect on this team.\n"
+        self.assertEqual(separation_findings(ent("skill", body)), [])
+
+    def test_four_digit_year_does_not_trigger_numbered_procedure(self):
+        # Years (3+ digits) should not trigger SEP1
+        body = "## Mission\n2026. Roadmap for next quarter\n"
+        self.assertEqual(separation_findings(ent("agent", body)), [])
+
+    def test_SEP1_still_catches_one_digit_procedures(self):
+        # Verify that 1-2 digit procedures are still caught
+        body = "## Mission\n1. Open the file\n2. Edit it\n"
+        self.assertIn("SEP1", rules(separation_findings(ent("agent", body))))
+
+    def test_SEP3_still_catches_clause_initial_persona_voice(self):
+        # Verify that clause-initial "As the Role" is still caught
+        body = "## Rules\nAs the Architect, weigh coupling against delivery speed.\n"
+        self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
+
 if __name__ == "__main__":
     unittest.main()
