@@ -34,8 +34,18 @@ class TestParse(unittest.TestCase):
     def test_malformed_yaml_raises_with_line(self):
         with tempfile.TemporaryDirectory() as t:
             p = write(t, "---\nname: [unclosed\n---\nbody\n")
-            with self.assertRaises(FrontmatterError):
+            with self.assertRaises(FrontmatterError) as cm:
                 parse_frontmatter(p)
+            self.assertEqual(cm.exception.line, 3)
+            self.assertIn("invalid YAML", cm.exception.message)
+
+    def test_non_mapping_yaml_raises(self):
+        with tempfile.TemporaryDirectory() as t:
+            p = write(t, "---\n- a\n- b\n---\nbody\n")
+            with self.assertRaises(FrontmatterError) as cm:
+                parse_frontmatter(p)
+            self.assertEqual(cm.exception.line, 1)
+            self.assertIn("must be a YAML mapping", cm.exception.message)
 
     def test_crlf_and_non_ascii_survive(self):
         with tempfile.TemporaryDirectory() as t:
