@@ -30,6 +30,24 @@ def build(tmp, spec, tasks):
     return root
 
 
+def build_delta(tmp, delta_spec, tasks, canonical_spec=None):
+    # Mirrors the real spec-driven workflow: a change's delta spec lives at
+    # delivery/changes/<name>/specs/spec.md (created by `propose`, written
+    # by hand before archival), separate from the canonical
+    # delivery/specs/**/spec.md tree that `archive` later folds it into.
+    # canonical_spec is optional so a test can exercise "the REQ exists only
+    # in the delta" (no delivery/specs/ tree at all) as well as "the REQ
+    # exists in both".
+    root = Path(tmp) / "delivery"
+    if canonical_spec is not None:
+        (root / "specs" / "theme").mkdir(parents=True)
+        (root / "specs" / "theme" / "spec.md").write_text(canonical_spec, encoding="utf-8")
+    (root / "changes" / "c" / "specs").mkdir(parents=True)
+    (root / "changes" / "c" / "specs" / "spec.md").write_text(delta_spec, encoding="utf-8")
+    (root / "changes" / "c" / "tasks.md").write_text(tasks, encoding="utf-8")
+    return root
+
+
 def rules(fs):
     return sorted({f.rule for f in fs})
 
@@ -190,6 +208,77 @@ class TestTrace(unittest.TestCase):
             fs = trace_findings(build(t, SPEC_CLEAN, tasks_implements_too_far_below))
             self.assertIn("T1", rules(fs))
             self.assertTrue(any("TASK-001" in f.message for f in fs if f.rule == "T1"))
+
+    # --- Fix round 2: a change's own delta spec counts for traceability ---
+    # (delivery/changes/<name>/specs/**/spec.md), not just delivery/specs/.
+    # The normal workflow proposes a change, writes new REQ-###s under the
+    # change's delta spec, and only *archive* folds them into
+    # delivery/specs/ — so before that, a REQ a change introduces must not
+    # report T3 the moment a task binds to it.
+
+    def test_req_defined_only_in_change_delta_is_not_T3(self):
+        with tempfile.TemporaryDirectory() as t:
+            # No canonical delivery/specs/ tree at all — REQ-001 exists only
+            # in the change's own delta spec.
+            root = build_delta(t, SPEC_CLEAN, TASKS_OK)
+            fs = trace_findings(root)
+            self.assertNotIn("T3", rules(fs))
+            # Fully clean: REQ-001 has an AC (in the delta) and is
+            # implemented by the change's own task.
+            self.assertEqual(fs, [])
+
+    def test_req_defined_in_change_delta_without_ac_is_still_T2(self):
+        with tempfile.TemporaryDirectory() as t:
+            # SPEC defines REQ-001 (with AC-001) and REQ-002 (no AC) — both
+            # only in the delta this time.
+            root = build_delta(t, SPEC, TASKS_OK)
+            fs = trace_findings(root)
+            self.assertIn("T2", rules(fs))
+            self.assertTrue(any(f.rule == "T2" and "REQ-002" in f.message for f in fs))
+
+    def test_task_citing_req_in_neither_location_is_still_T3(self):
+        with tempfile.TemporaryDirectory() as t:
+            # TASKS_GHOST implements REQ-999, which is defined in neither
+            # the delta nor (since canonical_spec is omitted) anywhere else.
+            root = build_delta(t, SPEC_CLEAN, TASKS_GHOST)
+            fs = trace_findings(root)
+            self.assertIn("T3", rules(fs))
+            self.assertTrue(any("REQ-999" in f.message for f in fs))
+
+    def test_strict_req_defined_in_delta_with_no_task_is_still_T4(self):
+        with tempfile.TemporaryDirectory() as t:
+            # TASKS_ORPHAN's one task has no 'Implements:' line at all, so
+            # REQ-001 (defined only in the delta, with an AC) is implemented
+            # by nothing.
+            root = build_delta(t, SPEC_CLEAN, TASKS_ORPHAN)
+            fs_strict = trace_findings(root, strict=True)
+            self.assertIn("T4", rules(fs_strict))
+            self.assertTrue(any(f.rule == "T4" and "REQ-001" in f.message for f in fs_strict))
+            # And plain (non-strict) validate does not enforce T4 at all.
+            fs_plain = trace_findings(root, strict=False)
+            self.assertNotIn("T4", rules(fs_plain))
+
+    def test_same_req_id_in_canonical_and_delta_is_treated_as_amendment_not_collision(self):
+        # Decision (see the module docstring in
+        # scripts/validate_traceability.py and the fix-round-2 section of
+        # task-11-report.md for the full reasoning): the same REQ-### id
+        # appearing in both delivery/specs/ (canonical) and a change's own
+        # delta spec is treated as that change amending an already-
+        # canonical requirement — a legitimate, common workflow — not a
+        # collision worth its own finding. There is deliberately no new
+        # rule for "duplicate REQ id across sources".
+        #
+        # canonical REQ-001 already carries AC-001; the delta re-states
+        # REQ-001's heading (an amendment, e.g. revised wording) but does
+        # not repeat the AC line. Because reqs_with_ac only ever grows, the
+        # AC recorded against the canonical copy still satisfies T2 for the
+        # amended REQ-001 — the merge is a union of evidence, not a
+        # last-writer-wins overwrite.
+        delta_amends_req001_no_ac = "# Spec\n## REQ-001 Users can toggle theme (revised wording)\n"
+        with tempfile.TemporaryDirectory() as t:
+            root = build_delta(t, delta_amends_req001_no_ac, TASKS_OK, canonical_spec=SPEC_CLEAN)
+            fs = trace_findings(root)
+            self.assertEqual(fs, [])
 
 
 if __name__ == "__main__":

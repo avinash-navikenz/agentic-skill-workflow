@@ -22,12 +22,27 @@ def _read_text(path: Path) -> tuple[str | None, Finding | None]:
     except (UnicodeDecodeError, OSError) as exc:
         return None, Finding("T0", path, f"file is not readable: {exc}")
 
+# Requirements are gathered from two locations:
+#   - delivery/specs/**/spec.md          -- canonical, folded in by `archive`
+#   - delivery/changes/*/specs/**/spec.md -- each change's own delta spec
+# The normal spec-driven workflow is: propose a change, write its delta spec
+# introducing new REQ-###s under delivery/changes/<name>/specs/, then write
+# tasks that implement them -- and only *archive* folds those requirements
+# into delivery/specs/. Scanning delivery/specs/ alone means a requirement a
+# change introduces reports T3 ("implements unknown REQ") from the moment a
+# task binds to it until the change is archived, which fails the common
+# case. A change's delta spec is proposed truth and counts for traceability
+# for the lifetime of that change, so both globs are scanned identically and
+# merged into the same `reqs` / `reqs_with_ac` structures.
+SPEC_GLOBS = ("specs/**/spec.md", "changes/*/specs/**/spec.md")
+
 def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
     out: list[Finding] = []
     reqs: dict[str, Path] = {}
     reqs_with_ac: set[str] = set()
 
-    for spec in sorted(delivery_root.glob("specs/**/spec.md")):
+    specs = [spec for pattern in SPEC_GLOBS for spec in sorted(delivery_root.glob(pattern))]
+    for spec in specs:
         text, finding = _read_text(spec)
         if finding:
             out.append(finding)
@@ -37,6 +52,18 @@ def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
             m = REQ.search(line)
             if m and line.lstrip().startswith("#"):
                 current = m.group(1)
+                # Decision: the same REQ-### id appearing in both
+                # delivery/specs/ and a change's delta spec is treated as a
+                # legitimate amendment (the change revising an already-
+                # canonical requirement), not a collision worth its own
+                # finding -- see the module-level note above and the report
+                # for the reasoning. reqs_with_ac is a set that only ever
+                # grows, so an AC recorded against a REQ from either source
+                # satisfies T2/T4 regardless of which copy is read first or
+                # last; `reqs[current]` simply ends up pointing at whichever
+                # copy was scanned last (delta after canonical, per
+                # SPEC_GLOBS' order), which is cosmetic only -- it decides
+                # where a T2/T4 Finding's path points, not whether one fires.
                 reqs[current] = spec
             elif current and AC.search(line):
                 reqs_with_ac.add(current)
