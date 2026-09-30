@@ -5,6 +5,8 @@ headings, so a naive heading split truncates every Template at the first
 heading *inside* its own fence. Both helpers here are fence-aware for that
 reason.
 """
+from __future__ import annotations
+
 import re
 from pathlib import Path
 
