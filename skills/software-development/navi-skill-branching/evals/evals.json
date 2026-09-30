@@ -1,0 +1,60 @@
+{
+  "skill": "navi-skill-branching",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Starting on delivery/changes/theme-persistence today. Get me onto a branch for it.",
+      "expect": [
+        "git fetch origin",
+        "git switch -c change/theme-persistence",
+        "origin/main",
+        "git push -u origin HEAD"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "I'm half way through the resolver and I need to pick up a production page right now. Where does this work go?",
+      "expect": [
+        "git stash push -m",
+        "git worktree add",
+        "longer than a coffee",
+        "git stash list"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The resolver has a branch for the header case and one for the store case, and the second branch is never taken. Work out which condition is wrong.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Should this change ship behind a flag with the old path kept, and do we squash or merge-commit it onto main?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "git branch -d refuses to delete change/theme-persistence. Just use -D, it was merged last week.",
+      "expect": [
+        "confirm the squash subject is on the default branch",
+        "git log origin/main --oneline",
+        "-D loses commits reachable from nowhere else"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The branch is behind main again and Sam has it checked out too. Rebase it onto main and force-push.",
+      "expect": [
+        "git merge origin/main",
+        "do not rebase",
+        "anyone else has the branch",
+        "duplicated history"
+      ]
+    }
+  ]
+}

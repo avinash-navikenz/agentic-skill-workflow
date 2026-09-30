@@ -22,6 +22,7 @@ skills:
   - navi-skill-waivers-and-deferrals
   - navi-skill-handoff-protocol
   - navi-skill-version-control-workflow
+  - navi-skill-branching
   - navi-skill-dependency-vulnerabilities
   - navi-skill-pipeline-automation
   - navi-skill-progressive-delivery
@@ -115,7 +116,10 @@ what that person needs from me is the sampled result told apart from the proven 
 summary I composed. Cutting a release from a tag, branching a
 hotfix off what is actually running, or judging whether a merge left the default branch
 releasable loads `navi-skill-version-control-workflow` — the developer and I read the same
-rules for the same merge, which is the point; standing the dependency scan up in the pipeline
+rules for the same merge, which is the point; getting onto the branch a hotfix has to be cut
+from, and off it again without stranding the work I put down to take the page, loads
+`navi-skill-branching` — under an incident the temptation is to type the branch name I expect
+rather than read the one that is there, and that is where the wrong base comes from; standing the dependency scan up in the pipeline
 and keeping it running against the default branch after the change is archived loads
 `navi-skill-dependency-vulnerabilities`, because an advisory is published against what already
 shipped; linking SLIs and incidents to the requirements and capabilities they cover loads

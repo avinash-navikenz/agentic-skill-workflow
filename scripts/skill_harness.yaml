@@ -205,6 +205,17 @@ post:
     replace: ["lane: standard\n", "lane: full\n"]
   - path: "delivery/changes/{change}/proposal.md"
     replace: ["`standard` — a feature inside an existing capability.", "`full` — the change introduces a model and a dataset."]
+  # The fixture's repository is built by `git init` + `git remote add`, which
+  # sets no upstream for `main`; a clone would. navi-skill-branching's block
+  # reports every local branch that tracks nothing, so without this the fixture
+  # would fail a check that is working correctly.
+  - path: ".git/config"
+    mode: append
+    content: |
+      [branch "main"]
+      	remote = origin
+      	merge = refs/heads/main
+
   # navi-skill-quality-attributes' QAS scenarios name AC-004 and AC-012 as the
   # criteria they measure. No skill Template defines those two, so the fixture
   # declares them, in the shape navi-skill-spec-authoring defines, under a
@@ -426,6 +437,9 @@ stage:
   # --- evidence and protocol -------------------------------------------------
   - { skill: navi-skill-code-review, fence: 2, path: "delivery/changes/{change}/evidence/g5-review.md" }
   - { skill: navi-skill-commit-craft, fence: 0, path: "delivery/changes/{change}/commits/TASK-006.msg" }
+  # navi-skill-branching's Template is the repository configuration its rules assume;
+  # its own block reads those keys back out of this file.
+  - { skill: navi-skill-branching, fence: 0, path: ".git/config", mode: append }
   - { skill: navi-skill-pull-requests, fence: 0, path: "delivery/changes/{change}/pull-request.md" }
   - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
   - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
@@ -475,6 +489,23 @@ skills:
         file: delivery/backlog.md
         replace: ["- **Cost of delay:** compounding —", "- **Cost of delay:** urgent —"]
         expects: "'Cost of delay' is not one of none/linear/deadline/compounding"
+
+  navi-skill-branching:
+    mutations:
+      - name: a branch tracks an upstream origin no longer has
+        file: .git/config
+        replace: ["merge = refs/heads/main", "merge = refs/heads/trunk"]
+        expects: "tracks origin/trunk, which origin does not have"
+      - name: a personal access token is written into the remote URL
+        file: .git/config
+        replace:
+          - "url = ./.remote.git"
+          - "url = https://navikenz:9c2f4b@dev.azure.com/navikenz/shell/_git/shell"
+        expects: "remote URL carries an embedded credential"
+      - name: the repository stops pruning branches the server deleted
+        file: .git/config
+        replace: ["prune = true", "prune = false"]
+        expects: "fetch.prune is not true"
 
   navi-skill-change-proposal:
     informational:
