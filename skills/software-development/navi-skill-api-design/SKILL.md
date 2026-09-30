@@ -268,10 +268,17 @@ Use opaque identifiers.
 # The schema is valid and internally consistent (any OpenAPI linter will do)
 npx --yes @stoplight/spectral-cli lint openapi.yaml
 
-# Every route in the code appears in the schema
-grep -rhoE '"/v1/[a-z0-9/{}_-]+"' src/routes/ | tr -d '"' | sort -u | while read -r p; do
-  grep -q "  $p:" openapi.yaml || echo "route not in schema: $p"
-done
+# Every route in the code appears in the schema. Match either quote style: a codebase that
+# writes routes in single quotes yields nothing here, the loop body never runs, and no output
+# reads as a pass. Say so when the extraction finds nothing rather than falling through.
+routes=$(grep -rhoE "['\"]/v1/[a-z0-9/{}_-]+['\"]" src/routes/ | tr -d "'\"" | sort -u)
+if [ -z "$routes" ]; then
+  echo "no /v1 route literals found under src/routes/ — the route check did not run"
+else
+  printf '%s\n' "$routes" | while read -r p; do
+    grep -q "  $p:" openapi.yaml || echo "route not in schema: $p"
+  done
+fi
 
 # Every object schema that lists its required fields also forbids unlisted ones. A bare count
 # asserts nothing; the comparison is what fails when a schema is added and left open.

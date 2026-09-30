@@ -293,9 +293,15 @@ awk -F'|' '/^\| *PROMO-/ {
   for (i=3;i<=5;i++) { c=$i; gsub(/[ \t]/,"",c); if (c=="") print $2 ": empty field in column " i-1 }
 }' "$P"
 
-# The five minimum criteria are present by subject
+# The five minimum criteria are present by subject. The search is scoped to the PROMO rows'
+# own columns and padded with a non-alphanumeric class, or 'card' is satisfied by
+# "cardinality" and 'cost' by any use of the word in the surrounding prose. The padding is
+# [^[:alnum:]] rather than \< \>, which the awk shipped with macOS matches never.
 for k in incumbent slice latency cost card; do
-  grep -qi "$k" "$P" || echo "$P: no criterion mentions '$k'"
+  awk -F'|' -v k="$k" -v p="$P" '
+    /^\| *PROMO-/ { row = " " tolower($3 " " $4 " " $5) " "
+                    if (row ~ "[^[:alnum:]]" k "[^[:alnum:]]") hit = 1 }
+    END { if (!hit) print p ": no PROMO criterion is about \"" k "\"" }' "$P"
 done
 
 # The per-slice criterion is blocking

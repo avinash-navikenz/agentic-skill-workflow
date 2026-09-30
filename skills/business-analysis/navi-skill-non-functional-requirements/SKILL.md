@@ -382,7 +382,7 @@ for S in $(find delivery/changes/$CHANGE/specs -name spec.md 2>/dev/null); do
 
   # Accessibility names criteria and a tool; privacy names class, jurisdiction and retention
   awk '/^## Non-functional pass$/{on=1;next} /^## /{on=0} on' "$S" | grep -q '^| Accessibility | none' \
-    || grep -qE '[0-9]\.[0-9]+\.[0-9]+' "$S" \
+    || grep -qE 'WCAG[^|]*success criteri[^|]*[0-9]+\.[0-9]+\.[0-9]+' "$S" \
     || echo "$S: an accessibility requirement names no WCAG success criterion"
 
   # Every criterion carries an Implements line — T2 reads the REQ/AC pairing from this file

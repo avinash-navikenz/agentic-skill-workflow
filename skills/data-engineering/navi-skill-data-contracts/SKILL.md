@@ -315,8 +315,11 @@ for id in $(grep -hoE 'DC-[0-9]{3,}' delivery/changes/*/handoffs.md 2>/dev/null 
     || echo "handoff names $id, which no contract defines"
 done
 
-# No envelope restates the contract text instead of citing it
-grep -nE 'Not fit for|Produced by' delivery/changes/*/handoffs.md 2>/dev/null
+# No envelope copies contract text. Rule 11 forbids the copy, not the reference: a pointer
+# to a section is how a reader finds it. A reproduced section heading, or a NOTFIT-### with
+# its body restated, is the copy that goes stale the day the contract changes.
+grep -nE '^ *#{1,6} +(Produced by|Not fit for) *$' delivery/changes/*/handoffs.md 2>/dev/null
+grep -nE 'NOTFIT-[0-9]{3,} +[-—]' delivery/changes/*/handoffs.md 2>/dev/null
 
 # The lane can actually record G4 — only 'full' can
 LANE=$(python3 -c 'import json;print(json.load(open("delivery/.adlc/state.json"))["lane"])')

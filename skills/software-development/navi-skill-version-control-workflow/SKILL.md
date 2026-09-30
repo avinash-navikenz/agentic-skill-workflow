@@ -253,8 +253,13 @@ git log origin/main --no-merges --pretty='%h %s' -n 50 | grep -v '(#[0-9]\+)$'
 # No credential-shaped string in the branch history
 git log -p origin/main.. | grep -nEi '(api[_-]?key|secret|password|token)\s*[:=]\s*["\x27][A-Za-z0-9/+_-]{16,}'
 
-# Tags are immutable: a tag that moved shows a different commit than the one recorded at G7
-git tag --list 'v*' --format='%(refname:short) %(objectname:short)'
+# Tags are immutable: a v* tag pointing at a different object here than on origin has moved
+# since it was pushed. A bare listing of the tags asserts nothing and can never fail.
+diff <(git ls-remote --tags origin 'v*' 2>/dev/null | grep -v '\^{}$' \
+         | awk '{sub(/refs\/tags\//, "", $2); print $2, $1}' | sort) \
+     <(git for-each-ref --format='%(refname:short) %(objectname)' 'refs/tags/v*' | sort) \
+  | grep '^[<>]' \
+  | sed 's/^/tag disagrees with origin — it moved, or was never pushed: /'
 ```
 
 Each command prints nothing — or, for the second, `0` — when the rule holds. The flag check is

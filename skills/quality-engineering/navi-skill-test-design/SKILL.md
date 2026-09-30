@@ -330,8 +330,14 @@ for id in $(grep -o 'TC-[0-9]\{3,\}' "$D" | sort -u); do
   # Automated by names a test whose name carries the AC it derives from
   ac=$(printf '%s\n' "$body" | grep '\*\*Derives from:\*\*' | grep -o 'AC-[0-9]\{3,\}' | head -1)
   aut=$(printf '%s\n' "$body" | grep '\*\*Automated by:\*\*')
-  [ -n "$ac" ] && printf '%s\n' "$aut" | grep -q "$ac" \
-    || echo "$id: 'Automated by' does not name $ac in the test's own name"
+  # Written as if/elif, not `[ -n "$ac" ] && … || echo`: that form falls through to the echo
+  # whenever $ac is empty and reports the wrong defect, with an empty id in the message.
+  if [ -n "$ac" ]; then
+    printf '%s\n' "$aut" | grep -q "$ac" \
+      || echo "$id: 'Automated by' does not name $ac in the test's own name"
+  elif ! printf '%s\n' "$body" | grep -q '\*\*Derives from:\*\*.*INC-'; then
+    echo "$id: 'Derives from' names neither an AC-### nor an incident id"
+  fi
 done
 
 # The technique pass names all six techniques

@@ -207,8 +207,12 @@ Split them.
 ## Validation
 
 ```bash
+# The pull request under review, read from the checkout rather than hardcoded
+read -r OWNER REPO <<<"$(gh repo view --json owner,name --jq '.owner.login + " " + .name')"
+PR=$(gh pr view --json number --jq .number)
+
 # Every blocking review thread is resolved (GitHub; review threads are GraphQL-only)
-gh api graphql -F owner=navikenz -F repo=shell -F pr=482 -f query='
+gh api graphql -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" -f query='
   query($owner:String!,$repo:String!,$pr:Int!){
     repository(owner:$owner,name:$repo){ pullRequest(number:$pr){
       reviewThreads(first:100){ nodes{ isResolved comments(first:1){ nodes{ body } } } } } } }' \
@@ -216,8 +220,15 @@ gh api graphql -F owner=navikenz -F repo=shell -F pr=482 -f query='
         | select(.isResolved==false) | .comments.nodes[0].body' \
   | grep '^blocking:'
 
-# Every comment carries a class label
-gh pr view 482 --json comments --jq '.comments[].body' \
+# Every review comment carries a class label. The labels live on review comments, which
+# `gh pr view --json comments` does not return — that field is the PR's issue comments. Only
+# each comment's first line is tested, or every continuation line reads as unlabelled.
+gh api graphql -F owner="$OWNER" -F repo="$REPO" -F pr="$PR" -f query='
+  query($owner:String!,$repo:String!,$pr:Int!){
+    repository(owner:$owner,name:$repo){ pullRequest(number:$pr){
+      reviewThreads(first:100){ nodes{ comments(first:50){ nodes{ body } } } } } } }' \
+  --jq '.data.repository.pullRequest.reviewThreads.nodes[].comments.nodes[].body
+        | split("\n")[0]' \
   | grep -vE '^(blocking|non-blocking|question):'
 
 # The change has a review record and it names a pull request
