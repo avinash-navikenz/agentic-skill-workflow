@@ -60,3 +60,12 @@ jobs:
         run: |
           python3 scripts/build_adapters.py .
           git diff --exit-code adapters templates/delivery/AGENTS.md
+
+      # docs/index.html and every README.md beside a SKILL.md / *.agent.md are
+      # generated from the same tree. Adding a skill or an agent therefore needs
+      # no edit to either — but it does need this regeneration to have been run,
+      # and this step is what fails if it was not.
+      - name: field guide and READMEs are up to date
+        run: |
+          python3 scripts/build_catalogue.py . --readmes --inject
+          git diff --exit-code docs/index.html skills agents

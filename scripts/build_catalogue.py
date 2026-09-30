@@ -18,8 +18,8 @@ the README that ships inside the generated adapter.
 
 Usage:
     python3 scripts/build_catalogue.py              # print JSON to stdout
-    python3 scripts/build_catalogue.py --inject     # bring every page under docs/ up to date
-    python3 scripts/build_catalogue.py --check      # non-zero exit if any page under docs/ is stale
+    python3 scripts/build_catalogue.py --inject     # rewrite the generated block in docs/index.html
+    python3 scripts/build_catalogue.py --check      # non-zero exit if docs/index.html is stale
     python3 scripts/build_catalogue.py --readmes    # write one README.md per skill and agent
 
 Following this project's convention (navi_lint/frontmatter.py, validate_traceability.py),
@@ -471,6 +471,12 @@ def _end_sentence(text: str) -> str:
     return text[:-1] + "." if text.endswith(":") else text
 
 
+def _route(kind: str, name: str) -> str:
+    """Where docs/index.html's router keeps this entry. The page is one file whose
+    sections behave as pages, so a cross-reference is a route, not another file."""
+    return f"#/{'agents' if kind == 'agent' else 'skills'}/{name}"
+
+
 def _rel(from_dir: str, to_path: str) -> str:
     """POSIX relative path from one repo-relative directory to a repo-relative file."""
     up = "../" * len(from_dir.split("/"))
@@ -509,7 +515,7 @@ def _skill_readme(s: dict, agents_by_name: dict) -> dict:
             "label": a["label"],
             "owns_gates": list(a.get("owns_gates") or []),
             "md": _rel(home, str(Path(a["path"]).parent.as_posix()) + "/README.md"),
-            "html": "agents.html#e-" + n,
+            "html": _route("agent", n),
         })
     adapter_dir = f"adapters/claude-code/skills/{s['name']}"
     return {
@@ -554,7 +560,7 @@ def _agent_readme(a: dict, skills_by_name: dict, agents_by_name: dict) -> dict:
             "label": s["label"],
             "discipline": s["discipline"],
             "md": _rel(home, str(Path(s["path"]).parent.as_posix()) + "/README.md"),
-            "html": "skills.html#e-" + n,
+            "html": _route("skill", n),
         })
     return {
         "kind": "agent",
@@ -566,7 +572,7 @@ def _agent_readme(a: dict, skills_by_name: dict, agents_by_name: dict) -> dict:
         "produces": list(a["produces"]),
         "consumes": list(a["consumes"]),
         "handoff_to": [{"name": n, "label": (agents_by_name.get(n) or {}).get("label", n),
-                        "html": "agents.html#e-" + n} for n in a["handoff_to"]],
+                        "html": _route("agent", n)} for n in a["handoff_to"]],
         "owns_gates": list(a["owns_gates"]),
         "phases": list(a["phases"]),
         "escalates": list(a["escalate_to_human_when"]),
@@ -715,37 +721,19 @@ def write_readmes(root: Path, data: dict) -> list[Path]:
     return changed
 
 
-# --------------------------------------------------------------------------- pages
+# --------------------------------------------------------------------------- page
 #
-# The site is six section pages plus a limits page, each self-contained apart
-# from the Google Fonts link. Three things would otherwise have to be kept in
-# step by hand across seven files, so they are injected instead:
+# docs/index.html is one file. Its seven sections behave as pages — the nav
+# routes between them on `#/<section>`, and only one is in the document flow at
+# a time — but there is nothing to fetch, so it works from disk and degrades to
+# one long scrolling document if scripting is off.
 #
-#   SHARED HEAD    the font link and the whole stylesheet
-#   SHARED CHROME  the masthead, the wordmark and the nav
-#   SHARED FOOT    the footer and the nav-highlight/theme script
-#
-# docs/index.html is the one authored copy of each; every other page receives it.
-# The fourth injected block is the catalogue payload, and each page gets only the
-# slice it renders — the whole tree in seven copies would put ~1 MB on disk to no
-# end, and a page that draws no cards has no marker at all.
+# Everything the page knows is in one injected block. Adding a skill or an agent
+# to the tree and re-running `--inject` is the whole of the update: no card, no
+# count, no filter list and no cross-link is written by hand anywhere on it.
 
-SHARED = ("SHARED HEAD", "SHARED CHROME", "SHARED FOOT")
-CANONICAL_PAGE = "index.html"
-
-# install.html, demo.html's prose and limits.html render no catalogue of their
-# own; install.html's numbers are verbatim command output, not derived values.
-PAGE_PAYLOAD = {
-    "index.html": ("counts", "disciplines"),
-    "how-it-works.html": ("counts", "phases", "gates", "lanes", "chain", "findings"),
-    "agents.html": ("catalogue", "agent"),
-    "skills.html": ("catalogue", "skill"),
-    # The demo opens on one agent doing its job before it shows the whole
-    # lifecycle, so that page needs exactly one entry and not the roster.
-    "demo.html": ("spotlight", "navi-agent-architect"),
-}
-PAGES = ("index.html", "how-it-works.html", "agents.html", "skills.html",
-         "install.html", "demo.html", "limits.html")
+PAGE = "index.html"
+SPOTLIGHT = "navi-agent-architect"
 
 
 def _hay(e: dict, models: dict) -> str:
@@ -765,118 +753,90 @@ def _hay(e: dict, models: dict) -> str:
     return re.sub(r"\s+", " ", " ".join(p for p in parts if p)).lower()
 
 
-def _cards(data: dict, kind: str) -> list[dict]:
-    models = readme_models(data)
+def _for_page(model: dict) -> dict:
+    """The README model minus the fields only the markdown file uses. `md` on a
+    relation is the relative path from one README.md to another; the page links
+    by route instead, and carrying both would put ~20 KB of dead paths on it."""
+    out = dict(model)
+    for key in ("holders", "held", "handoff_to"):
+        if key in out:
+            out[key] = [{k: v for k, v in rel.items() if k != "md"} for rel in out[key]]
+    return out
+
+
+def _cards(data: dict, kind: str, models: dict) -> list[dict]:
     out = []
     for e in (data["agents"] if kind == "agent" else data["skills"]):
-        m = models[e["name"]]
         out.append({
             "name": e["name"],
             "kind": kind,
             "label": e["label"],
             "discipline": e["discipline"],
             "phases": list(e["phases"]),
-            "gates": list(m["gates"]),
+            "gates": list(models[e["name"]]["gates"]),
             "description": e["description"],
             "hay": _hay({**e, "kind": kind}, models),
-            "readme": m,
+            "readme": _for_page(models[e["name"]]),
         })
     return out
 
 
-def page_payload(data: dict, page: str) -> dict | None:
-    """The slice of the catalogue one page renders, or None if it renders none."""
-    spec = PAGE_PAYLOAD.get(page)
-    if spec is None:
-        return None
-    if spec[0] == "spotlight":
-        wanted = spec[1]
-        agent = next((a for a in data["agents"] if a["name"] == wanted), None)
-        if agent is None:
-            raise CatalogueError(f"docs/{page} spotlights '{wanted}', which is not an agent here")
-        labels = {s["name"]: s["label"] for s in data["skills"]}
-        return {"agent": agent, "skill_labels": {n: labels[n] for n in agent["skills"]}}
-    if spec[0] == "catalogue":
-        kind = spec[1]
-        return {
-            "kind": kind,
-            "cards": _cards(data, kind),
-            "counts": data["counts"],
-            "disciplines": [d for d in data["disciplines"]
-                            if d["agents" if kind == "agent" else "skills"]],
-            "phases": data["phases"],
-            "gates": data["gates"],
-            "install_framework": INSTALL_FRAMEWORK,
-        }
-    return {k: data[k] for k in spec}
+def page_payload(data: dict) -> dict:
+    """Everything docs/index.html renders, in one block."""
+    models = readme_models(data)
+    spotlight = next((a for a in data["agents"] if a["name"] == SPOTLIGHT), None)
+    if spotlight is None:
+        raise CatalogueError(
+            f"the demo section spotlights '{SPOTLIGHT}', which is not an agent in this tree"
+        )
+    return {
+        "counts": data["counts"],
+        "disciplines": data["disciplines"],
+        "phases": data["phases"],
+        "gates": data["gates"],
+        "lanes": data["lanes"],
+        "chain": data["chain"],
+        "findings": data["findings"],
+        "agents": _cards(data, "agent", models),
+        "skills": _cards(data, "skill", models),
+        "spotlight": spotlight,
+        "install_framework": INSTALL_FRAMEWORK,
+    }
 
 
 # --------------------------------------------------------------------------- injection
 
-
-def _block(name: str) -> tuple[str, str]:
-    return f"<!-- BEGIN {name} -->", f"<!-- END {name} -->"
-
-
-def _extract(html: str, name: str, where: Path) -> str:
-    """The text between one BEGIN/END marker pair, markers excluded."""
-    begin, end = _block(name)
-    a, b = html.find(begin), html.find(end)
-    if a == -1 or b == -1 or b < a:
-        raise CatalogueError(
-            f"{where} has no `{begin}` / `{end}` pair — every page must carry both markers"
-        )
-    return html[a + len(begin):b]
+BEGIN = "<!-- BEGIN GENERATED CATALOGUE -->"
+END = "<!-- END GENERATED CATALOGUE -->"
 
 
-def _replace(html: str, name: str, body: str, where: Path) -> str:
-    begin, end = _block(name)
-    a, b = html.find(begin), html.find(end)
-    if a == -1 or b == -1 or b < a:
-        raise CatalogueError(
-            f"{where} has no `{begin}` / `{end}` pair — every page must carry both markers"
-        )
-    return html[:a] + begin + body + html[b:]
-
-
-def _render_payload(data: dict | None) -> str:
-    if data is None:
-        return ""
+def _render_block(data: dict) -> str:
     payload = json.dumps(data, indent=1, sort_keys=False, ensure_ascii=False)
     # `</script>` inside a JSON string would close the block early; no current value
     # contains one, but the escape costs nothing and removes the failure mode.
     payload = payload.replace("</", "<\\/")
-    return f"\n{SCRIPT_OPEN}\n{payload}\n{SCRIPT_CLOSE}\n"
+    return f"{BEGIN}\n{SCRIPT_OPEN}\n{payload}\n{SCRIPT_CLOSE}\n{END}"
 
 
-def _read_page(root: Path, page: str) -> tuple[Path, str]:
-    path = root / "docs" / page
+def inject(root: Path, data: dict, *, check_only: bool = False) -> bool:
+    page = root / "docs" / PAGE
     try:
-        return path, path.read_text(encoding="utf-8")
+        html = page.read_text(encoding="utf-8")
     except OSError as exc:
-        raise CatalogueError(f"cannot read {path}: {exc}") from exc
+        raise CatalogueError(f"cannot read {page}: {exc}") from exc
 
+    start, stop = html.find(BEGIN), html.find(END)
+    if start == -1 or stop == -1 or stop < start:
+        raise CatalogueError(
+            f"{page} has no `{BEGIN}` / `{END}` pair — the page must carry both markers"
+        )
 
-def inject(root: Path, data: dict, *, check_only: bool = False) -> list[str]:
-    """Bring every page under docs/ up to date. Returns the pages that changed."""
-    canonical_path, canonical = _read_page(root, CANONICAL_PAGE)
-    shared = {name: _extract(canonical, name, canonical_path) for name in SHARED}
-
-    changed: list[str] = []
-    for page in PAGES:
-        path, html = _read_page(root, page)
-        updated = html
-        if page != CANONICAL_PAGE:
-            for name in SHARED:
-                updated = _replace(updated, name, shared[name], path)
-        if page in PAGE_PAYLOAD:
-            updated = _replace(updated, "GENERATED CATALOGUE",
-                               _render_payload(page_payload(data, page)), path)
-        if updated != html:
-            changed.append(page)
-            if not check_only:
-                path.write_text(updated, encoding="utf-8")
-    return changed
+    updated = html[:start] + _render_block(page_payload(data)) + html[stop + len(END):]
+    if updated == html:
+        return False
+    if not check_only:
+        page.write_text(updated, encoding="utf-8")
+    return True
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -904,20 +864,17 @@ def main(argv: list[str] | None = None) -> int:
             if not (args.inject or args.check):
                 return 0
         if args.check:
-            stale = inject(root, data, check_only=True)
-            if stale:
-                print("stale: " + ", ".join("docs/" + p for p in stale) +
-                      " — run: python3 scripts/build_catalogue.py . --inject", file=sys.stderr)
+            if inject(root, data, check_only=True):
+                print("docs/index.html is stale — run: "
+                      "python3 scripts/build_catalogue.py . --inject", file=sys.stderr)
                 return 1
-            print(f"docs/ is up to date ({len(PAGES)} pages)")
+            print("docs/index.html catalogue is up to date")
             return 0
         if args.inject:
             changed = inject(root, data)
             c = data["counts"]
-            print(f"{len(changed)} of {len(PAGES)} page(s) updated "
+            print(f"{'updated' if changed else 'unchanged'}: docs/index.html "
                   f"({c['agents']} agents, {c['skills']} skills, {c['disciplines']} disciplines)")
-            for page in changed:
-                print(f"  docs/{page}")
             return 0
         json.dump(data, sys.stdout, indent=1, ensure_ascii=False)
         sys.stdout.write("\n")
