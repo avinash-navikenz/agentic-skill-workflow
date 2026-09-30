@@ -29,9 +29,11 @@ backfilled or restated; or a late record has arrived and nobody has decided what
 
 ## Rules
 
-1. Write the pipeline document at `delivery/changes/<name>/pipeline.md` and link it from
-   `delivery/changes/<name>/design.md` by path. G3 and G4 are read against the design; a file
-   nothing links to is a file nobody opens.
+1. Write the pipeline document at `delivery/changes/<name>/pipeline.md` and add a row for it to
+   the `## Linked artifacts` table that `templates/change/design.md` ships into every
+   `design.md`. That table is a design's one home for outward links; a change-scoped artifact
+   never earns a heading of its own. G3 and G4 are read against the design; a file nothing
+   links to is a file nobody opens.
 2. Number pipelines `PIPE-###`, sequential within `delivery/`, never reused. Number each stage
    `PIPE-###.S<n>` in execution order.
 3. Open the file with two lines: `Detailed here:` naming every `PIPE-###` this change adds or
@@ -114,12 +116,13 @@ backfilled or restated; or a late record has arrived and nobody has decided what
 
 ## Template
 
-Copy into `delivery/changes/<name>/pipeline.md`, and add a link to it from `design.md`:
+Copy into `delivery/changes/<name>/pipeline.md`, and add its row to `design.md`'s
+`## Linked artifacts` table:
 
 ```markdown
 # Pipelines — theme-persistence
 
-Linked from `design.md`.
+Linked from `design.md`'s `## Linked artifacts` table.
 Detailed here: PIPE-004 (output DC-003).
 Inherited unchanged: PIPE-003 (`delivery/specs/data/raw-session-events/pipeline.md`),
 PIPE-005 (`delivery/specs/data/theme-daily/pipeline.md`).
@@ -180,7 +183,7 @@ PIPE-005 (`delivery/specs/data/theme-daily/pipeline.md`).
 
 ## Checklist
 
-- [ ] `pipeline.md` exists and `design.md` links it by path
+- [ ] `pipeline.md` exists and `design.md`'s `## Linked artifacts` table carries a row for it
 - [ ] `Detailed here:` and `Inherited unchanged:` between them account for every `PIPE-###` in the file
 - [ ] Every `PIPE-###` names its input `DC-###`s and exactly one output `DC-###`
 - [ ] Every pipeline declares exactly one of the four run modes

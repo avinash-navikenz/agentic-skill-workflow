@@ -33,10 +33,25 @@ test("init creates the full delivery tree", () => {
   const root = tmp();
   assert.strictEqual(init.run([], root, () => {}), 0);
   for (const rel of ["project.md", "AGENTS.md", "specs", "changes/archive",
-                     "decisions", "ops/runbooks", "ops/postmortems",
+                     "decisions", "ops/runbooks", "ops/postmortems", "ops/models",
+                     "ops/slo.md",
                      ".adlc/state.json", ".adlc/waivers.md"]) {
     assert.ok(fs.existsSync(path.join(root, "delivery", rel)), `missing ${rel}`);
   }
+});
+
+// G8-OPERATE names delivery/ops/slo.md by path and its drift/decay criterion is
+// satisfied by files under delivery/ops/models/. Both must exist after a bare
+// init or the gate is unsatisfiable out of the box.
+test("init scaffolds the G8 operating artifacts: ops/slo.md and ops/models/", () => {
+  const root = tmp();
+  init.run([], root, () => {});
+  const slo = fs.readFileSync(path.join(root, "delivery", "ops", "slo.md"), "utf8");
+  assert.ok(slo.includes("SLI-001"), "slo.md should ship an SLI-### entry shape");
+  assert.ok(slo.includes("**Objective:**"), "slo.md should ship the Objective field");
+  assert.ok(slo.includes("**Error budget:**"), "slo.md should ship the Error budget field");
+  assert.ok(fs.statSync(path.join(root, "delivery", "ops", "models")).isDirectory());
+  assert.ok(fs.existsSync(path.join(root, "delivery", "ops", "models", ".gitkeep")));
 });
 
 test("init writes a valid initial state", () => {
@@ -84,6 +99,22 @@ test("init with a template path that is a directory (not a file) creates nothing
     const code = init.run([], root, (s) => lines.push(s));
     assert.strictEqual(code, 1);
     assert.ok(lines.join("\n").includes("project.md"), "error should name the offending template");
+    assert.ok(!fs.existsSync(path.join(root, "delivery")), "delivery/ must not exist after a failed init");
+  });
+});
+
+// The preflight must cover EVERY template init copies, not just the first one.
+// A template added to TEMPLATE_FILES but left out of findUnreadableTemplate()
+// would fail at copy time — after the directories exist — leaving a half-built
+// delivery/ that init itself then refuses to overwrite.
+test("init with a missing ops/slo.md template creates nothing and fails clearly", () => {
+  withTemplatesOverride((templatesCopy) => {
+    const root = tmp();
+    fs.rmSync(path.join(templatesCopy, "delivery", "ops", "slo.md"));
+    const lines = [];
+    const code = init.run([], root, (s) => lines.push(s));
+    assert.strictEqual(code, 1);
+    assert.ok(lines.join("\n").includes("slo.md"), "error should name the missing template");
     assert.ok(!fs.existsSync(path.join(root, "delivery")), "delivery/ must not exist after a failed init");
   });
 });

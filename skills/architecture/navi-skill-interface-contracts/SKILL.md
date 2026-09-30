@@ -27,9 +27,10 @@ consumer needs something to build against before the producer exists.
 
 ## Rules
 
-1. Write one `CONTRACT-###` entry per boundary in `delivery/changes/<name>/design.md` under a
-   `## Interface contracts` heading, numbered sequentially within the change. G3 reads the
-   design for a contract at each boundary it draws.
+1. Write one `CONTRACT-###` entry per boundary in `delivery/changes/<name>/design.md` under the
+   `## Interface contracts` heading, numbered sequentially within the change.
+   `templates/change/design.md` ships that heading, so fill it in place rather than appending a
+   second one. G3 reads the design for a contract at each boundary it draws.
 2. Treat as a boundary anything crossed by two components with different deploy cadences or
    different on-call owners: a synchronous call, a published event, a shared database table,
    a file drop, or a library whose callers are outside this change. A shared table read by
@@ -88,7 +89,8 @@ consumer needs something to build against before the producer exists.
 
 ## Template
 
-Append to `delivery/changes/<name>/design.md`:
+Fill the `## Interface contracts` section that `templates/change/design.md` ships into every
+`delivery/changes/<name>/design.md`:
 
 ```markdown
 ## Interface contracts

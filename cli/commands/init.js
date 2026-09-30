@@ -6,8 +6,8 @@ const { newState, writeState } = require("../lib/state");
 const { detectHarness } = require("../lib/capabilities");
 const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 
-const DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", ".adlc"];
-const GITKEEP_DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems"];
+const DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", "ops/models", ".adlc"];
+const GITKEEP_DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", "ops/models"];
 
 // Template name (relative to the "delivery" templates dir) -> destination
 // path relative to delivery/.
@@ -15,6 +15,14 @@ const TEMPLATE_FILES = [
   { name: "project.md", dest: "project.md" },
   { name: "AGENTS.md", dest: "AGENTS.md" },
   { name: path.join(".adlc", "waivers.md"), dest: path.join(".adlc", "waivers.md") },
+  // G8-OPERATE's exit criteria name delivery/ops/slo.md by path. Before this
+  // entry existed, `init` created ops/runbooks/ and ops/postmortems/ and no
+  // slo.md, so a freshly initialised tree could not satisfy G8 without a file
+  // nothing told the team to create. Registered in TEMPLATE_FILES rather than
+  // written inline so it goes through findUnreadableTemplate() with the
+  // others — an unregistered template reintroduces the half-built delivery/
+  // trap the preflight exists to prevent.
+  { name: path.join("ops", "slo.md"), dest: path.join("ops", "slo.md") },
 ];
 
 function copyTemplate(templatesDir, name, dest) {

@@ -28,9 +28,10 @@ non-functional threshold and needs to know the instrument.
 ## Rules
 
 1. Write every quality attribute as a `QAS-###` scenario in `delivery/changes/<name>/design.md`
-   under a `## Quality attributes` heading, numbered sequentially within the change. The
-   design template ships `Approach`, `Alternatives rejected` and `Risks` only; this section is
-   appended, and G3 reads the design for it.
+   under the `## Quality attributes` heading, numbered sequentially within the change.
+   `templates/change/design.md` ships that heading, so fill it in place. Never append a second
+   `## Quality attributes` — two headings of the same name make G3's reader pick one, and the
+   ranking in the other is then unread.
 2. Give every scenario all six fields, in order: `Source`, `Stimulus`, `Environment`,
    `Response`, `Measure`, `Serves`. A scenario missing `Environment` is a number nobody can
    reproduce; one missing `Source` is a load nobody can generate.
@@ -84,7 +85,8 @@ non-functional threshold and needs to know the instrument.
 
 ## Template
 
-Append to `delivery/changes/<name>/design.md`:
+Fill the `## Quality attributes` section that `templates/change/design.md` ships into every
+`delivery/changes/<name>/design.md`:
 
 ```markdown
 ## Quality attributes

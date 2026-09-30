@@ -29,9 +29,10 @@ exercised against the build.
 
 ## Rules
 
-1. Write the model at `delivery/changes/<name>/threat-model.md`. Link it from
-   `delivery/changes/<name>/design.md` by path. G3's exit criteria are read against the
-   design; a model nothing links to is a file nobody opens.
+1. Write the model at `delivery/changes/<name>/threat-model.md`. Link it from the
+   `## Threat model` heading that `templates/change/design.md` ships into every `design.md`,
+   and add a row for it to that template's `## Linked artifacts` table. G3's exit criteria are
+   read against the design; a model nothing links to is a file nobody opens.
 2. Open with `## What is worth taking` — every asset this change creates, moves or exposes,
    each with the harm its loss causes, stated as what happens to a person or to the business
    rather than as a category. `Session tokens: an attacker reads any user's saved preferences
@@ -71,10 +72,12 @@ exercised against the build.
     otherwise cannot tell a threat that was solved from one that was never real.
 11. Bind every threat to what motivated it with `Serves: REQ-###`, the `CONTRACT-###` it sits
     on, or both.
-12. On a lane that does not enforce G3 (`express`, `hotfix`), write `## Reach` in the change's
-    `design.md` instead of a full model: what this change newly lets someone see or do, and
-    from which of the four access levels. That statement is the threat set G6 exercises
-    against. Never skip it — G6 is enforced by every lane.
+12. On a lane that does not enforce G3 (`express`, `hotfix`), rename the shipped
+    `## Threat model` heading to `## Reach` and write the reach statement there instead of a
+    full model: what this change newly lets someone see or do, and from which of the four
+    access levels. Renaming the shipped heading rather than adding a section is what keeps a
+    `design.md` to one home for this; that statement is the threat set G6 exercises against.
+    Never skip it — G6 is enforced by every lane.
 13. Reopen the model when a boundary moves. A change that alters a `CONTRACT-###`, adds a
     store, or changes who can reach a component rewrites the affected boundary's pass and
     renumbers nothing. Inheriting an earlier model by reference is permitted only for
@@ -96,7 +99,7 @@ exercised against the build.
 | Nobody will sign the acceptance | Not accepted — it is unresolved; G3 is `--fail` until it is one of the three |
 | The team has no agreed severity scale | Record `Reach` and `Attacker gains`; do not invent a rating |
 | A threat has no `Verify` line | Write one before G3; G6 cannot exercise what nobody described |
-| Lane is `express` or `hotfix` | Write `## Reach` in `design.md`; G6 still exercises it |
+| Lane is `express` or `hotfix` | Rename `design.md`'s `## Threat model` heading to `## Reach` and write the statement there; G6 still exercises it |
 | A boundary is unchanged since the last model | Inherit by reference, naming the file and threat ids |
 | A boundary moved since the last model | Re-run that boundary's pass; do not inherit |
 | G3 is being recorded with an open threat | Record `--fail`; dispose of the threat, then re-record |
@@ -198,7 +201,7 @@ Inherited unchanged: none.
 
 ## Checklist
 
-- [ ] `threat-model.md` exists and `design.md` links to it by path
+- [ ] `threat-model.md` exists, `design.md`'s `## Threat model` section links it by path, and `## Linked artifacts` carries a row for it
 - [ ] Every asset names the harm, not a category
 - [ ] Every actor carries one of the four access levels
 - [ ] Every `CONTRACT-###`, store and log has a recorded six-prompt pass
@@ -209,7 +212,7 @@ Inherited unchanged: none.
 - [ ] Every `mitigated` names the control, the component and the failing test
 - [ ] Every `accepted` names an `ADR-###` carrying `Accepted-by:` with a person
 - [ ] Every threat has a `Verify` line runnable at Phase 6
-- [ ] On `express` or `hotfix`, `design.md` carries a `## Reach` section instead
+- [ ] On `express` or `hotfix`, `design.md`'s `## Threat model` heading is renamed `## Reach` and carries the statement
 - [ ] The model predates the G3 verdict, and every `Verify` was re-run before G6
 
 ## Anti-patterns
@@ -249,7 +252,8 @@ just versioned. The inherited pass was run against a different boundary. Re-run 
 every boundary the change touches.
 
 **Express means skip.** A `hotfix` change with no threat work because G3 is not enforced. G6
-is enforced by every lane and requires the change's own reach. Write `## Reach` in `design.md`.
+is enforced by every lane and requires the change's own reach. Rename the shipped
+`## Threat model` heading to `## Reach` and write the statement under it.
 
 ## Validation
 
@@ -257,8 +261,11 @@ is enforced by every lane and requires the change's own reach. Write `## Reach` 
 CHANGE=<name>
 TM=delivery/changes/$CHANGE/threat-model.md
 
-# The design links the model
+# The design links the model, from the shipped section and from the link table
 grep -q 'threat-model.md' delivery/changes/$CHANGE/design.md || echo "design.md does not link the threat model"
+# and it is one section, not a second one appended beside the shipped heading
+[ "$(grep -c '^## Threat model$' delivery/changes/$CHANGE/design.md)" -le 1 ] \
+  || echo "design.md has more than one '## Threat model' heading"
 
 # Every threat has all seven fields
 for id in $(grep -o 'THREAT-[0-9]\{3,\}' "$TM" | sort -u); do
