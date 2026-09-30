@@ -1,6 +1,6 @@
 # The nine ADLC gates
 
-One section per gate. Each names the phase it closes, its owner, what must be true to enter
+One section per gate. Each names the phase it closes, its owner or owners, what must be true to enter
 the phase, what must be true to leave it, and what the framework accepts as evidence.
 
 The lane decides which of these nine are enforced. A gate outside the active lane's set is
@@ -62,7 +62,8 @@ skipped and recorded nowhere; `navi-delivery gate` refuses it outright.
 
 ## G3-DESIGN — closes Phase 3, Architect
 
-**Owner:** Architect (`navi-agent-architect`)
+**Owners:** Architect and Security Engineer (`navi-agent-architect`,
+`navi-agent-security-engineer`)
 
 **Entry criteria**
 - G2 is `pass` or `waived`.
@@ -74,10 +75,14 @@ skipped and recorded nowhere; `navi-delivery gate` refuses it outright.
 - Component and data boundaries are named, with the interface contract at each boundary.
 - The quality attributes the design optimises for are stated, along with what they cost.
 - Every failure mode identified has a stated behaviour.
+- A threat model covers the boundaries this design draws, naming what is worth taking and who
+  would want it. Every threat it identifies is either designed out, mitigated by a named
+  control, or accepted — and an accepted threat carries the person accepting it.
 
 **Evidence accepted**
 - `delivery/changes/<name>/design.md`.
 - `delivery/decisions/ADR-###.md` for each decision the design depends on.
+- The threat model for the change, and the `ADR-###` recording each accepted threat.
 
 **Not enforced by:** `express`, `hotfix`.
 
@@ -85,7 +90,7 @@ skipped and recorded nowhere; `navi-delivery gate` refuses it outright.
 
 ## G4-DATA-MODEL — closes Phase 4, Data & Model
 
-**Owner:** Data Engineer and ML Engineer (`navi-agent-data-engineer`,
+**Owners:** Data Engineer and ML Engineer (`navi-agent-data-engineer`,
 `navi-agent-machine-learning-engineer`)
 
 **Entry criteria**
@@ -110,7 +115,9 @@ G4 — see the note at the end of this file.
 
 ## G5-BUILD — closes Phase 5, Build
 
-**Owner:** Developer, Data Engineer or ML Engineer, per what is being built
+**Owners:** Developer, Data Engineer and ML Engineer (`navi-agent-fullstack-developer`,
+`navi-agent-data-engineer`, `navi-agent-machine-learning-engineer`) — whichever of the three
+built the thing, and all of those that did
 
 **Entry criteria**
 - G3 is `pass` or `waived`, and G4 where the lane enforces it.
@@ -134,7 +141,8 @@ G4 — see the note at the end of this file.
 
 ## G6-QUALITY — closes Phase 6, Verify
 
-**Owner:** QA Engineer (`navi-agent-qa-engineer`)
+**Owners:** QA Engineer and Security Engineer (`navi-agent-qa-engineer`,
+`navi-agent-security-engineer`)
 
 **Entry criteria**
 - G5 is `pass` or `waived`, or the lane does not enforce G5.
@@ -146,10 +154,17 @@ G4 — see the note at the end of this file.
 - No known defect of severity high or above is open against the change.
 - Flaky tests are quarantined with an owner and a date, not re-run until green.
 - Non-functional thresholds named in the spec are measured, not assumed.
+- Every threat identified for this change has been exercised against it as built, and each
+  dependency it ships is checked against known vulnerabilities. Where the lane enforces G3, the
+  threat set is the one that gate's model named; where it does not, it is the change's own
+  reach — what it newly lets someone see or do. Every finding carries a disposition: fixed,
+  mitigated, or waived under `navi-skill-waivers-and-deferrals`.
 
 **Evidence accepted**
 - The test report (TAP, JUnit XML, or the project's own format).
 - The defect list with severities.
+- The security verification record: what was exercised, what was found, and the disposition of
+  each finding, traced back to the threat it answers.
 
 **Enforced by every lane.**
 
@@ -157,7 +172,7 @@ G4 — see the note at the end of this file.
 
 ## G7-RELEASE — closes Phase 7, Release
 
-**Owner:** DevOps Engineer and MLOps Engineer (`navi-agent-devops-engineer`,
+**Owners:** DevOps Engineer and MLOps Engineer (`navi-agent-devops-engineer`,
 `navi-agent-mlops-engineer`)
 
 **Entry criteria**
@@ -182,7 +197,8 @@ G4 — see the note at the end of this file.
 
 ## G8-OPERATE — closes Phase 8, Operate & Monitor
 
-**Owner:** MLOps Engineer and DevOps Engineer
+**Owners:** MLOps Engineer and DevOps Engineer (`navi-agent-mlops-engineer`,
+`navi-agent-devops-engineer`)
 
 **Entry criteria**
 - G7 is `pass` or `waived` and the change is live in the target environment.
@@ -205,7 +221,7 @@ G4 — see the note at the end of this file.
 
 ## G9-FEEDBACK — closes Phase 9, Learn & Evolve
 
-**Owner:** Product Owner and Architect
+**Owners:** Product Owner and Architect (`navi-agent-product-owner`, `navi-agent-architect`)
 
 **Entry criteria**
 - G8 is `pass` or `waived`, or the change is a hotfix closing out an incident.
