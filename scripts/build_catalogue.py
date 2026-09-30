@@ -278,7 +278,14 @@ def _chain_and_findings(root: Path) -> tuple[list[dict], list[dict]]:
 # --------------------------------------------------------------------------- build
 
 
-def build(root: Path) -> dict:
+def catalogue_items(root: Path) -> dict:
+    """The agent and skill halves of the catalogue, and nothing else.
+
+    Split out of build() so a caller that only needs the tree — build_adapters.py,
+    rendering the README that ships inside the adapter — does not also have to
+    supply ADLC.md, SDD.md and cli/lib/lanes.js. Those are framework constants
+    the pages need; a skill's README does not depend on any of them.
+    """
     try:
         entries = load_entries(root)
     except FrontmatterError as exc:
@@ -355,6 +362,13 @@ def build(root: Path) -> dict:
                 problems.append(f"{s['name']} is used_by unknown agent {a}")
     if problems:
         raise CatalogueError("referential integrity: " + "; ".join(sorted(problems)))
+
+    return {"agents": agents, "skills": skills}
+
+
+def build(root: Path) -> dict:
+    items = catalogue_items(root)
+    agents, skills = items["agents"], items["skills"]
 
     disciplines = sorted({s["discipline"] for s in skills} | {a["discipline"] for a in agents})
     discipline_rows = [{
