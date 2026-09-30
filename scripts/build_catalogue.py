@@ -12,10 +12,14 @@ and lanes is derived here from the files that are themselves the source of truth
 Nothing is hand-transcribed into the page, so regenerating after a change to any of
 those files keeps the page true.
 
+The same extraction feeds three outputs: the per-page JSON each docs page renders,
+one README.md beside every SKILL.md and *.agent.md, and (through build_adapters.py)
+the README that ships inside the generated adapter.
+
 Usage:
     python3 scripts/build_catalogue.py              # print JSON to stdout
-    python3 scripts/build_catalogue.py --inject     # rewrite the <script> block in docs/index.html
-    python3 scripts/build_catalogue.py --check      # non-zero exit if docs/index.html is stale
+    python3 scripts/build_catalogue.py --inject     # bring every page under docs/ up to date
+    python3 scripts/build_catalogue.py --check      # non-zero exit if any page under docs/ is stale
     python3 scripts/build_catalogue.py --readmes    # write one README.md per skill and agent
 
 Following this project's convention (navi_lint/frontmatter.py, validate_traceability.py),
@@ -711,36 +715,168 @@ def write_readmes(root: Path, data: dict) -> list[Path]:
     return changed
 
 
+# --------------------------------------------------------------------------- pages
+#
+# The site is six section pages plus a limits page, each self-contained apart
+# from the Google Fonts link. Three things would otherwise have to be kept in
+# step by hand across seven files, so they are injected instead:
+#
+#   SHARED HEAD    the font link and the whole stylesheet
+#   SHARED CHROME  the masthead, the wordmark and the nav
+#   SHARED FOOT    the footer and the nav-highlight/theme script
+#
+# docs/index.html is the one authored copy of each; every other page receives it.
+# The fourth injected block is the catalogue payload, and each page gets only the
+# slice it renders — the whole tree in seven copies would put ~1 MB on disk to no
+# end, and a page that draws no cards has no marker at all.
+
+SHARED = ("SHARED HEAD", "SHARED CHROME", "SHARED FOOT")
+CANONICAL_PAGE = "index.html"
+
+# install.html, demo.html's prose and limits.html render no catalogue of their
+# own; install.html's numbers are verbatim command output, not derived values.
+PAGE_PAYLOAD = {
+    "index.html": ("counts", "disciplines"),
+    "how-it-works.html": ("counts", "phases", "gates", "lanes", "chain", "findings"),
+    "agents.html": ("catalogue", "agent"),
+    "skills.html": ("catalogue", "skill"),
+    # The demo opens on one agent doing its job before it shows the whole
+    # lifecycle, so that page needs exactly one entry and not the roster.
+    "demo.html": ("spotlight", "navi-agent-architect"),
+}
+PAGES = ("index.html", "how-it-works.html", "agents.html", "skills.html",
+         "install.html", "demo.html", "limits.html")
+
+
+def _hay(e: dict, models: dict) -> str:
+    """One lower-cased search string per entry, built here rather than in the
+    browser so the page carries the text it searches and nothing else."""
+    parts = [e["name"], e["label"], e["discipline"], e["description"],
+             " ".join(e.get("tags") or [])]
+    if e["kind"] == "agent":
+        parts += [e["mission"], e["how_i_decide"], e["definition_of_good"],
+                  " ".join(e["mental_model"]), " ".join(e["escalate_to_human_when"]),
+                  " ".join(e["owns_gates"]), " ".join(e["skills"]),
+                  " ".join(h["label"] for h in models[e["name"]]["held"])]
+    else:
+        parts += [e["trigger"], " ".join(e["trigger_phrases"]), e["produces"],
+                  " ".join(e["anti_patterns"]), " ".join(e["used_by_agents"]),
+                  " ".join(h["label"] for h in models[e["name"]]["holders"])]
+    return re.sub(r"\s+", " ", " ".join(p for p in parts if p)).lower()
+
+
+def _cards(data: dict, kind: str) -> list[dict]:
+    models = readme_models(data)
+    out = []
+    for e in (data["agents"] if kind == "agent" else data["skills"]):
+        m = models[e["name"]]
+        out.append({
+            "name": e["name"],
+            "kind": kind,
+            "label": e["label"],
+            "discipline": e["discipline"],
+            "phases": list(e["phases"]),
+            "gates": list(m["gates"]),
+            "description": e["description"],
+            "hay": _hay({**e, "kind": kind}, models),
+            "readme": m,
+        })
+    return out
+
+
+def page_payload(data: dict, page: str) -> dict | None:
+    """The slice of the catalogue one page renders, or None if it renders none."""
+    spec = PAGE_PAYLOAD.get(page)
+    if spec is None:
+        return None
+    if spec[0] == "spotlight":
+        wanted = spec[1]
+        agent = next((a for a in data["agents"] if a["name"] == wanted), None)
+        if agent is None:
+            raise CatalogueError(f"docs/{page} spotlights '{wanted}', which is not an agent here")
+        labels = {s["name"]: s["label"] for s in data["skills"]}
+        return {"agent": agent, "skill_labels": {n: labels[n] for n in agent["skills"]}}
+    if spec[0] == "catalogue":
+        kind = spec[1]
+        return {
+            "kind": kind,
+            "cards": _cards(data, kind),
+            "counts": data["counts"],
+            "disciplines": [d for d in data["disciplines"]
+                            if d["agents" if kind == "agent" else "skills"]],
+            "phases": data["phases"],
+            "gates": data["gates"],
+            "install_framework": INSTALL_FRAMEWORK,
+        }
+    return {k: data[k] for k in spec}
+
+
 # --------------------------------------------------------------------------- injection
 
 
-def _render_block(data: dict) -> str:
+def _block(name: str) -> tuple[str, str]:
+    return f"<!-- BEGIN {name} -->", f"<!-- END {name} -->"
+
+
+def _extract(html: str, name: str, where: Path) -> str:
+    """The text between one BEGIN/END marker pair, markers excluded."""
+    begin, end = _block(name)
+    a, b = html.find(begin), html.find(end)
+    if a == -1 or b == -1 or b < a:
+        raise CatalogueError(
+            f"{where} has no `{begin}` / `{end}` pair — every page must carry both markers"
+        )
+    return html[a + len(begin):b]
+
+
+def _replace(html: str, name: str, body: str, where: Path) -> str:
+    begin, end = _block(name)
+    a, b = html.find(begin), html.find(end)
+    if a == -1 or b == -1 or b < a:
+        raise CatalogueError(
+            f"{where} has no `{begin}` / `{end}` pair — every page must carry both markers"
+        )
+    return html[:a] + begin + body + html[b:]
+
+
+def _render_payload(data: dict | None) -> str:
+    if data is None:
+        return ""
     payload = json.dumps(data, indent=1, sort_keys=False, ensure_ascii=False)
     # `</script>` inside a JSON string would close the block early; no current value
     # contains one, but the escape costs nothing and removes the failure mode.
     payload = payload.replace("</", "<\\/")
-    return f"{BEGIN}\n{SCRIPT_OPEN}\n{payload}\n{SCRIPT_CLOSE}\n{END}"
+    return f"\n{SCRIPT_OPEN}\n{payload}\n{SCRIPT_CLOSE}\n"
 
 
-def inject(root: Path, data: dict, *, check_only: bool = False) -> bool:
-    page = root / "docs" / "index.html"
+def _read_page(root: Path, page: str) -> tuple[Path, str]:
+    path = root / "docs" / page
     try:
-        html = page.read_text(encoding="utf-8")
+        return path, path.read_text(encoding="utf-8")
     except OSError as exc:
-        raise CatalogueError(f"cannot read {page}: {exc}") from exc
+        raise CatalogueError(f"cannot read {path}: {exc}") from exc
 
-    start, stop = html.find(BEGIN), html.find(END)
-    if start == -1 or stop == -1 or stop < start:
-        raise CatalogueError(
-            f"{page} has no `{BEGIN}` / `{END}` pair — the page must carry both markers"
-        )
 
-    updated = html[:start] + _render_block(data) + html[stop + len(END):]
-    if updated == html:
-        return False
-    if not check_only:
-        page.write_text(updated, encoding="utf-8")
-    return True
+def inject(root: Path, data: dict, *, check_only: bool = False) -> list[str]:
+    """Bring every page under docs/ up to date. Returns the pages that changed."""
+    canonical_path, canonical = _read_page(root, CANONICAL_PAGE)
+    shared = {name: _extract(canonical, name, canonical_path) for name in SHARED}
+
+    changed: list[str] = []
+    for page in PAGES:
+        path, html = _read_page(root, page)
+        updated = html
+        if page != CANONICAL_PAGE:
+            for name in SHARED:
+                updated = _replace(updated, name, shared[name], path)
+        if page in PAGE_PAYLOAD:
+            updated = _replace(updated, "GENERATED CATALOGUE",
+                               _render_payload(page_payload(data, page)), path)
+        if updated != html:
+            changed.append(page)
+            if not check_only:
+                path.write_text(updated, encoding="utf-8")
+    return changed
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -768,17 +904,20 @@ def main(argv: list[str] | None = None) -> int:
             if not (args.inject or args.check):
                 return 0
         if args.check:
-            if inject(root, data, check_only=True):
-                print("docs/index.html is stale — run: python3 scripts/build_catalogue.py --inject",
-                      file=sys.stderr)
+            stale = inject(root, data, check_only=True)
+            if stale:
+                print("stale: " + ", ".join("docs/" + p for p in stale) +
+                      " — run: python3 scripts/build_catalogue.py . --inject", file=sys.stderr)
                 return 1
-            print("docs/index.html catalogue is up to date")
+            print(f"docs/ is up to date ({len(PAGES)} pages)")
             return 0
         if args.inject:
             changed = inject(root, data)
             c = data["counts"]
-            print(f"{'updated' if changed else 'unchanged'}: docs/index.html "
+            print(f"{len(changed)} of {len(PAGES)} page(s) updated "
                   f"({c['agents']} agents, {c['skills']} skills, {c['disciplines']} disciplines)")
+            for page in changed:
+                print(f"  docs/{page}")
             return 0
         json.dump(data, sys.stdout, indent=1, ensure_ascii=False)
         sys.stdout.write("\n")

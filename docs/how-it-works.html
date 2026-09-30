@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>navi-delivery — field guide</title>
-<meta name="description" content="An agentic SDLC framework, plan to monitor: eleven persona agents over thirty-nine best-practice skills, nine gates, four lanes.">
+<title>How it works — navi-delivery</title>
+<meta name="description" content="The four ideas behind navi-delivery: the agent/skill separation, nine phases and nine gates, four lanes as gate subsets, and the traceability chain.">
 <!-- BEGIN SHARED HEAD -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -367,124 +367,162 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 
 <main id="main">
 
-<!-- ================================================================ START -->
-<section id="start" class="hero">
+<section id="model">
   <div class="wrap">
-    <p class="kicker" id="top">Internal field guide &middot; v0.1.0</p>
-    <h1>An agentic SDLC framework, Plan to Monitor</h1>
-    <p class="tag">Agents hold the judgment. Skills hold the rules.</p>
-    <p class="lede">
-      Eleven persona agents carry each discipline's judgment. Thirty-nine skills across twelve
-      disciplines carry each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
-      your repo and records what actually happened at each of nine gates &mdash; so a phase that
-      emitted no telemetry did not happen, and a gate whose verdict was never recorded was
-      never passed.
-    </p>
-    <p class="lede sub small">
-      This site is generated from the repository. Every agent, skill, phase, gate, lane,
-      traceability link and validator finding is extracted from the source files by
-      <code>scripts/build_catalogue.py</code>, which also writes the README that sits beside each
-      <code>SKILL.md</code> and each <code>*.agent.md</code>; every command in the
-      <a href="demo.html">worked demo</a> was run against the committed tree and its output copied
-      verbatim. What v1 does <em>not</em> do is on <a href="limits.html">Limits</a> &mdash; read it
-      before you meet it.
-    </p>
-    <div class="stats" id="stats"></div>
-  </div>
-</section>
+    <p class="kicker">How the framework works</p>
+    <h2>Four ideas carry the whole design</h2>
+    <p class="lede small">Everything below is read out of <code>ADLC.md</code>,
+    <code>SDD.md</code> and <code>cli/lib/lanes.js</code> by
+    <code>scripts/build_catalogue.py</code> &mdash; the tables and the diagrams are the
+    framework&rsquo;s own definitions, not a description of them.</p>
 
-<!-- ================================================================ MAP -->
-<section id="map">
-  <div class="wrap">
-    <p class="kicker">Where things are</p>
-    <h2>Six more pages</h2>
-    <div class="map">
-      <a href="how-it-works.html">
-        <div class="n">The design</div>
-        <div class="t">How it works</div>
-        <p>The four ideas: the separation, nine phases and nine gates, four lanes as gate subsets,
-        and the traceability chain. With the diagrams.</p>
-      </a>
-      <a href="agents.html">
-        <div class="n">Catalogue</div>
-        <div class="t">Agents</div>
-        <p>All eleven personas. Each card opens to that agent's README: the gates it owns, the
-        skills it holds, when it stops and asks a human, and how to install it.</p>
-      </a>
-      <a href="skills.html">
-        <div class="n">Catalogue</div>
-        <div class="t">Skills</div>
-        <p>All thirty-nine, searchable and filterable by discipline, phase and gate. Each card
-        opens to that skill's README and both install paths.</p>
-      </a>
-      <a href="install.html">
-        <div class="n">Getting it</div>
-        <div class="t">Install</div>
-        <p>The generated adapter, <code>install.sh</code>, the CLI, and what to do in a harness
-        with no plugin support at all.</p>
-      </a>
-      <a href="demo.html">
-        <div class="n">Evidence</div>
-        <div class="t">Worked demo</div>
-        <p>One change carried end to end, including a gate that fails. Every command was run;
-        every block of output is verbatim.</p>
-      </a>
-      <a href="limits.html">
-        <div class="n">Honesty</div>
-        <div class="t">Limits</div>
-        <p>What v1 does not do. Two adapters only, evidence checked by shape, gate actors derived
-        rather than proven, G4 on one lane.</p>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================================ SEPARATION -->
-<section id="separation">
-  <div class="wrap">
-    <p class="kicker">The one idea to take away</p>
-    <h2>Judgment and rules are separate files, and it is checked</h2>
+    <h3 style="margin-top:26px">1 · The separation</h3>
     <p class="lede small">
       Coding assistants land in the middle of the lifecycle and leave both ends untouched.
       Judgment gets re-derived at every prompt, standards live in a wiki detached from the work,
       and the loop never closes. The response is to separate the two things that keep getting
-      fused &mdash; and then to check it mechanically, because a separation nobody checks merges
+      fused — and then to check it mechanically, because a separation nobody checks merges
       within months.
     </p>
     <div class="two">
       <div class="half a">
-        <h3>Agents &mdash; the thinking</h3>
+        <h3>Agents — the thinking</h3>
         <dl>
-          <dt>Contain</dt><dd>mission &middot; mental model &middot; trade-off framing &middot; escalation triggers &middot; definition of good &middot; a skill-invocation plan</dd>
+          <dt>Contain</dt><dd>mission · mental model · trade-off framing · escalation triggers · definition of good · a skill-invocation plan</dd>
           <dt>Answer</dt><dd>what, why, when</dd>
           <dt>Voice</dt><dd>first person, persona</dd>
           <dt>File</dt><dd><code>agents/navi-agent-&lt;persona&gt;/*.agent.md</code></dd>
         </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="agents.html">Browse the eleven agents &rarr;</a></p>
       </div>
       <div class="half b">
-        <h3>Skills &mdash; the rules</h3>
+        <h3>Skills — the rules</h3>
         <dl>
-          <dt>Contain</dt><dd>standards &middot; decision tables &middot; templates &middot; checklists &middot; anti-patterns &middot; a mechanical validation step</dd>
+          <dt>Contain</dt><dd>standards · decision tables · templates · checklists · anti-patterns · a mechanical validation step</dd>
           <dt>Answer</dt><dd>how</dd>
           <dt>Voice</dt><dd>impersonal, imperative</dd>
           <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
         </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="skills.html">Browse the thirty-nine skills &rarr;</a></p>
       </div>
     </div>
     <div class="note">
       <p><strong>The falsifiable test.</strong> Delete every agent and the skills still fully
       specify <em>how</em> work is done; delete every skill and the agents still specify
       <em>what, why and when</em>.</p>
-      <p class="small sub" style="margin-bottom:0">Enforced by <code>scripts/lint_separation.py</code>.
-      The rest of the design &mdash; the gates, the lanes, the chain &mdash; is on
-      <a href="how-it-works.html">How it works</a>.</p>
+      <p class="small sub" style="margin-bottom:0">Enforced by <code>scripts/lint_separation.py</code>:
+      <strong>SEP1</strong> a numbered procedure inside an <code>.agent.md</code> ·
+      <strong>SEP2</strong> a <code>## Template</code> or <code>## Checklist</code> inside an
+      <code>.agent.md</code> · <strong>SEP3</strong> persona voice inside a <code>SKILL.md</code> ·
+      <strong>SEP4</strong> first person inside a <code>SKILL.md</code>. The build fails on any of them.</p>
     </div>
-    <p class="small sub" style="margin-bottom:0">
-      Each item's README is a summary and carries no rules: <code>SKILL.md</code> and
-      <code>*.agent.md</code> stay the only authority, and the README links to them rather than
-      quoting them. Two copies of a rule drift, which is the thing this framework exists to stop.
+    <p class="small sub">
+      The corollary is the part that bites: <strong>an agent may not produce a lifecycle artifact
+      from memory.</strong> It loads the governing skill, follows it, and records which skills it
+      used in the handoff envelope. An agent that writes a spec from what it remembers about specs
+      has made the skill library decorative.
+    </p>
+
+    <h3 style="margin-top:34px">2 · Nine phases, nine gates, and a loop that closes</h3>
+    <p class="lede small">
+      Phases are not a waterfall. Phase 6's owner is consulted at phase 2 — testability of an
+      acceptance criterion is cheapest to fix while the criterion is still being written — and the
+      Architect reviews phase 5 output against the design phase 3 settled. Consultation is recorded
+      as a handoff with <code>kind: review</code>, not as a phase transition.
+    </p>
+    <figure class="figure">
+      <div class="svgscroll" id="lifecycleFig"></div>
+      <figcaption>
+        Generated from <code>ADLC.md</code> §1. <code>G1</code>–<code>G9</code> are the identifiers
+        the CLI matches; the suffixed forms (<code>G2-SPEC</code>, <code>G3-DESIGN</code>) are
+        mnemonics for readers and are never typed.
+      </figcaption>
+    </figure>
+    <p class="small">Each gate's exit criteria and the evidence it accepts, straight from <code>ADLC.md</code> §2:</p>
+    <div class="tablewrap"><table id="gateTable"></table></div>
+    <div class="note">
+      <p><strong>A verdict is one of exactly three values:</strong> <code>pass</code>,
+      <code>fail</code>, <code>waived</code>. There is no conditional pass and no pass with
+      follow-ups. <code>--pass</code> and <code>--fail</code> both require
+      <code>--evidence &lt;path&gt;</code>.</p>
+    </div>
+
+    <h3 style="margin-top:34px">3 · Four lanes, as gate subsets</h3>
+    <p class="lede small">
+      Proportionality is what keeps the framework in daily use. Nine gates on a flag flip is not
+      rigour; it is a guarantee that the next flag flip goes around the framework. The lane is
+      declared at <code>propose</code> time, written into <code>state.lane</code>, and fixed for
+      the life of the change.
+    </p>
+    <div class="tablewrap"><table class="matrix" id="laneMatrix"></table></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="panel">
+        <h4>Choosing a lane</h4>
+        <ul class="small" style="margin-bottom:0">
+          <li><strong>By the highest-severity characteristic present, never the average.</strong> One regulated field in an otherwise trivial change makes the whole change <code>full</code>.</li>
+          <li><strong>Anything touching a dataset, schema, feature store or model takes <code>full</code></strong> — see the G4 gap in <a href="limits.html">Limits</a>.</li>
+          <li><strong><code>hotfix</code> means production is degraded right now.</strong> A bug found before release is <code>standard</code>.</li>
+          <li><strong>Where two lanes both fit, take the wider one.</strong> An unnecessary gate costs hours; a missing gate costs an incident.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h4>Skipped is not waived</h4>
+        <p class="small">A gate <strong>outside</strong> the lane's set is <em>skipped</em>: recorded
+        nowhere, and <code>navi-delivery gate</code> refuses it outright with
+        <code>&lt;G#&gt; is not in lane '&lt;lane&gt;'</code>.</p>
+        <p class="small">A gate <strong>inside</strong> the set that cannot be met is
+        <em>waived</em>, with a reason and a calendar expiry strictly in the future, appended to
+        <code>.adlc/waivers.md</code> and to the event log. Only one of the two is a decision
+        somebody made.</p>
+        <p class="small" style="margin-bottom:0"><strong>Lanes are never widened in place.</strong>
+        A change that outgrows its lane is closed out — waiving each unsettled gate with a reason
+        naming the abandonment — and re-proposed. There is no <code>abandon</code> verb.</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:34px">4 · The traceability chain</h3>
+    <p class="lede small">
+      The spec is the source of truth; code is its consequence. Every artifact after the first
+      declares the upstream ID it descends from, and the chain runs one way only — an insight can
+      propose a new requirement, but by becoming a candidate <code>REQ-###</code> in a new change,
+      never by editing backwards into a closed one.
+    </p>
+    <figure class="figure">
+      <div class="svgscroll" id="chainFig"></div>
+      <figcaption>Generated from <code>SDD.md</code> §1.</figcaption>
+    </figure>
+    <div class="tablewrap"><table id="chainTable"></table></div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="panel">
+        <h4>What the validator actually sees</h4>
+        <p class="small"><code>scripts/validate_traceability.py</code> is deliberately literal.
+        It recognises a requirement only as <code>REQ-###</code> on a line starting with
+        <code>#</code>; a task only as <code>**TASK-###**</code> <em>in bold</em>; and an
+        <code>Implements: REQ-###</code> line only within three lines of its task marker.
+        Three digits minimum — it does not see <code>REQ-4</code> at all.</p>
+        <p class="small" style="margin-bottom:0">This is the single most common way a spec passes
+        validation while meaning nothing.</p>
+      </div>
+      <div class="panel">
+        <h4>The findings</h4>
+        <div class="tablewrap" style="margin:0"><table id="findingTable"></table></div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:34px">Rework: a failed gate does not simply block</h3>
+    <figure class="figure">
+      <div class="svgscroll" id="reworkFig"></div>
+      <figcaption>
+        <code>gate G6 --fail</code> on a <code>standard</code> change. G6 and every later gate
+        <em>in the same lane</em> go stale; G1–G5 were decided on evidence that is still good, and
+        G4/G9 are untouched because marking a gate this lane cannot record would create a stale
+        entry that could never be cleared.
+      </figcaption>
+    </figure>
+    <p class="small">
+      <code>validate</code> fails while any stale entry remains, so rework cannot be silently
+      skipped past. Each stale gate is cleared by <strong>re-recording that gate individually</strong>
+      as <code>pass</code> or <code>waived</code> — a passing G6 does not vouch for G7. Re-recording
+      is a supported path: the event log appends a new record carrying <code>previous</code>, and
+      history is never overwritten.
     </p>
   </div>
 </section>
@@ -554,78 +592,248 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
   "gates": 9,
   "lanes": 4
  },
- "disciplines": [
+ "phases": [
   {
-   "id": "architecture",
-   "label": "architecture",
-   "skills": 4,
-   "agents": 1
+   "n": 1,
+   "phase": "Plan",
+   "gate": "G1",
+   "owner": "Product Owner"
   },
   {
-   "id": "business-analysis",
-   "label": "business analysis",
-   "skills": 2,
-   "agents": 1
+   "n": 2,
+   "phase": "Specify",
+   "gate": "G2",
+   "owner": "Business Analyst"
   },
   {
-   "id": "data-engineering",
-   "label": "data engineering",
-   "skills": 3,
-   "agents": 1
+   "n": 3,
+   "phase": "Architect",
+   "gate": "G3",
+   "owner": "Architect + Security Engineer"
   },
   {
-   "id": "lifecycle-method",
-   "label": "lifecycle method",
-   "skills": 6,
-   "agents": 1
+   "n": 4,
+   "phase": "Data & Model",
+   "gate": "G4",
+   "owner": "Data Engineer + ML Engineer"
   },
   {
-   "id": "machine-learning",
-   "label": "machine learning",
-   "skills": 3,
-   "agents": 1
+   "n": 5,
+   "phase": "Build",
+   "gate": "G5",
+   "owner": "Developer / Data Engineer / ML Engineer"
   },
   {
-   "id": "mlops",
-   "label": "mlops",
-   "skills": 2,
-   "agents": 1
+   "n": 6,
+   "phase": "Verify",
+   "gate": "G6",
+   "owner": "QA Engineer + Security Engineer"
   },
   {
-   "id": "platform-devops",
-   "label": "platform devops",
-   "skills": 4,
-   "agents": 1
+   "n": 7,
+   "phase": "Release",
+   "gate": "G7",
+   "owner": "DevOps Engineer + MLOps Engineer"
   },
   {
-   "id": "product-management",
-   "label": "product management",
-   "skills": 2,
-   "agents": 1
+   "n": 8,
+   "phase": "Operate & Monitor",
+   "gate": "G8",
+   "owner": "MLOps Engineer + DevOps Engineer"
   },
   {
-   "id": "quality-engineering",
-   "label": "quality engineering",
-   "skills": 3,
-   "agents": 1
+   "n": 9,
+   "phase": "Learn & Evolve",
+   "gate": "G9",
+   "owner": "Product Owner + Architect"
+  }
+ ],
+ "gates": [
+  {
+   "gate": "G1",
+   "closes": "Plan",
+   "exit": "`proposal.md` filled in, lane declared and justified, at least one measurable outcome, non-goals that a reader would otherwise assume were in scope",
+   "evidence": "`proposal.md`"
   },
   {
-   "id": "security",
-   "label": "security",
-   "skills": 1,
-   "agents": 1
+   "gate": "G2",
+   "closes": "Specify",
+   "exit": "Every `REQ-###` carries at least one `AC-###`; criteria in Given/When/Then with an observable outcome; MoSCoW priority on each requirement; open questions recorded as `Q-###` rather than assumed away; no T2 findings",
+   "evidence": "the delta `spec.md`, the traceability output"
   },
   {
-   "id": "software-development",
-   "label": "software development",
-   "skills": 5,
-   "agents": 1
+   "gate": "G3",
+   "closes": "Architect",
+   "exit": "Approach, alternatives rejected, risks with mitigations; an `ADR-###` per consequential decision; boundaries named with an interface contract at each; quality attributes stated with what they cost; every failure mode carrying a stated behaviour; a threat model whose every threat is designed out, mitigated, or accepted by a named person",
+   "evidence": "`design.md`, the ADRs, the threat model"
   },
   {
-   "id": "spec-driven-development",
-   "label": "spec driven development",
-   "skills": 4,
-   "agents": 0
+   "gate": "G4",
+   "closes": "Data & Model",
+   "exit": "A data contract per source dataset; end-to-end lineage; for ML, a baseline plus a held-out, leakage-checked evaluation set whose metric ties to the proposal's outcome; data-quality thresholds with on-breach behaviour; PII classified and its handling stated",
+   "evidence": "contracts, lineage doc, baseline report"
+  },
+  {
+   "gate": "G5",
+   "closes": "Build",
+   "exit": "Every task checked off or explicitly deferred; no T1 or T3 findings; every acceptance criterion referenced by at least one automated test; the project's own build green; code review complete with blocking comments resolved",
+   "evidence": "build and test output, traceability output, review record"
+  },
+  {
+   "gate": "G6",
+   "closes": "Verify",
+   "exit": "Every criterion passing, or a recorded reason it is verified manually; negative and empty-state paths covered, not only the happy path; no open high-severity defect; flaky tests quarantined with an owner and a date rather than re-run until green; non-functional thresholds measured; every threat exercised as built and every shipped dependency checked, each finding dispositioned fixed / mitigated / not-applicable / waived",
+   "evidence": "test report, defect list, security verification record"
+  },
+  {
+   "gate": "G7",
+   "closes": "Release",
+   "exit": "Deployment reproducible from a recorded artifact version or commit; a rollback path that has been exercised, with a known time-to-restore; blast radius stated in people; secrets referenced rather than embedded; for a model, the version registered and promotion criteria met",
+   "evidence": "pipeline run, rollback rehearsal, named human approval"
+  },
+  {
+   "gate": "G8",
+   "closes": "Operate",
+   "exit": "Every shipped capability carrying an `SLI-###` in `ops/slo.md`, each with an objective, an error budget, and an alert that fires before the budget burns; a runbook for every alert that can page a human; drift and decay monitors live for a model; telemetry confirmed arriving, not merely configured",
+   "evidence": "`ops/slo.md`, runbook paths, a query showing telemetry arriving"
+  },
+  {
+   "gate": "G9",
+   "closes": "Learn",
+   "exit": "Predicted outcome compared against measured, with the gap named; every insight recorded as `INSIGHT-###`; every insight routed to exactly one destination; for a hotfix, the contributing causes and the control that failed",
+   "evidence": "`ops/postmortems/<name>.md` with routed insights"
+  }
+ ],
+ "lanes": [
+  {
+   "lane": "express",
+   "gates": [
+    "G2",
+    "G6",
+    "G7"
+   ],
+   "when": "copy, config, flag flip",
+   "deferred": [],
+   "mandatory": []
+  },
+  {
+   "lane": "standard",
+   "gates": [
+    "G1",
+    "G2",
+    "G3",
+    "G5",
+    "G6",
+    "G7",
+    "G8"
+   ],
+   "when": "most features and bugs",
+   "deferred": [],
+   "mandatory": []
+  },
+  {
+   "lane": "full",
+   "gates": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G7",
+    "G8",
+    "G9"
+   ],
+   "when": "new capability, regulated, or any ML",
+   "deferred": [],
+   "mandatory": []
+  },
+  {
+   "lane": "hotfix",
+   "gates": [
+    "G2",
+    "G6",
+    "G7",
+    "G9"
+   ],
+   "when": "production incident",
+   "deferred": [
+    "G2"
+   ],
+   "mandatory": [
+    "G9"
+   ]
+  }
+ ],
+ "chain": [
+  {
+   "id": "REQ-###",
+   "artifact": "A requirement",
+   "lives_in": "`specs/<capability>/spec.md`, on a heading line",
+   "upstream": "— (the root of the chain)"
+  },
+  {
+   "id": "AC-###",
+   "artifact": "An acceptance criterion",
+   "lives_in": "under its requirement's heading",
+   "upstream": "by **position**, not by an explicit link"
+  },
+  {
+   "id": "ADR-###",
+   "artifact": "An architectural decision",
+   "lives_in": "`decisions/ADR-###.md`, listed in `design.md`",
+   "upstream": "the `REQ-###` it serves"
+  },
+  {
+   "id": "TASK-###",
+   "artifact": "A unit of build work",
+   "lives_in": "`changes/<name>/tasks.md`",
+   "upstream": "`Implements: REQ-###`"
+  },
+  {
+   "id": "TEST",
+   "artifact": "An automated test",
+   "lives_in": "your own test suite",
+   "upstream": "the `AC-###` it exercises, by reference"
+  },
+  {
+   "id": "SLI-###",
+   "artifact": "A service level indicator",
+   "lives_in": "`ops/slo.md`",
+   "upstream": "the `REQ-###` it measures"
+  },
+  {
+   "id": "INSIGHT-###",
+   "artifact": "Something learned",
+   "lives_in": "`ops/postmortems/<name>.md`",
+   "upstream": "its destination and target"
+  }
+ ],
+ "findings": [
+  {
+   "code": "T0",
+   "meaning": "The file is not readable — not valid UTF-8, or a broken path",
+   "fix": "Repair or remove it. A validator that cannot read a file has not checked it"
+  },
+  {
+   "code": "T1",
+   "meaning": "`TASK-###` has no `Implements:` line",
+   "fix": "Bold the task id, and move the `Implements:` line directly under it"
+  },
+  {
+   "code": "T2",
+   "meaning": "`REQ-###` has no acceptance criteria",
+   "fix": "Write at least one, per `navi-skill-acceptance-criteria`"
+  },
+  {
+   "code": "T3",
+   "meaning": "`TASK-###` implements an unknown `REQ-###`",
+   "fix": "Always a defect in one of two files: the task names the wrong id, or the requirement was never written"
+  },
+  {
+   "code": "T4",
+   "meaning": "`REQ-###` is implemented by no task — **`--strict` only**",
+   "fix": "Add a task, or move the requirement to a later change"
   }
  ]
 }
@@ -661,22 +869,179 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
   try {
     DATA = JSON.parse(document.getElementById("navi-catalogue").textContent);
   } catch (err) {
-    document.getElementById("stats").innerHTML =
-      '<p class="small">The embedded counts could not be parsed. Regenerate them with ' +
-      '<code>python3 scripts/build_catalogue.py . --inject</code>.</p>';
+    document.getElementById("gateTable").innerHTML =
+      '<tbody><tr><td>The embedded tables could not be parsed. Regenerate them with ' +
+      '<code>python3 scripts/build_catalogue.py . --inject</code>.</td></tr></tbody>';
     return;
   }
-// ---------------------------------------------------------------- stats
+// ---------------------------------------------------------------- lifecycle SVG
   (function () {
-    var c = DATA.counts;
-    var rows = [
-      [c.agents, "agents"], [c.skills, "skills"], [c.disciplines, "disciplines"],
-      [c.phases, "ADLC phases"], [c.gates, "gates"], [c.lanes, "lanes"], [7, "CLI verbs"]
-    ];
-    var host = document.getElementById("stats");
-    rows.forEach(function (r) {
-      host.appendChild(el("div", "stat", "<b>" + r[0] + "</b><span>" + r[1] + "</span>"));
+    var P = DATA.phases, W = 118, GAP = 10, PAD = 6;
+    var total = PAD * 2 + P.length * W + (P.length - 1) * GAP;
+    var H = 252;
+    var s = ['<svg viewBox="0 0 ' + total + ' ' + H + '" width="' + total + '" height="' + H +
+             '" role="img" aria-label="The nine ADLC phases, each with its gate, and the insight loop from phase 9 back to phase 1" style="min-width:' + total + 'px">'];
+
+    s.push('<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+           '<path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>');
+
+    P.forEach(function (p, i) {
+      var x = PAD + i * (W + GAP);
+      s.push('<rect class="d-node" x="' + x + '" y="34" width="' + W + '" height="58" rx="9" stroke-width="1"/>');
+      s.push('<text class="d-num" x="' + (x + 10) + '" y="24">PHASE ' + p.n + '</text>');
+      // Phase names are short; "Operate & Monitor" and "Learn & Evolve" wrap to two lines.
+      var words = p.phase.split(" ");
+      if (p.phase.length > 12 && words.length > 1) {
+        var mid = words.length > 2 ? 2 : 1;
+        s.push('<text class="d-label" x="' + (x + W / 2) + '" y="59" text-anchor="middle">' +
+               esc(words.slice(0, mid).join(" ")) + '</text>');
+        s.push('<text class="d-label" x="' + (x + W / 2) + '" y="75" text-anchor="middle">' +
+               esc(words.slice(mid).join(" ")) + '</text>');
+      } else {
+        s.push('<text class="d-label" x="' + (x + W / 2) + '" y="68" text-anchor="middle">' + esc(p.phase) + '</text>');
+      }
+      // gate badge
+      s.push('<rect class="d-node-hi" x="' + (x + W / 2 - 21) + '" y="104" width="42" height="22" rx="11"/>');
+      s.push('<text class="d-label-inv" x="' + (x + W / 2) + '" y="119" text-anchor="middle">' + esc(p.gate) + '</text>');
+      // Owners are written "A + B" for co-ownership and "A / B / C" where any of
+      // three roles may own it. Both separators become one line each, so a long
+      // owner list stacks instead of running into the neighbouring phase.
+      var owner = p.owner.split(/\s*[+/]\s*/).filter(Boolean);
+      owner.slice(0, 3).forEach(function (o, k) {
+        s.push('<text class="d-sub" x="' + (x + W / 2) + '" y="' + (142 + k * 13) + '" text-anchor="middle">' + esc(o) + '</text>');
+      });
+      if (i < P.length - 1) {
+        var ax = x + W + 1, bx = x + W + GAP - 1;
+        s.push('<path class="d-line" d="M' + ax + ',63 L' + bx + ',63" stroke-width="1.4" marker-end="url(#ar)" style="color:var(--line-strong)"/>');
+      }
     });
+
+    // loop back from phase 9 to phase 1
+    var lastX = PAD + (P.length - 1) * (W + GAP) + W / 2;
+    var firstX = PAD + W / 2;
+    s.push('<path class="d-loop" d="M' + lastX + ',186 L' + lastX + ',216 L' + firstX + ',216 L' + firstX + ',186" ' +
+           'stroke-width="1.6" marker-end="url(#ar)" style="color:var(--accent)"/>');
+    s.push('<rect x="' + (total / 2 - 200) + '" y="204" width="400" height="24" rx="6" fill="var(--surface)"/>');
+    s.push('<text class="d-looplabel" x="' + (total / 2) + '" y="220" text-anchor="middle">' +
+           'INSIGHT-### → the product backlog, or an amendment to a navi-skill-* file</text>');
+    s.push('</svg>');
+    document.getElementById("lifecycleFig").innerHTML = s.join("");
+  })();
+
+  // ---------------------------------------------------------------- gate table
+  (function () {
+    var t = document.getElementById("gateTable");
+    var ownerFor = {};
+    DATA.phases.forEach(function (p) { ownerFor[p.gate] = p.owner; });
+    var h = "<thead><tr><th>Gate</th><th>Closes</th><th>Owner</th><th>Exit criteria, in short</th><th>Evidence</th></tr></thead><tbody>";
+    DATA.gates.forEach(function (g) {
+      h += "<tr><td><span class='chip gate'>" + esc(g.gate) + "</span></td>" +
+           "<td>" + esc(g.closes) + "</td>" +
+           "<td class='small'>" + esc(ownerFor[g.gate] || "") + "</td>" +
+           "<td>" + md(g.exit) + "</td>" +
+           "<td class='small'>" + md(g.evidence) + "</td></tr>";
+    });
+    t.innerHTML = h + "</tbody>";
+  })();
+
+  // ---------------------------------------------------------------- lane matrix
+  (function () {
+    var t = document.getElementById("laneMatrix");
+    var gates = DATA.gates.map(function (g) { return g.gate; });
+    var h = "<thead><tr><th>Lane</th><th>When</th>";
+    gates.forEach(function (g) { h += "<th>" + esc(g) + "</th>"; });
+    h += "<th>Count</th></tr></thead><tbody>";
+    DATA.lanes.forEach(function (l) {
+      h += "<tr><td class='lane'><code>" + esc(l.lane) + "</code></td><td class='small'>" + esc(l.when) + "</td>";
+      gates.forEach(function (g) {
+        if (l.gates.indexOf(g) === -1) {
+          h += "<td class='off' title='skipped — gate refuses it outright'>·</td>";
+        } else {
+          var mark = "●", tip = "enforced";
+          if (l.deferred.indexOf(g) !== -1) { mark = "◐"; tip = "enforced, deferred (retroactive within 48h)"; }
+          if (l.mandatory.indexOf(g) !== -1) { mark = "★"; tip = "enforced, mandatory"; }
+          h += "<td class='on' title='" + tip + "'>" + mark + "</td>";
+        }
+      });
+      h += "<td class='small'>" + l.gates.length + "</td></tr>";
+    });
+    t.innerHTML = h + "</tbody>";
+  })();
+
+  // ---------------------------------------------------------------- chain
+  (function () {
+    var C = DATA.chain, W = 128, GAP = 34, PAD = 8;
+    var total = PAD * 2 + C.length * W + (C.length - 1) * GAP;
+    var H = 118;
+    var s = ['<svg viewBox="0 0 ' + total + ' ' + H + '" width="' + total + '" height="' + H +
+             '" role="img" aria-label="The traceability chain: REQ to AC to ADR to TASK to TEST to SLI to INSIGHT" style="min-width:' + total + 'px">'];
+    s.push('<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">' +
+           '<path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>');
+    C.forEach(function (c, i) {
+      var x = PAD + i * (W + GAP);
+      s.push('<rect class="d-node-hi" x="' + x + '" y="26" width="' + W + '" height="34" rx="17"/>');
+      s.push('<text class="d-label-inv" x="' + (x + W / 2) + '" y="48" text-anchor="middle">' + esc(c.id) + '</text>');
+      s.push('<text class="d-sub" x="' + (x + W / 2) + '" y="78" text-anchor="middle">' + esc(c.artifact) + '</text>');
+      if (i < C.length - 1) {
+        s.push('<path class="d-line" d="M' + (x + W + 5) + ',43 L' + (x + W + GAP - 5) + ',43" ' +
+               'stroke-width="1.6" marker-end="url(#ar2)" style="color:var(--line-strong)"/>');
+      }
+    });
+    s.push('<text class="d-sub" x="' + PAD + '" y="104">Each declares the upstream ID it descends from. The chain runs one way only.</text>');
+    s.push('</svg>');
+    document.getElementById("chainFig").innerHTML = s.join("");
+
+    var t = document.getElementById("chainTable");
+    var h = "<thead><tr><th>ID</th><th>Artifact</th><th>Lives in</th><th>Declares upstream</th></tr></thead><tbody>";
+    C.forEach(function (c) {
+      h += "<tr><td><code>" + esc(c.id) + "</code></td><td>" + md(c.artifact) + "</td><td>" +
+           md(c.lives_in) + "</td><td>" + md(c.upstream) + "</td></tr>";
+    });
+    t.innerHTML = h + "</tbody>";
+
+    var f = document.getElementById("findingTable");
+    var fh = "<thead><tr><th>Finding</th><th>Meaning</th></tr></thead><tbody>";
+    DATA.findings.forEach(function (x) {
+      fh += "<tr><td><code>" + esc(x.code) + "</code></td><td>" + md(x.meaning) + "</td></tr>";
+    });
+    f.innerHTML = fh + "</tbody>";
+  })();
+
+  // ---------------------------------------------------------------- rework diagram
+  (function () {
+    var lane = DATA.lanes.filter(function (l) { return l.lane === "standard"; })[0];
+    if (!lane) return;
+    var gates = lane.gates, W = 66, GAP = 12, PAD = 8;
+    var total = PAD * 2 + gates.length * W + (gates.length - 1) * GAP;
+    var H = 150;
+    var stale = ["G6", "G7", "G8"];
+    var s = ['<svg viewBox="0 0 ' + total + ' ' + H + '" width="' + total + '" height="' + H +
+             '" role="img" aria-label="On a standard change, failing G6 marks G6, G7 and G8 stale" style="min-width:' + total + 'px">'];
+    s.push('<text class="d-num" x="' + PAD + '" y="16">LANE: STANDARD — 7 GATES ENFORCED</text>');
+    gates.forEach(function (g, i) {
+      var x = PAD + i * (W + GAP);
+      var isStale = stale.indexOf(g) !== -1;
+      var failed = g === "G6";
+      s.push('<rect x="' + x + '" y="28" width="' + W + '" height="38" rx="8" ' +
+             'fill="' + (isStale ? "var(--surface)" : "var(--accent)") + '" ' +
+             'stroke="' + (failed ? "var(--bad)" : isStale ? "var(--bad)" : "var(--accent)") + '" ' +
+             'stroke-width="' + (failed ? 2.2 : 1.4) + '" ' +
+             (isStale && !failed ? 'stroke-dasharray="4 3" ' : "") + '/>');
+      s.push('<text x="' + (x + W / 2) + '" y="52" text-anchor="middle" font-size="12" font-weight="800" ' +
+             'fill="' + (isStale ? "var(--bad)" : "var(--on-accent)") + '">' + esc(g) + '</text>');
+      s.push('<text class="d-sub" x="' + (x + W / 2) + '" y="82" text-anchor="middle">' +
+             (failed ? "fail" : isStale ? "stale" : "pass") + '</text>');
+    });
+    var x6 = PAD + gates.indexOf("G6") * (W + GAP) + W / 2;
+    var x8 = PAD + gates.indexOf("G8") * (W + GAP) + W / 2;
+    s.push('<path class="d-loop" d="M' + x6 + ',94 L' + x6 + ',108 L' + x8 + ',108" stroke-width="1.6" ' +
+           'marker-end="url(#ar)" style="color:var(--bad)" stroke="var(--bad)"/>');
+    s.push('<text class="d-sub" x="' + PAD + '" y="128" fill="var(--bad)">' +
+           'gate G6 --fail → 3 artifact(s) marked stale: gate:G6, gate:G7, gate:G8</text>');
+    s.push('<text class="d-sub" x="' + PAD + '" y="143">' +
+           'G4 and G9 are untouched — this lane cannot record them, so a stale entry could never be cleared.</text>');
+    s.push('</svg>');
+    document.getElementById("reworkFig").innerHTML = s.join("");
   })();
 
   })();
