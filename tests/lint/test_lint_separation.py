@@ -132,5 +132,138 @@ class TestSeparation(unittest.TestCase):
         body = "## Rules\nAs the architect, weigh coupling against delivery speed.\n"
         self.assertIn("SEP3", rules(separation_findings(ent("skill", body))))
 
+# ---------------------------------------------------------------------------
+# SEP5 — bulleted imperative directives in agents.
+#
+# SEP1 matched numbered lists only, so the same rules written as bullets
+# scored zero. These tests pin both halves of the behaviour: the directives
+# that must now be caught, and the judgment prose that must stay silent.
+# The second half is the load-bearing one — a linter that fires on valid
+# `Mental model` prose gets switched off.
+# ---------------------------------------------------------------------------
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Every one of these is an instruction to the reader or a statement of what an
+# artifact must contain (spec §4.1 test (a)).
+DIRECTIVE_BULLETS = [
+    "Write the ADR before starting implementation.",
+    "Record every gate verdict in the events log.",
+    "Keep the ADR index current.",
+    "Verify the rollback has been run.",
+    "Use the shipped template for every ADR.",
+    "Always escalate a vendor lock-in decision.",
+    "Never average two personas' disagreement.",
+    "Do not accept a spec without numbers.",
+    "Don't merge without a green gate.",
+    "First, run the traceability validator.",
+    "Ensure that the spec is testable before accepting Phase 3 work.",
+    "Ensure it is signed off.",
+    "The handoff record must name the receiving persona.",
+    "Every waiver must carry an expiry date.",
+    "You must record the verdict before handing off.",
+]
+
+# Judgment. Real `Mental model` bullets from the shipped corpus, plus the
+# near-miss shapes that a naive rule would trip on: a noun that is also a verb
+# in subject position, and `must`/`never`/`always` used declaratively.
+JUDGMENT_BULLETS = [
+    "Architecture is the set of decisions that are expensive to reverse.",
+    "Debt is a financing decision, not a moral failure.",
+    "Code is read far more often than written.",
+    "Testing does not create quality; it reveals it.",
+    "Monitoring input distributions catches decay weeks before outcomes does.",
+    "Rollback is only real if it has been run.",
+    "A model is a perishable asset.",
+    "Value and effort are both estimates.",
+    "Process that is disproportionate gets routed around.",
+    "Lineage is not documentation; it is the ability to answer a question.",
+    "Alerts that do not correspond to a decision train people to ignore alerts.",
+    # `never` / `always` / `must` as ordinary prose, not as instructions.
+    "The question is never whether it fails but whether we can detect it.",
+    "Every branch I add is a state someone must later reason about.",
+    "The interesting question is always who is wrong about, and how badly.",
+    # Nouns that English also allows as verbs, in subject position.
+    "Trust boundaries are where the design's assumptions stop being true.",
+    "Review is the cheapest control we have.",
+    "Record keeping is uneven across the teams.",
+    "Reporting is not the same as monitoring.",
+]
+
+class TestSEP5BulletedImperatives(unittest.TestCase):
+    def _agent(self, bullets, heading="## Working agreement"):
+        return ent("agent", heading + "\n" + "".join(f"- {b}\n" for b in bullets))
+
+    def test_each_directive_bullet_is_caught(self):
+        for bullet in DIRECTIVE_BULLETS:
+            with self.subTest(bullet=bullet):
+                found = separation_findings(self._agent([bullet]))
+                self.assertIn("SEP5", rules(found), f"not caught: {bullet}")
+
+    def test_each_judgment_bullet_is_not_caught(self):
+        for bullet in JUDGMENT_BULLETS:
+            with self.subTest(bullet=bullet):
+                found = separation_findings(self._agent([bullet], "## Mental model"))
+                self.assertEqual([], found, f"false positive on: {bullet}")
+
+    def test_one_finding_per_offending_bullet(self):
+        found = [f for f in separation_findings(self._agent(DIRECTIVE_BULLETS))
+                 if f.rule == "SEP5"]
+        self.assertEqual(len(DIRECTIVE_BULLETS), len(found))
+
+    def test_finding_quotes_the_offending_line(self):
+        found = separation_findings(self._agent(["Write the ADR before starting implementation."]))
+        self.assertIn("Write the ADR", found[0].message)
+        self.assertIn("line 2", found[0].message)
+
+    def test_multi_line_bullet_is_read_as_one_item(self):
+        body = ("## Working agreement\n"
+                "- Record the verdict in the events log before\n"
+                "  handing off to the next persona.\n")
+        self.assertIn("SEP5", rules(separation_findings(ent("agent", body))))
+
+    def test_directive_in_a_later_sentence_of_a_judgment_bullet_is_not_caught(self):
+        # Only the bullet's opening sentence is read as the imperative slot;
+        # `must` is still checked across the whole item, which is what form 2
+        # is for. This keeps trailing subordinate clauses from firing.
+        body = "## Mental model\n- Architecture is expensive to reverse, and always has been.\n"
+        self.assertEqual([], separation_findings(ent("agent", body)))
+
+    def test_checkbox_bullet_is_caught(self):
+        body = "## Working agreement\n- [ ] Verify the rollback has been run.\n"
+        self.assertIn("SEP5", rules(separation_findings(ent("agent", body))))
+
+    def test_emphasis_does_not_hide_the_imperative(self):
+        body = "## Working agreement\n- **Use** the shipped template for every ADR.\n"
+        self.assertIn("SEP5", rules(separation_findings(ent("agent", body))))
+
+    def test_directive_bullet_inside_a_fence_is_ignored(self):
+        body = "## Mission\nOwn it.\n\n```\n- Write the ADR before starting.\n```\n"
+        self.assertEqual([], separation_findings(ent("agent", body)))
+
+    def test_numbered_lists_are_still_caught_by_SEP1(self):
+        body = "## Working agreement\n1. Open the file\n2. Edit the header\n"
+        self.assertIn("SEP1", rules(separation_findings(ent("agent", body))))
+
+    def test_skills_may_contain_rules_as_bullets(self):
+        # Rules are what a skill is for — SEP5 is agent-only.
+        body = ("## Rules\n"
+                "- Record every decision.\n"
+                "- The ADR must contain a rejected-alternatives section.\n"
+                "- Always stamp the date.\n"
+                "- Never merge without a green gate.\n")
+        self.assertEqual([], separation_findings(ent("skill", body)))
+
+    def test_shipped_agent_corpus_stays_clean(self):
+        # The calibration guarantee: all 11 shipped agents were reviewed by
+        # hand and must keep scoring zero. If this fails, either an agent
+        # acquired a rule or SEP5 lost precision — both are worth stopping for.
+        from scripts.navi_lint.registry import load_entries
+        agents = [e for e in load_entries(REPO_ROOT) if e.kind == "agent"]
+        self.assertGreaterEqual(len(agents), 11)
+        hits = [f for e in agents for f in separation_findings(e)]
+        self.assertEqual([], hits, f"shipped agents no longer clean: {hits}")
+
+
 if __name__ == "__main__":
     unittest.main()
