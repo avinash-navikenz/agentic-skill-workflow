@@ -44,6 +44,14 @@ CAPABILITIES = [
      "fallback": "adopt the persona sequentially in this session"},
 ]
 
+ROOT_PLUGIN_MANIFEST = {
+    "name": "navi-delivery",
+    "description": "Agentic SDLC framework: persona agents over best-practice skills, plan to monitor",
+    "version": "0.1.0",
+    "author": {"name": "Navikenz"},
+    "keywords": ["sdlc", "adlc", "spec-driven", "agents", "skills"],
+}
+
 
 def tree(t, include_orchestrator=False):
     root = Path(t)
@@ -63,6 +71,10 @@ def tree(t, include_orchestrator=False):
     reg = root / "registry"
     reg.mkdir(parents=True)
     (reg / "capabilities.json").write_text(json.dumps(CAPABILITIES), encoding="utf-8")
+
+    plugin_dir = root / ".claude-plugin"
+    plugin_dir.mkdir(parents=True)
+    (plugin_dir / "plugin.json").write_text(json.dumps(ROOT_PLUGIN_MANIFEST), encoding="utf-8")
 
     (root / "templates" / "delivery").mkdir(parents=True)
     (root / "templates" / "delivery" / "AGENTS.md").write_text(
@@ -125,6 +137,19 @@ class TestBuildAdapters(unittest.TestCase):
             self.assertIn("navi-agent-orchestrator", text)
             self.assertIn("none (enforces gates without owning one)", text)
 
+    def test_claude_code_manifest_exists_matches_root_and_is_marked_generated(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = tree(t)
+            written = build(root, root / "adapters")
+            manifest_path = root / "adapters" / "claude-code" / ".claude-plugin" / "plugin.json"
+            self.assertIn(manifest_path, written)
+            data = json.loads(manifest_path.read_text(encoding="utf-8"))
+            self.assertEqual(data["name"], ROOT_PLUGIN_MANIFEST["name"])
+            self.assertEqual(data["version"], ROOT_PLUGIN_MANIFEST["version"])
+            # JSON has no comment syntax, so the do-not-edit banner is a key,
+            # not an HTML comment — but it must still say GENERATED.
+            self.assertIn("GENERATED", data["_generated"])
+
     def test_copied_frontmatter_still_starts_the_file(self):
         with tempfile.TemporaryDirectory() as t:
             root = tree(t)
@@ -154,6 +179,13 @@ class TestBuildAdapters(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             root = tree(t)
             (root / "registry" / "capabilities.json").write_text("{not json", encoding="utf-8")
+            rc = main([str(root)])
+            self.assertEqual(rc, 1)
+
+    def test_main_reports_readable_message_not_traceback_on_bad_root_plugin_manifest(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = tree(t)
+            (root / ".claude-plugin" / "plugin.json").write_text("not json", encoding="utf-8")
             rc = main([str(root)])
             self.assertEqual(rc, 1)
 
