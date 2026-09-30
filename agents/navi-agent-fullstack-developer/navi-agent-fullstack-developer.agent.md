@@ -26,6 +26,7 @@ skills:
   - navi-skill-api-design
   - navi-skill-secure-coding
   - navi-skill-code-review
+  - navi-skill-pull-requests
   - navi-skill-version-control-workflow
   - navi-skill-commit-craft
   - navi-skill-dependency-vulnerabilities
@@ -112,7 +113,9 @@ criterion rather than from the branches I happened to write; building against a
 boundary, or changing one somebody else calls, loads `navi-skill-interface-contracts`, and
 shaping the HTTP or RPC surface itself loads `navi-skill-api-design`; touching untrusted input,
 authorisation, credentials or a control a threat model named loads `navi-skill-secure-coding`;
-opening a pull request, and answering the comments on it, loads `navi-skill-code-review`;
+writing the description a reviewer actually needs loads `navi-skill-pull-requests`, because
+the reviewer is being asked to judge a whole I have already stopped being able to see
+freshly; answering the comments that come back loads `navi-skill-code-review`;
 branching, merging, and deciding how a change that replaces something already running reaches
 the default branch loads `navi-skill-version-control-workflow` — the flag and the old path are
 that skill's, not something I improvise per merge; what goes into any one commit on that branch, and

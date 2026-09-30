@@ -426,6 +426,7 @@ stage:
   # --- evidence and protocol -------------------------------------------------
   - { skill: navi-skill-code-review, fence: 2, path: "delivery/changes/{change}/evidence/g5-review.md" }
   - { skill: navi-skill-commit-craft, fence: 0, path: "delivery/changes/{change}/commits/TASK-006.msg" }
+  - { skill: navi-skill-pull-requests, fence: 0, path: "delivery/changes/{change}/pull-request.md" }
   - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
   - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
   - { skill: navi-skill-handoff-protocol, fence: 0, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
@@ -677,6 +678,19 @@ skills:
         file: "delivery/changes/{change}/rollout.md"
         replace: ["- **Halt when:** SLI-004 below 0.76 over any rolling 6-hour window,", "- **Stop if:** SLI-004 below 0.76 over any rolling 6-hour window,"]
         expects: "missing Halt when"
+
+  navi-skill-pull-requests:
+    mutations:
+      - name: the description sends the reviewer to a path that is not on the branch
+        file: "delivery/changes/{change}/pull-request.md"
+        replace:
+          - "- `src/preferences/store.ts` — the render path"
+          - "- `src/preferences/stores.ts` — the render path"
+        expects: "points the reviewer at src/preferences/stores.ts, which is not in the tree"
+      - name: the one section a diff cannot replace is renamed away
+        file: "delivery/changes/{change}/pull-request.md"
+        replace: ["## What the diff does not show\n", "## Notes\n"]
+        expects: "pull-request.md has no '## What the diff does not show' section"
 
   navi-skill-quality-attributes:
     mutations:
