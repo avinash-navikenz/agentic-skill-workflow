@@ -425,6 +425,7 @@ stage:
   - { skill: navi-skill-outcome-and-kpi-definition, fence: 1, path: "delivery/ops/postmortems/{change}.md", mode: append }
   # --- evidence and protocol -------------------------------------------------
   - { skill: navi-skill-code-review, fence: 2, path: "delivery/changes/{change}/evidence/g5-review.md" }
+  - { skill: navi-skill-commit-craft, fence: 0, path: "delivery/changes/{change}/commits/TASK-006.msg" }
   - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
   - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
   - { skill: navi-skill-handoff-protocol, fence: 0, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
@@ -496,6 +497,19 @@ skills:
       record, TODOs without a tracker id, credential-shaped strings in the branch history) are
       exercised indirectly by navi-skill-secure-coding and navi-skill-version-control-workflow,
       which run the same greps against the same fixture.
+
+  navi-skill-commit-craft:
+    mutations:
+      - name: a Refs trailer names a task that is in no tasks.md
+        file: "delivery/changes/{change}/commits/TASK-006.msg"
+        replace: ["Refs: TASK-006", "Refs: TASK-906"]
+        expects: "Refs names TASK-906, which is in no tasks.md entry"
+      - name: one commit carries two reasons for changing
+        file: "delivery/changes/{change}/commits/TASK-006.msg"
+        replace:
+          - "TASK-006: fall back to the request header when the store is unreadable"
+          - "TASK-006: fall back to the request header and rename the settings route"
+        expects: "joins two changes with 'and'"
 
   navi-skill-data-contracts:
     mutations:

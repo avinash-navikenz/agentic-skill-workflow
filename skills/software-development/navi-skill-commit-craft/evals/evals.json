@@ -1,0 +1,63 @@
+{
+  "skill": "navi-skill-commit-craft",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "I've finished the header fallback for TASK-006. Write me a commit message for it.",
+      "expect": [
+        "Why:",
+        "Satisfies: AC-",
+        "Refs: TASK-006",
+        "Tracker:",
+        "blank line"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "My working tree has the theme fallback, a console.log I left in, and a rename in an unrelated file. How do I commit this?",
+      "expect": [
+        "git add -p",
+        "one reason",
+        "git diff --staged",
+        "two commits",
+        ".gitignore"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The transaction is opening a connection, writing three rows and then failing to commit — and it only happens on the staging database. Find the leak.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "The branch is ready. Should we squash-merge it, and does the old localStorage path come out in the same merge?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Put 'Fixes AB#4421' in this commit so the Azure Boards item closes when I push the branch.",
+      "expect": [
+        "not in a branch commit",
+        "squash",
+        "the pull request",
+        "navi-skill-pull-requests"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The message on the commit I pushed an hour ago is wrong — amend it and force-push.",
+      "expect": [
+        "amend only while the commit is unpushed",
+        "navi-skill-version-control-workflow",
+        "force-push",
+        "review thread"
+      ]
+    }
+  ]
+}
