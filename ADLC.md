@@ -74,10 +74,15 @@ with follow-ups.
 disk. A verdict asserted in prose and never recorded does not exist: `status`, `validate`
 and `archive` read only `.adlc/state.json` and `.adlc/events.jsonl`.
 
-**The check is existence, not content.** Any path that resolves is accepted — including an
-empty directory. The gate records that evidence was *named*; a human reviewing the change
-is what establishes that the evidence says anything. Treat the path as a citation, and
+**The check is shape, not content.** Evidence must be a regular, non-empty file; a
+directory, a device and a zero-byte file are each refused with their own message. The gate
+records that evidence was *named* and that something is there to open; a human reviewing the
+change is what establishes that the evidence says anything. Treat the path as a citation, and
 make it one a reader can follow.
+
+**Every gate decision is attributed.** The event carries `actor` and `actor_source` — see
+[docs/CLI.md](docs/CLI.md) — so a gate co-owned by two agents, as G3 and G6 are, shows which
+owner recorded the verdict.
 
 Never record a gate whose evidence was produced before the most recent change to that
 gate's inputs. Regenerate, then record.

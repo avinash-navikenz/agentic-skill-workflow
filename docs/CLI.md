@@ -181,9 +181,9 @@ three lines below its task. Each of those produces no finding at all. See
 
 ---
 
-## `gate <G#> --pass|--fail --evidence <path>`
+## `gate <G#> --pass|--fail --evidence <path> [--actor <name>]`
 
-## `gate <G#> --waive <reason> --expires <YYYY-MM-DD>`
+## `gate <G#> --waive <reason> --expires <YYYY-MM-DD> [--actor <name>]`
 
 Records a gate decision into `state.json` and appends an event to `events.jsonl`.
 
@@ -192,7 +192,7 @@ navi-delivery gate G6 --pass --evidence delivery/changes/x/evidence/g6-tests.tap
 ```
 
 ```text
-G6 pass (evidence: delivery/changes/x/evidence/g6-tests.tap)
+G6 pass (evidence: delivery/changes/x/evidence/g6-tests.tap, by: dev@navikenz.com)
 ```
 
 A failure marks the gate and every later gate **in the same lane** stale:
@@ -205,7 +205,7 @@ rework required — 3 artifact(s) marked stale
 Re-recording is supported and visible:
 
 ```text
-G6 re-recorded: fail -> pass (evidence: .../g6-tests.tap)
+G6 re-recorded: fail -> pass (evidence: .../g6-tests.tap, by: dev@navikenz.com)
 ```
 
 The new event carries `previous: "fail"`. Nothing is overwritten. **Recording a gate clears
@@ -218,10 +218,13 @@ navi-delivery gate G8 --waive "SLI lands with the next platform release" --expir
 ```
 
 ```text
-G8 waived until 2026-12-31
+G8 waived until 2026-12-31 (approved by: dev@navikenz.com)
 ```
 
-Appends a row to `.adlc/waivers.md` with the date, change, gate, reason and expiry.
+Appends a row to `.adlc/waivers.md` with the date, change, gate, reason, expiry and
+approver. The `Approved by` column the template header promises is populated with the
+resolved actor: this CLI has no second-party approval step, so the person who records a
+waiver is the person accepting the debt.
 
 > **A waiver's scope is the whole gate.** One reason and one expiry cover every criterion
 > that gate checks. Write the reason so a reader can tell which criterion was in question.
@@ -236,6 +239,11 @@ Appends a row to `.adlc/waivers.md` with the date, change, gate, reason and expi
 | Both or neither verdict flag | `specify exactly one of --pass or --fail` |
 | No `--evidence` | `--evidence is required to record a gate decision` |
 | Evidence path missing | `evidence file not found: nope.md` |
+| Evidence is a directory | `evidence must be a file, not a directory: . — name the file inside it that records the decision` |
+| Evidence is not a regular file | `evidence must be a regular file: /dev/null is a character device` |
+| Evidence is empty | `evidence file is empty (0 bytes): zero.md — a gate verdict must point at something a later reader can open` |
+| `--actor` with no value | `--actor requires a name — got none (or the next token looks like a flag)` |
+| No name derivable at all | `cannot determine who is recording this decision — pass --actor <name> or set NAVI_DELIVERY_ACTOR` |
 | `--waive` with no reason | `--waive requires a reason — got none (or the next token looks like a flag)` |
 | Reason containing a newline | `waiver reason must not contain a newline — it becomes a single waivers.md table row` |
 | No `--expires` | `a waiver requires --expires <YYYY-MM-DD>` |
@@ -245,11 +253,34 @@ Appends a row to `.adlc/waivers.md` with the date, change, gate, reason and expi
 
 All refusals write nothing — not the state, not the waivers row, not the event.
 
-> **`--evidence` checks existence, not content.** Any path that resolves is accepted,
-> including an empty directory. See [CONCEPTS.md](CONCEPTS.md) §3.
+> **`--evidence` must be a regular, non-empty file.** A directory, a device and a zero-byte
+> file are each refused with their own message. A symlink is judged by what it resolves to.
+> The content is still not read — evidence proves something was produced, not that it says
+> what you claim.
 
-> **Events record no actor.** G3 and G6 are each co-owned by two agents, and the log cannot
-> say which recorded the verdict. Name the person inside the evidence file where it matters.
+### Who recorded it
+
+Every gate event carries `actor` and `actor_source`. The name is resolved from the first
+source that answers:
+
+| Order | Source | `actor_source` |
+|---|---|---|
+| 1 | `--actor <name>` | `flag` |
+| 2 | `$NAVI_DELIVERY_ACTOR` | `env` |
+| 3 | `git config user.email` (in the working directory) | `git` |
+| 4 | `$USER` / `$LOGNAME` / the OS login | `login` |
+
+If none answers, the decision is **refused** rather than recorded as unknown.
+
+`--actor` is deliberately *not* required: making it so would break every documented
+invocation, the golden path and the test suite, to buy a name `git config` already knows.
+What makes derivation sufficient is `actor_source` — a name typed on purpose (`flag`,
+`env`) is stronger evidence than one inferred from the shell (`login`), and an auditor
+reading `events.jsonl` can tell them apart. A `login`-sourced actor prints a one-line note
+suggesting `--actor`; the stronger sources print nothing.
+
+This is what lets the log answer "which owner recorded this?" for the co-owned gates G3 and
+G6.
 
 ---
 

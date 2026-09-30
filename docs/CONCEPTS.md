@@ -124,10 +124,17 @@ A verdict asserted in a handoff, a commit message or a conversation does not exi
 the framework is concerned. This is why `--evidence` is mandatory on both `--pass` and
 `--fail`.
 
-**The limit of this, stated plainly:** the check is that the path exists, not that it says
-anything. An empty directory is accepted. The mechanism buys you a citation that a human can
-follow and an append-only record of who decided what and when — not automated verification
-of the evidence itself. Treat it as a bibliography, not a proof.
+**The limit of this, stated plainly:** the check is that the path is a regular, non-empty
+file, not that the file says anything. A directory, a device and a zero-byte file are each
+refused, so a verdict can no longer cite nothing — but a file containing one space would
+pass. The mechanism buys you a citation that a human can follow and an append-only record of
+who decided what and when — not automated verification of the evidence itself. Treat it as a
+bibliography, not a proof.
+
+Every gate event also records `actor` and `actor_source`: who recorded the verdict, and how
+strongly that name is attested — typed with `--actor`, read from `$NAVI_DELIVERY_ACTOR` or
+`git config user.email`, or inferred from the login. For the co-owned gates G3 and G6 that
+is what lets the log say *which* owner decided.
 
 The record is append-only in a way that matters. Re-recording a gate does not overwrite the
 old verdict; it appends a new event carrying `previous`. Six months later the log still says

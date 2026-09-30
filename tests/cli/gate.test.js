@@ -205,11 +205,14 @@ test("waiving a previously failed gate clears its own stale entry", () => {
 test("a waiver reason containing a pipe is escaped, producing a well-formed table row", () => {
   const root = repo();
   assert.strictEqual(
-    gate.run(["G3", "--waive", "no risk | acceptable", "--expires", "2026-12-31"], root, () => {}), 0);
+    gate.run(["G3", "--waive", "no risk | acceptable", "--expires", "2026-12-31",
+              "--actor", "Dana Okonkwo"], root, () => {}), 0);
   const text = fs.readFileSync(path.join(root, "delivery", ".adlc", "waivers.md"), "utf8");
   const row = text.split("\n").find((l) => l.includes("G3"));
   assert.ok(row, "expected a waivers.md row for G3");
-  assert.match(row, /^\| \d{4}-\d{2}-\d{2} \| c \| G3 \| no risk \\\| acceptable \| 2026-12-31 \| \|$/);
+  // The final column was `| |` until 2c; it now carries the approver, which is
+  // what the template header has always promised.
+  assert.match(row, /^\| \d{4}-\d{2}-\d{2} \| c \| G3 \| no risk \\\| acceptable \| 2026-12-31 \| Dana Okonkwo \|$/);
 });
 
 // Finding C: a reason containing a newline cannot be escaped into one row.
@@ -230,4 +233,176 @@ test("failing a gate on 'express' marks stale only within that lane's gate set",
   assert.strictEqual(gate.run(["G6", "--fail", "--evidence", "evidence.md"], root, () => {}), 0);
   const s = readState(root);
   assert.deepStrictEqual(s.stale.slice().sort(), ["gate:G6", "gate:G7"]);
+});
+
+// ---------------------------------------------------------------------------
+// 2a — --evidence accepted anything that existed. `--evidence .`,
+// `--evidence /dev/null` and an empty directory all recorded a pass, so a
+// fully-archived change could be evidenced by nothing at all. Evidence must
+// be a regular, non-empty file, and each way of failing gets its own message.
+// ---------------------------------------------------------------------------
+function refusal(root, args) {
+  const lines = [];
+  const code = gate.run(args, root, (s) => lines.push(s));
+  return { code, out: lines.join("\n") };
+}
+
+test("evidence naming a directory is refused, and says so", () => {
+  const root = repo();
+  const { code, out } = refusal(root, ["G2", "--pass", "--evidence", "."]);
+  assert.strictEqual(code, 1);
+  assert.match(out, /not a directory/);
+  assert.strictEqual(readState(root).gates.G2, undefined);
+  assert.deepStrictEqual(readEvents(root).filter((e) => e.gate === "G2"), []);
+});
+
+test("evidence naming an empty directory is refused as a directory", () => {
+  const root = repo();
+  fs.mkdirSync(path.join(root, "empty-dir"));
+  const { code, out } = refusal(root, ["G2", "--pass", "--evidence", "empty-dir"]);
+  assert.strictEqual(code, 1);
+  assert.match(out, /not a directory/);
+});
+
+test("evidence naming a device is refused with its own message", () => {
+  const root = repo();
+  const { code, out } = refusal(root, ["G2", "--pass", "--evidence", "/dev/null"]);
+  assert.strictEqual(code, 1);
+  assert.match(out, /must be a regular file/);
+  assert.match(out, /character device/);
+  assert.strictEqual(readState(root).gates.G2, undefined);
+});
+
+test("a zero-byte evidence file is refused with its own message", () => {
+  const root = repo();
+  fs.writeFileSync(path.join(root, "zero.md"), "");
+  const { code, out } = refusal(root, ["G2", "--pass", "--evidence", "zero.md"]);
+  assert.strictEqual(code, 1);
+  assert.match(out, /empty \(0 bytes\)/);
+  assert.strictEqual(readState(root).gates.G2, undefined);
+});
+
+test("each evidence refusal carries a distinct message", () => {
+  const root = repo();
+  fs.writeFileSync(path.join(root, "zero.md"), "");
+  const messages = [".", "/dev/null", "zero.md", "nope.md"]
+    .map((v) => refusal(root, ["G2", "--pass", "--evidence", v]).out);
+  assert.strictEqual(new Set(messages).size, 4, messages.join(" | "));
+});
+
+test("a symlink resolving to a real non-empty file is accepted", () => {
+  const root = repo();
+  fs.symlinkSync(path.join(root, "evidence.md"), path.join(root, "link.md"));
+  assert.strictEqual(gate.run(["G2", "--pass", "--evidence", "link.md"], root, () => {}), 0);
+});
+
+test("a symlink resolving to a device is refused", () => {
+  const root = repo();
+  fs.symlinkSync("/dev/null", path.join(root, "devlink"));
+  const { code, out } = refusal(root, ["G2", "--pass", "--evidence", "devlink"]);
+  assert.strictEqual(code, 1);
+  assert.match(out, /must be a regular file/);
+});
+
+// ---------------------------------------------------------------------------
+// 2b — gate events recorded no actor, so a log covering co-owned gates
+// (G3, G6) could not say which owner recorded a verdict. The actor is derived
+// with an explicit override, and its provenance is recorded alongside it.
+// ---------------------------------------------------------------------------
+test("a gate event records an actor and where the name came from", () => {
+  const root = repo();
+  assert.strictEqual(gate.run(["G2", "--pass", "--evidence", "evidence.md"], root, () => {}), 0);
+  const evt = readEvents(root).at(-1);
+  assert.ok(evt.actor, "no actor on the event");
+  assert.ok(["flag", "env", "git", "login"].includes(evt.actor_source), evt.actor_source);
+});
+
+test("--actor wins over every derived source and is recorded as such", () => {
+  const root = repo();
+  gate.run(["G2", "--pass", "--evidence", "evidence.md", "--actor", "Dana Okonkwo"], root, () => {});
+  const evt = readEvents(root).at(-1);
+  assert.strictEqual(evt.actor, "Dana Okonkwo");
+  assert.strictEqual(evt.actor_source, "flag");
+});
+
+test("a failed gate is attributed too", () => {
+  const root = repo();
+  gate.run(["G2", "--fail", "--evidence", "evidence.md", "--actor", "Sam Reyes"], root, () => {});
+  const evt = readEvents(root).at(-1);
+  assert.strictEqual(evt.verdict, "fail");
+  assert.strictEqual(evt.actor, "Sam Reyes");
+});
+
+test("two owners recording the same co-owned gate are distinguishable in the log", () => {
+  const root = repo();
+  gate.run(["G3", "--fail", "--evidence", "evidence.md", "--actor", "architect@x"], root, () => {});
+  gate.run(["G3", "--pass", "--evidence", "evidence.md", "--actor", "security@x"], root, () => {});
+  const g3 = readEvents(root).filter((e) => e.gate === "G3");
+  assert.deepStrictEqual(g3.map((e) => e.actor), ["architect@x", "security@x"]);
+  assert.deepStrictEqual(g3.map((e) => e.verdict), ["fail", "pass"]);
+});
+
+test("--actor with no value is refused rather than borrowing the next flag", () => {
+  const root = repo();
+  const { code, out } = refusal(root, ["G2", "--pass", "--evidence", "evidence.md", "--actor", "--fail"]);
+  assert.strictEqual(code, 1);
+  assert.match(out, /--actor requires a name/);
+  assert.strictEqual(readState(root).gates.G2, undefined);
+});
+
+test("the actor is resolved before anything is written, so a bad actor writes nothing", () => {
+  const root = repo();
+  const before = readEvents(root).length;
+  refusal(root, ["G2", "--waive", "a reason", "--expires", "2030-01-01", "--actor", "--pass"]);
+  assert.strictEqual(readEvents(root).length, before);
+  const rows = fs.readFileSync(path.join(root, "delivery", ".adlc", "waivers.md"), "utf8")
+    .split("\n").filter((l) => l.startsWith("| 2"));
+  assert.deepStrictEqual(rows, [], "a waiver row was written despite the refusal");
+});
+
+// ---------------------------------------------------------------------------
+// 2c — waivers emitted `| |` under a header promising "Approved by".
+// ---------------------------------------------------------------------------
+function waiversText(root) {
+  return fs.readFileSync(path.join(root, "delivery", ".adlc", "waivers.md"), "utf8");
+}
+
+test("a waiver row populates the Approved by column", () => {
+  const root = repo();
+  assert.strictEqual(
+    gate.run(["G3", "--waive", "vendor SLA pending", "--expires", "2030-01-01",
+              "--actor", "Dana Okonkwo"], root, () => {}), 0);
+  const row = waiversText(root).trim().split("\n").at(-1);
+  assert.match(row, /\| Dana Okonkwo \|$/);
+  assert.doesNotMatch(row, /\| \|$/);
+});
+
+test("every waiver row has a non-empty final column", () => {
+  const root = repo();
+  gate.run(["G3", "--waive", "one", "--expires", "2030-01-01"], root, () => {});
+  gate.run(["G6", "--waive", "two", "--expires", "2030-01-01"], root, () => {});
+  const rows = waiversText(root).trim().split("\n").filter((l) => l.startsWith("| 2"));
+  assert.strictEqual(rows.length, 2);
+  for (const row of rows) {
+    const approver = row.split("|").at(-2).trim();
+    assert.notStrictEqual(approver, "", `empty Approved by in: ${row}`);
+  }
+});
+
+test("a waiver event records the approver and the strength of that attribution", () => {
+  const root = repo();
+  gate.run(["G3", "--waive", "vendor SLA pending", "--expires", "2030-01-01",
+            "--actor", "Dana Okonkwo"], root, () => {});
+  const evt = readEvents(root).at(-1);
+  assert.strictEqual(evt.verdict, "waived");
+  assert.strictEqual(evt.actor, "Dana Okonkwo");
+  assert.strictEqual(evt.actor_source, "flag");
+});
+
+test("a pipe in an actor name is escaped, not left to shift the table", () => {
+  const root = repo();
+  gate.run(["G3", "--waive", "r", "--expires", "2030-01-01", "--actor", "a|b"], root, () => {});
+  const row = waiversText(root).trim().split("\n").at(-1);
+  assert.match(row, /a\\\|b/);
+  assert.strictEqual(row.split(/(?<!\\)\|/).length - 1, 7);
 });

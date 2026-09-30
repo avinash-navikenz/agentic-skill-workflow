@@ -6,6 +6,7 @@ const { appendEvent } = require("../lib/events");
 const { gatesForLane, ALL_GATES } = require("../lib/lanes");
 const { waiversPath } = require("../lib/paths");
 const { flagValue } = require("../lib/args");
+const { resolveActor, actorWarning } = require("../lib/actor");
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
@@ -65,6 +66,45 @@ function clearOwnStale(s, gate) {
   s.stale = s.stale.filter((entry) => entry !== `gate:${gate}`);
 }
 
+// The whole point of --evidence is that a verdict points at something a later
+// reader can open. A bare existsSync let `--evidence .`, `--evidence /dev/null`
+// and an empty directory all record a pass, so a fully-archived change could
+// be evidenced by nothing at all. Evidence must be a *regular, non-empty file*,
+// and each way of failing that gets its own message — "not found" tells you to
+// check the path, "is a directory" tells you to name a file inside it, and
+// "is empty" tells you the file exists but says nothing.
+//
+// statSync follows symlinks deliberately: a symlink to a real report is
+// evidence, a symlink to /dev/null is not, and the distinction that matters is
+// what the link resolves to.
+function describeNonFile(st) {
+  if (st.isDirectory()) return "a directory";
+  if (st.isCharacterDevice()) return "a character device";
+  if (st.isBlockDevice()) return "a block device";
+  if (st.isFIFO()) return "a FIFO";
+  if (st.isSocket()) return "a socket";
+  return "not a regular file";
+}
+
+function evidenceError(cwd, value) {
+  let st;
+  try {
+    st = fs.statSync(path.resolve(cwd, value));
+  } catch {
+    return `evidence file not found: ${value}`;
+  }
+  if (st.isDirectory()) {
+    return `evidence must be a file, not a directory: ${value} — name the file inside it that records the decision`;
+  }
+  if (!st.isFile()) {
+    return `evidence must be a regular file: ${value} is ${describeNonFile(st)}`;
+  }
+  if (st.size === 0) {
+    return `evidence file is empty (0 bytes): ${value} — a gate verdict must point at something a later reader can open`;
+  }
+  return null;
+}
+
 function run(argv, cwd, emit = console.log) {
   const gate = argv[0];
   if (!ALL_GATES.includes(gate)) { emit(`unknown gate '${gate}' — valid: ${ALL_GATES.join(", ")}`); return 1; }
@@ -87,6 +127,13 @@ function run(argv, cwd, emit = console.log) {
   // it is never silently overwritten, only ever appended to.
   const previous = s.gates[gate];
 
+  // Resolved before either branch: a pass, a fail and a waiver are all
+  // decisions the record must be able to attribute. See cli/lib/actor.js for
+  // why this is derived rather than a required flag.
+  const who = resolveActor(argv, cwd);
+  if (who.error) { emit(who.error); return 1; }
+  const warning = actorWarning(who.source);
+
   const waive = flagValue(argv, "--waive");
   if (waive.present) {
     // Fix round 1, finding A: an omitted reason must not silently borrow
@@ -105,17 +152,27 @@ function run(argv, cwd, emit = console.log) {
     const problem = expiryError(expires.value);
     if (problem) { emit(problem); return 1; }
 
-    const row = `| ${new Date().toISOString().slice(0, 10)} | ${s.change} | ${gate} | ${escapeForTableCell(waiveReason)} | ${expires.value} | |\n`;
+    // 2c: the template header promises "Approved by" and the row emitted an
+    // empty cell, so a waiver — the one artifact that exists to record an
+    // accepted exception — named nobody. Decision: populate it rather than
+    // drop the column. This CLI has no second-party approval step; the person
+    // who records a waiver is the person accepting the debt, and a
+    // self-asserted name is the honest answer to "who do I ask about this?".
+    // How strongly that name is attested is recorded on the event as
+    // actor_source, so an inferred name is never mistaken for a typed one.
+    const row = `| ${new Date().toISOString().slice(0, 10)} | ${s.change} | ${gate} | ${escapeForTableCell(waiveReason)} | ${expires.value} | ${escapeForTableCell(who.actor)} |\n`;
     fs.appendFileSync(waiversPath(cwd), row);
     s.gates[gate] = "waived";
     clearOwnStale(s, gate);
     writeState(cwd, s);
-    const evt = { change: s.change, gate, verdict: "waived", reason: waiveReason, expires: expires.value };
+    const evt = { change: s.change, gate, verdict: "waived", reason: waiveReason,
+                  expires: expires.value, actor: who.actor, actor_source: who.source };
     if (previous) evt.previous = previous;
     appendEvent(cwd, evt);
+    if (warning) emit(warning);
     emit(previous
-      ? `${gate} re-recorded: ${previous} -> waived until ${expires.value}`
-      : `${gate} waived until ${expires.value}`);
+      ? `${gate} re-recorded: ${previous} -> waived until ${expires.value} (approved by: ${who.actor})`
+      : `${gate} waived until ${expires.value} (approved by: ${who.actor})`);
     return 0;
   }
 
@@ -125,7 +182,8 @@ function run(argv, cwd, emit = console.log) {
 
   const evidence = flagValue(argv, "--evidence");
   if (!evidence.value) { emit("--evidence is required to record a gate decision"); return 1; }
-  if (!fs.existsSync(path.resolve(cwd, evidence.value))) { emit(`evidence file not found: ${evidence.value}`); return 1; }
+  const evidenceProblem = evidenceError(cwd, evidence.value);
+  if (evidenceProblem) { emit(evidenceProblem); return 1; }
 
   const verdict = passed ? "pass" : "fail";
   s.gates[gate] = verdict;
@@ -142,12 +200,14 @@ function run(argv, cwd, emit = console.log) {
     clearOwnStale(s, gate);
   }
   writeState(cwd, s);
-  const evt = { change: s.change, gate, verdict, evidence: evidence.value };
+  const evt = { change: s.change, gate, verdict, evidence: evidence.value,
+                actor: who.actor, actor_source: who.source };
   if (previous) evt.previous = previous;
   appendEvent(cwd, evt);
+  if (warning) emit(warning);
   emit(previous
-    ? `${gate} re-recorded: ${previous} -> ${verdict} (evidence: ${evidence.value})`
-    : `${gate} ${verdict} (evidence: ${evidence.value})`);
+    ? `${gate} re-recorded: ${previous} -> ${verdict} (evidence: ${evidence.value}, by: ${who.actor})`
+    : `${gate} ${verdict} (evidence: ${evidence.value}, by: ${who.actor})`);
   if (failed) emit(`rework required — ${s.stale.length} artifact(s) marked stale`);
   return 0;
 }

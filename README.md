@@ -214,13 +214,17 @@ real future expiry, into `delivery/.adlc/waivers.md`. See [`ADLC.md`](ADLC.md).
 
 These are real, recorded, and worth knowing before you meet them:
 
-- **`gate --evidence` checks existence, not content.** Any path that exists is accepted,
-  including an empty directory. The gate records *that* evidence was named, not that it
+- **`gate --evidence` checks shape, not content.** Evidence must be a regular, non-empty
+  file — a directory, a device and a zero-byte file are each refused — but a file
+  containing one space passes. The gate records *that* evidence was named, not that it
   says anything.
 - **`gate --waive` waives the whole gate.** One reason and one expiry attach to the gate,
   so a single unfixable finding waives every criterion the gate covers rather than itself.
-- **Gate events record no actor.** A gate co-owned by two agents cannot show which owner
-  recorded the verdict.
+- **Gate actors are derived, not proven.** Every gate event carries `actor` and
+  `actor_source`, resolved from `--actor`, `$NAVI_DELIVERY_ACTOR`, `git config user.email`
+  or the login, in that order. That is attribution, not authentication: nothing stops
+  someone passing a name that is not theirs. `actor_source` records how the name was
+  obtained so a reader can weigh it.
 - **G4 is enforced only on the `full` lane.** `standard` cannot record it at all; the CLI
   refuses the gate outright. This is why `navi-skill-lane-selection` routes anything
   touching a dataset, schema, feature or model to `full`.
