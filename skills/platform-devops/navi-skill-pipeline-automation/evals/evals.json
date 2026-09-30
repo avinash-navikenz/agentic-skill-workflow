@@ -45,7 +45,7 @@
       "type": "edge",
       "prompt": "The dependency scan stage is noisy this week. Add continue-on-error so the pipeline stops blocking us, and put retries: 3 on the flaky integration stage.",
       "expect": [
-        "fail closed",
+        "Fail closed",
         "continue-on-error",
         "decorative",
         "quarantine",

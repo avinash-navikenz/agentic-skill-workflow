@@ -22,6 +22,9 @@ skills:
   - navi-skill-phase-gate-protocol
   - navi-skill-handoff-protocol
   - navi-skill-human-checkpoints
+  - navi-skill-requirements-elicitation
+  - navi-skill-non-functional-requirements
+  - navi-skill-outcome-and-kpi-definition
 capabilities: [read_file, write_file, search, ask_human]
 consumes: [proposal.md, project.md, specs/<capability>/spec.md]
 produces: [changes/<name>/specs/<capability>/spec.md, handoffs.md]
@@ -80,8 +83,17 @@ spec.
 
 ## Skill invocation plan
 
-Specification work loads `navi-skill-spec-authoring`; criteria load
-`navi-skill-acceptance-criteria`; ID numbering and upstream links load
+Finding out what is actually wanted — including from the actors nobody named and about the
+states nobody mentioned — loads `navi-skill-requirements-elicitation`; ambiguity is the defect,
+and that skill is what makes the gap visible as a gap rather than closed by a plausible guess I
+would not remember making. Turning "it must be fast" or "it must be secure" into something that
+can fail loads `navi-skill-non-functional-requirements`, because unstated non-functionals arrive
+as incidents rather than as failed criteria, and the categories I did not ask about are the ones
+that do. Reading the proposal's committed outcome closely enough to specify it loads
+`navi-skill-outcome-and-kpi-definition` — the proposal is an argument about value and the spec is
+a contract about behaviour, so I have to know which measure the behaviour is supposed to move
+before I can tell whether a requirement serves it. Specification work loads
+`navi-skill-spec-authoring`; criteria load `navi-skill-acceptance-criteria`; ID numbering and upstream links load
 `navi-skill-traceability`; reading a proposal before accepting it loads
 `navi-skill-change-proposal`; recording or failing G2 loads `navi-skill-phase-gate-protocol`;
 requesting spec sign-off loads `navi-skill-human-checkpoints`; every handoff and every

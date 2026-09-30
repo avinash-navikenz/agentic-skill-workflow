@@ -1,0 +1,75 @@
+{
+  "skill": "navi-skill-non-functional-requirements",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The stakeholder says it must be fast, secure and highly available. Turn that into something G2 can accept.",
+      "expect": [
+        "REQ-",
+        "AC-",
+        "number",
+        "unit",
+        "window",
+        "conditions",
+        "Priority",
+        "Verified by"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "The spec has twelve functional requirements and nothing else. What categories have we not asked about?",
+      "expect": [
+        "Performance",
+        "Availability and recovery",
+        "Capacity and growth",
+        "Security",
+        "Privacy and data residency",
+        "Accessibility",
+        "Operability",
+        "Compatibility",
+        "Cost",
+        "none"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Rank the qualities this design optimises for against each other and write the scenarios with their measures into design.md.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Work out who to interview about this capability and record what each of them assumed.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Put the NFRs in a separate nfrs.md so the spec stays readable, and use 99.9% availability and WCAG 2.2 AA.",
+      "expect": [
+        "spec.md",
+        "validate_traceability.py",
+        "T2",
+        "SLI-",
+        "success criteri",
+        "assistive technology",
+        "Source"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Reuse the NFR set from the last platform we built — the numbers were signed off there.",
+      "expect": [
+        "Never copy",
+        "different population",
+        "false provenance",
+        "will not be questioned",
+        "Re-derive"
+      ]
+    }
+  ]
+}
