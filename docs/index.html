@@ -671,7 +671,7 @@ Next:
     <p class="lede small">
       <code>add-csv-export</code>: a feature inside an existing capability, touching no data and no
       model, so the lane is <code>standard</code>. Every block below was run against the committed
-      tree at <code>215578c</code>, in a scratch directory, and its output copied verbatim —
+      tree at <code>f8707d3</code>, in a scratch directory, and its output copied verbatim —
       including the part where G6 fails and the change goes back for rework, which is the part
       worth reading twice. The narrative version with the reasoning behind each artefact is
       <code>docs/WALKTHROUGH.md</code>; this is the same change, condensed to what you type and
@@ -1001,9 +1001,23 @@ phase:  1
 <span class="o">Insights: delivery/ops/postmortems/add-csv-export.md — route each to the backlog or a skill amendment</span>
 </pre>
         </div>
-        <p class="small">Every gate in the lane is settled and nothing is stale, so
-        <code>archive</code> proceeds; it refuses otherwise, naming what is outstanding. Three
-        things happened: the delta spec was folded into
+        <p class="small">Every gate in the lane is settled, nothing is stale, and the delivery tree
+        traces, so <code>archive</code> proceeds. It refuses on any of the three, naming what is
+        outstanding and changing nothing — the traceability check matters most here, because
+        <code>archive</code> is the moment the claim becomes permanent:</p>
+        <div class="term">
+          <div class="term-head"><span class="dot"></span>archive refusing a change that does not trace</div>
+<pre><span class="c">$ navi-delivery archive x</span>
+<span class="bad">cannot archive 'x': traceability findings are outstanding. Nothing was changed.</span>
+<span class="bad">T3 …/delivery/changes/x/tasks.md: TASK-001 implements unknown REQ-999</span>
+<span class="o">
+1 traceability finding(s)
+  resolve by binding each task to a requirement that exists, and giving every requirement acceptance criteria
+  re-check with: navi-delivery validate</span>
+<span class="dim">exit 1</span>
+</pre>
+        </div>
+        <p class="small">On the clean change, three things happened: the delta spec was folded into
         <code>delivery/specs/reporting/spec.md</code>, which is now the current truth about what the
         system does; the change moved to <code>changes/archive/2026-09-30-add-csv-export/</code>
         intact; and an insight stub was written.</p>
@@ -1086,7 +1100,7 @@ phase:  1
     <h2>What v1 does not do</h2>
     <p class="lede small">
       These are real, recorded, and worth knowing before you meet them. All verified against the
-      committed tree at <code>215578c</code>.
+      committed tree at <code>f8707d3</code>.
     </p>
 
     <div class="grid2">
@@ -4603,7 +4617,7 @@ phase:  1
   (function () {
     var P = DATA.phases, W = 118, GAP = 10, PAD = 6;
     var total = PAD * 2 + P.length * W + (P.length - 1) * GAP;
-    var H = 236;
+    var H = 252;
     var s = ['<svg viewBox="0 0 ' + total + ' ' + H + '" width="' + total + '" height="' + H +
              '" role="img" aria-label="The nine ADLC phases, each with its gate, and the insight loop from phase 9 back to phase 1" style="min-width:' + total + 'px">'];
 
@@ -4628,10 +4642,12 @@ phase:  1
       // gate badge
       s.push('<rect class="d-node-hi" x="' + (x + W / 2 - 21) + '" y="104" width="42" height="22" rx="11"/>');
       s.push('<text class="d-label-inv" x="' + (x + W / 2) + '" y="119" text-anchor="middle">' + esc(p.gate) + '</text>');
-      // owner, wrapped onto up to two lines
-      var owner = p.owner.replace(/ \+ /g, " + ").split(" + ");
-      owner.slice(0, 2).forEach(function (o, k) {
-        s.push('<text class="d-sub" x="' + (x + W / 2) + '" y="' + (144 + k * 13) + '" text-anchor="middle">' + esc(o) + '</text>');
+      // Owners are written "A + B" for co-ownership and "A / B / C" where any of
+      // three roles may own it. Both separators become one line each, so a long
+      // owner list stacks instead of running into the neighbouring phase.
+      var owner = p.owner.split(/\s*[+/]\s*/).filter(Boolean);
+      owner.slice(0, 3).forEach(function (o, k) {
+        s.push('<text class="d-sub" x="' + (x + W / 2) + '" y="' + (142 + k * 13) + '" text-anchor="middle">' + esc(o) + '</text>');
       });
       if (i < P.length - 1) {
         var ax = x + W + 1, bx = x + W + GAP - 1;
@@ -4642,10 +4658,10 @@ phase:  1
     // loop back from phase 9 to phase 1
     var lastX = PAD + (P.length - 1) * (W + GAP) + W / 2;
     var firstX = PAD + W / 2;
-    s.push('<path class="d-loop" d="M' + lastX + ',170 L' + lastX + ',200 L' + firstX + ',200 L' + firstX + ',170" ' +
+    s.push('<path class="d-loop" d="M' + lastX + ',186 L' + lastX + ',216 L' + firstX + ',216 L' + firstX + ',186" ' +
            'stroke-width="1.6" marker-end="url(#ar)" style="color:var(--accent)"/>');
-    s.push('<rect x="' + (total / 2 - 200) + '" y="188" width="400" height="24" rx="6" fill="var(--surface)"/>');
-    s.push('<text class="d-looplabel" x="' + (total / 2) + '" y="204" text-anchor="middle">' +
+    s.push('<rect x="' + (total / 2 - 200) + '" y="204" width="400" height="24" rx="6" fill="var(--surface)"/>');
+    s.push('<text class="d-looplabel" x="' + (total / 2) + '" y="220" text-anchor="middle">' +
            'INSIGHT-### → the product backlog, or an amendment to a navi-skill-* file</text>');
     s.push('</svg>');
     document.getElementById("lifecycleFig").innerHTML = s.join("");
