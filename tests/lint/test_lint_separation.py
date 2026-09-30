@@ -265,5 +265,52 @@ class TestSEP5BulletedImperatives(unittest.TestCase):
         self.assertEqual([], hits, f"shipped agents no longer clean: {hits}")
 
 
+# ---------------------------------------------------------------------------
+# SEP0 — an unrecognised metadata.kind must fail loudly, not silently skip.
+# ---------------------------------------------------------------------------
+class TestSEP0UnrecognisedKind(unittest.TestCase):
+    VIOLATING_BODY = (
+        "## Working agreement\n"
+        "1. Open the design document\n"
+        "2. Write the ADR\n"
+        "\n"
+        "## Checklist\n"
+        "- Always record the gate verdict before handing off.\n"
+    )
+
+    def test_wrong_case_kind_no_longer_scores_a_silent_zero(self):
+        e = Entry("navi-agent-x", "Agent", Path("agents/x/x.agent.md"), {}, self.VIOLATING_BODY)
+        found = separation_findings(e)
+        self.assertEqual(["SEP0"], rules(found))
+        self.assertIn("'Agent'", found[0].message)
+        self.assertIn("NOT graded", found[0].message)
+
+    def test_missing_kind_is_reported_too(self):
+        e = Entry("navi-agent-x", "", Path("agents/x/x.agent.md"), {}, self.VIOLATING_BODY)
+        found = separation_findings(e)
+        self.assertEqual(["SEP0"], rules(found))
+        self.assertIn("missing", found[0].message)
+
+    def test_correct_kind_grades_the_same_body(self):
+        found = separation_findings(ent("agent", self.VIOLATING_BODY))
+        self.assertEqual(["SEP1", "SEP2", "SEP5"], rules(found))
+
+    def test_main_exits_one_on_unrecognised_kind(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            d = Path(tmp) / "agents" / "navi-agent-bad"
+            d.mkdir(parents=True)
+            (d / "navi-agent-bad.agent.md").write_text(
+                "---\nname: navi-agent-bad\nmetadata:\n  kind: Agent\n---\n"
+                + self.VIOLATING_BODY)
+            old, sys.stdout = sys.stdout, StringIO()
+            try:
+                code = main([tmp])
+                out = sys.stdout.getvalue()
+            finally:
+                sys.stdout = old
+            self.assertEqual(1, code)
+            self.assertIn("SEP0", out)
+
+
 if __name__ == "__main__":
     unittest.main()

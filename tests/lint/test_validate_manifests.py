@@ -125,5 +125,52 @@ class TestManifests(unittest.TestCase):
             self.assertEqual(exit_code, 1)
             self.assertIn("M1", output)
 
+# ---------------------------------------------------------------------------
+# M8 — metadata.kind must be one of {skill, agent}.
+#
+# `kind: Agent` (wrong case) made lint_separation report 0 findings on a file
+# with obvious violations, and made this validator emit 15 phantom M5/M7
+# findings about unrelated skills while never naming the file that caused them.
+# ---------------------------------------------------------------------------
+class TestKindValidation(unittest.TestCase):
+    def _bad(self, value):
+        a = agent()
+        a.meta["metadata"]["kind"] = value
+        return a
+
+    def test_wrong_case_kind_is_reported(self):
+        found = check([skill(), self._bad("Agent")])
+        self.assertIn("M8", rules(found))
+
+    def test_finding_names_the_file_and_the_bad_value(self):
+        found = [f for f in check([skill(), self._bad("Agent")]) if f.rule == "M8"]
+        first = found[0]
+        self.assertEqual(Path("agents/navi-agent-architect/navi-agent-architect.agent.md"), first.path)
+        self.assertIn("'Agent'", first.message)
+
+    def test_arbitrary_kind_is_reported(self):
+        for value in ["Skill", "persona", "", None, "AGENT", "agents"]:
+            with self.subTest(value=value):
+                self.assertIn("M8", rules(check([skill(), self._bad(value)])))
+
+    def test_valid_kinds_are_accepted(self):
+        self.assertNotIn("M8", rules(check([skill(), agent()])))
+
+    def test_absent_kind_is_left_to_M2(self):
+        a = agent()
+        del a.meta["metadata"]["kind"]
+        found = check([skill(), a])
+        self.assertNotIn("M8", rules(found))
+        self.assertIn("M2", rules(found))
+
+    def test_referential_checks_are_withheld_not_misreported(self):
+        # The bug's loudest symptom: 15 findings pointing at innocent skills.
+        # With a broken kind the referential results are untrustworthy, so they
+        # are withheld and the withholding is stated.
+        found = check([skill(), self._bad("Agent")])
+        self.assertEqual([], [f for f in found if f.rule in ("M4", "M5", "M7")])
+        self.assertTrue(any("skipped" in f.message for f in found if f.rule == "M8"))
+
+
 if __name__ == "__main__":
     unittest.main()

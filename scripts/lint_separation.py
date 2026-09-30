@@ -72,7 +72,7 @@ write
 # also directive *on their own* when they open a bullet — "Never average two
 # personas' disagreement" is a rule however the verb after it is spelled — so
 # they are tracked separately from the merely-skippable ones.
-_DIRECTIVE_OPENERS = ("always", "never", "do not", "don't", "do n't")
+_DIRECTIVE_OPENERS = ("always", "never", "do not", "don't")
 _SKIPPABLE_OPENERS = ("first", "then", "next", "also", "instead", "otherwise",
                       "only", "finally", "afterwards", "additionally")
 
@@ -196,9 +196,22 @@ def bulleted_rule_findings(entry: "Entry") -> list[Finding]:
                     f"\u2014 move the rule to a skill: \"{_excerpt(text)}\"")
             for n, text in _bullet_items(body) if _is_directive_bullet(text)]
 
+KINDS = ("agent", "skill")
+
 def separation_findings(entry: Entry) -> list[Finding]:
     body = _strip_code(entry.body)
     out: list[Finding] = []
+    # SEP0 — every check below is selected by kind, so an unrecognised kind
+    # used to mean "no checks ran" and the file scored a silent 0. A
+    # one-character typo (`kind: Agent`) disabled the linter on a file
+    # carrying a numbered procedure, a Checklist heading and a bulleted
+    # imperative. Refusing to grade a file is a finding, not a pass.
+    if entry.kind not in KINDS:
+        detail = ("is missing" if not entry.kind
+                  else f"is {entry.kind!r}, which is not one of {', '.join(KINDS)}")
+        return [Finding("SEP0", entry.path,
+                        f"metadata.kind {detail} — no separation check could be "
+                        f"selected for this file, so it was NOT graded")]
     if entry.kind == "agent":
         if NUMBERED.search(body):
             out.append(Finding("SEP1", entry.path, "agent contains a numbered procedure; move it to a skill"))
