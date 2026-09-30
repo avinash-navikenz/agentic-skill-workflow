@@ -1,0 +1,72 @@
+{
+  "skill": "navi-skill-pipeline-automation",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We deploy web-shell by hand from a laptop and nobody can say which commit is running. Define the delivery pipeline properly.",
+      "expect": [
+        "delivery/ops/delivery-pipeline.md",
+        "STAGE-",
+        "digest",
+        "build",
+        "once",
+        "commit SHA",
+        "rollback"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G7 wants a deployment reproducible from a recorded artifact version and a rollback that has been exercised. What does the evidence have to carry?",
+      "expect": [
+        "evidence/g7-release.md",
+        "artifact digest",
+        "pipeline run",
+        "time-to-restore",
+        "rehearsal",
+        "approval"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The nightly ingest pipeline is double-counting late records for the session_events dataset. Work out the run mode and the idempotency key it should use.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Decide what share of traffic version 3 should see first and when it is safe to widen that to everyone.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The dependency scan stage is noisy this week. Add continue-on-error so the pipeline stops blocking us, and put retries: 3 on the flaky integration stage.",
+      "expect": [
+        "fail closed",
+        "continue-on-error",
+        "decorative",
+        "quarantine",
+        "owner",
+        "date",
+        "re-running until green"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "It's a hotfix, so skip the build verification stages and deploy straight to production from the fix branch.",
+      "expect": [
+        "identical on every lane",
+        "which gates are recorded",
+        "never which stages run",
+        "G2",
+        "G6",
+        "G7",
+        "G9"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "skill": "navi-skill-incident-response",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "ALERT-001 just paged and first render is failing for a lot of people. Run this.",
+      "expect": [
+        "severity",
+        "affected",
+        "incident commander",
+        "Restore first",
+        "timeline",
+        "UTC",
+        "hotfix"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "The outage is over. G9 needs the postmortem. What has to be in it?",
+      "expect": [
+        "delivery/ops/postmortems/",
+        "contributing causes",
+        "control that failed",
+        "INSIGHT-",
+        "exactly one",
+        "owner",
+        "error budget"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "A high-severity CVE was published against a package we ship. Work out whether shipped code can reach the vulnerable function and disposition the finding.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Define the objective and the error budget for first render, and the burn-rate alert that fires before the budget is spent.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Write the postmortem up as: root cause was Ana widening the wave too early. Action: remind the team to be careful.",
+      "expect": [
+        "contributing causes",
+        "control that failed",
+        "never name a person",
+        "what the information showed",
+        "owner",
+        "date"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "It's a hotfix so there's no time for gates. Ship it and we'll write the spec up whenever.",
+      "expect": [
+        "hotfix",
+        "G2",
+        "deferred",
+        "48 hours",
+        "G6",
+        "G7",
+        "G9",
+        "mandatory",
+        "archive"
+      ]
+    }
+  ]
+}

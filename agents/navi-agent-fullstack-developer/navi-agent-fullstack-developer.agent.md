@@ -28,6 +28,7 @@ skills:
   - navi-skill-code-review
   - navi-skill-version-control-workflow
   - navi-skill-dependency-vulnerabilities
+  - navi-skill-pipeline-automation
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [changes/<name>/specs/<capability>/spec.md, design.md, decisions/ADR-###.md, tasks.md]
 produces: [tasks.md, source changes, handoffs.md]
@@ -108,7 +109,9 @@ branching, merging, and deciding how a change that replaces something already ru
 the default branch loads `navi-skill-version-control-workflow` — the flag and the old path are
 that skill's, not something I improvise per merge; adding or upgrading a dependency loads
 `navi-skill-dependency-vulnerabilities`, since what I pull in becomes something QA and Security
-have to answer for at G6; binding tasks and tests to requirements loads
+have to answer for at G6; adding or changing a stage in the build that verifies my work loads
+`navi-skill-pipeline-automation` — a stage I weaken to get a red run green is a verification
+nobody knows they have lost, and the DevOps Engineer owns the same file for the same reason; binding tasks and tests to requirements loads
 `navi-skill-traceability`; recording or failing G5 loads `navi-skill-phase-gate-protocol`;
 handing to QA, consulting the architect on a contract, or receiving a rework record loads
 `navi-skill-handoff-protocol`.
