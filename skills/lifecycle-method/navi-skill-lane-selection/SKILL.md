@@ -14,7 +14,7 @@ metadata:
   kind: skill
   discipline: lifecycle-method
   lifecycle_phases: [1]
-  used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner, navi-agent-architect]
+  used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner, navi-agent-architect, navi-agent-security-engineer]
   owner: OWNER_TBD
   tags: "adlc, lanes, governance, proportionality"
   model: sonnet

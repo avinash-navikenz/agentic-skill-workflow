@@ -15,7 +15,7 @@ metadata:
   kind: skill
   discipline: lifecycle-method
   lifecycle_phases: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-  used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner, navi-agent-business-analyst, navi-agent-architect, navi-agent-fullstack-developer, navi-agent-data-engineer, navi-agent-machine-learning-engineer, navi-agent-mlops-engineer, navi-agent-devops-engineer, navi-agent-qa-engineer]
+  used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner, navi-agent-business-analyst, navi-agent-architect, navi-agent-fullstack-developer, navi-agent-data-engineer, navi-agent-machine-learning-engineer, navi-agent-mlops-engineer, navi-agent-devops-engineer, navi-agent-qa-engineer, navi-agent-security-engineer]
   owner: OWNER_TBD
   tags: "adlc, handoff, collaboration, provenance"
   model: sonnet

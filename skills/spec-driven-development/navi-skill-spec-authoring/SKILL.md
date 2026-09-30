@@ -14,7 +14,7 @@ metadata:
   kind: skill
   discipline: spec-driven-development
   lifecycle_phases: [2, 3]
-  used_by_agents: [navi-agent-business-analyst, navi-agent-architect, navi-agent-product-owner, navi-agent-qa-engineer]
+  used_by_agents: [navi-agent-business-analyst, navi-agent-architect, navi-agent-product-owner, navi-agent-qa-engineer, navi-agent-security-engineer]
   owner: OWNER_TBD
   tags: "sdd, requirements, specification, nfr"
   model: opus
