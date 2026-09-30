@@ -12,7 +12,7 @@ metadata:
   kind: agent
   discipline: security
   lifecycle_phases: [3, 6]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "security, threat-modelling, trust-boundaries, vulnerabilities, secrets, risk-acceptance"
   model: opus
 owns_gates: [G3, G6]

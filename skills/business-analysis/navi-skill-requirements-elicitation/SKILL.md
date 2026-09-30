@@ -17,7 +17,7 @@ metadata:
   discipline: business-analysis
   lifecycle_phases: [1, 2]
   used_by_agents: [navi-agent-business-analyst, navi-agent-product-owner]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "business-analysis, requirements, elicitation, actors, assumptions, questions, g2"
   model: opus
 ---

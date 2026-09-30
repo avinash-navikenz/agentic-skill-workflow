@@ -14,7 +14,7 @@ metadata:
   discipline: spec-driven-development
   lifecycle_phases: [5]
   used_by_agents: [navi-agent-fullstack-developer, navi-agent-data-engineer, navi-agent-machine-learning-engineer, navi-agent-orchestrator, navi-agent-architect]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "sdd, tasks, planning, delivery"
   model: sonnet
 ---

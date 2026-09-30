@@ -16,7 +16,7 @@ metadata:
   discipline: security
   lifecycle_phases: [5, 6]
   used_by_agents: [navi-agent-security-engineer, navi-agent-fullstack-developer, navi-agent-devops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "security, dependencies, sca, cve, vulnerabilities, g6, supply-chain"
   model: sonnet
 ---

@@ -15,7 +15,7 @@ metadata:
   discipline: spec-driven-development
   lifecycle_phases: [2, 3]
   used_by_agents: [navi-agent-business-analyst, navi-agent-architect, navi-agent-product-owner, navi-agent-qa-engineer, navi-agent-security-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "sdd, requirements, specification, nfr"
   model: opus
 ---

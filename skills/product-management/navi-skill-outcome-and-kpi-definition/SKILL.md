@@ -17,7 +17,7 @@ metadata:
   discipline: product-management
   lifecycle_phases: [1, 9]
   used_by_agents: [navi-agent-product-owner, navi-agent-business-analyst]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "product, outcomes, kpi, baseline, counter-metric, attribution, g1, g9"
   model: opus
 ---

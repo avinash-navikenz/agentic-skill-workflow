@@ -17,7 +17,7 @@ metadata:
   discipline: machine-learning
   lifecycle_phases: [4, 5, 7]
   used_by_agents: [navi-agent-machine-learning-engineer, navi-agent-mlops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "ml, model-card, documentation, limitations, segments, handover, g7"
   model: sonnet
 ---

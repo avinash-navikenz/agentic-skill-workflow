@@ -15,7 +15,7 @@ metadata:
   discipline: architecture
   lifecycle_phases: [3, 5]
   used_by_agents: [navi-agent-architect, navi-agent-fullstack-developer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "architecture, contracts, boundaries, compatibility, versioning"
   model: opus
 ---

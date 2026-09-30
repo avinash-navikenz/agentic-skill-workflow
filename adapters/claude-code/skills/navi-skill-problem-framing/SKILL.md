@@ -16,7 +16,7 @@ metadata:
   discipline: machine-learning
   lifecycle_phases: [3, 4]
   used_by_agents: [navi-agent-machine-learning-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "ml, problem-framing, baselines, labels, cost-of-error, g4"
   model: opus
 ---

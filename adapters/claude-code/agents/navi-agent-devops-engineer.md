@@ -11,7 +11,7 @@ metadata:
   kind: agent
   discipline: platform-devops
   lifecycle_phases: [7, 8]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "devops, release, environments, blast-radius, slo, secrets, incidents"
   model: sonnet
 owns_gates: [G7, G8]

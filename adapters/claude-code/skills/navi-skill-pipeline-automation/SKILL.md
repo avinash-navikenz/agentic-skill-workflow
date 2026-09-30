@@ -18,7 +18,7 @@ metadata:
   discipline: platform-devops
   lifecycle_phases: [5, 7]
   used_by_agents: [navi-agent-devops-engineer, navi-agent-fullstack-developer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "devops, ci-cd, pipeline, reproducibility, artifacts, secrets, rollback, g7"
   model: sonnet
 ---

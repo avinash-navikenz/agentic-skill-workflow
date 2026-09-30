@@ -16,7 +16,7 @@ metadata:
   discipline: lifecycle-method
   lifecycle_phases: [2, 3, 7, 8]
   used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner, navi-agent-business-analyst, navi-agent-architect, navi-agent-devops-engineer, navi-agent-mlops-engineer, navi-agent-security-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "adlc, governance, approval, escalation"
   model: sonnet
 ---

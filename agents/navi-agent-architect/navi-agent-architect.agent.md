@@ -12,7 +12,7 @@ metadata:
   kind: agent
   discipline: architecture
   lifecycle_phases: [3, 9]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "architecture, quality-attributes, boundaries, adr, failure-modes, technical-debt"
   model: opus
 owns_gates: [G3, G9]

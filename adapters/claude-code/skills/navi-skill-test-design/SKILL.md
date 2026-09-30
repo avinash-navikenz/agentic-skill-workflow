@@ -17,7 +17,7 @@ metadata:
   discipline: quality-engineering
   lifecycle_phases: [5, 6]
   used_by_agents: [navi-agent-qa-engineer, navi-agent-fullstack-developer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "quality, testing, test-cases, boundaries, negative-testing, fixtures, g5, g6"
   model: sonnet
 ---

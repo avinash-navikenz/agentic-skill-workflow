@@ -16,7 +16,7 @@ metadata:
   discipline: data-engineering
   lifecycle_phases: [3, 4, 5]
   used_by_agents: [navi-agent-data-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "data, pipeline, lineage, idempotency, backfill, late-data, cost, g4"
   model: sonnet
 ---

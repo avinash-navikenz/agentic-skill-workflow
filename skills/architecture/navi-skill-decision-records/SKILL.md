@@ -14,7 +14,7 @@ metadata:
   discipline: architecture
   lifecycle_phases: [3, 9]
   used_by_agents: [navi-agent-architect, navi-agent-security-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "architecture, adr, decisions, governance, traceability"
   model: sonnet
 ---

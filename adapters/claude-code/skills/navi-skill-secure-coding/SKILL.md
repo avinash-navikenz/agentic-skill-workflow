@@ -16,7 +16,7 @@ metadata:
   discipline: software-development
   lifecycle_phases: [5, 6]
   used_by_agents: [navi-agent-fullstack-developer, navi-agent-security-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "security, secure-coding, injection, authorisation, secrets, logging"
   model: sonnet
 ---

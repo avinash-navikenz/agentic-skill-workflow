@@ -11,7 +11,7 @@ metadata:
   kind: agent
   discipline: product-management
   lifecycle_phases: [1, 9]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "product, outcomes, kpi, scope, prioritisation, insights"
   model: opus
 owns_gates: [G1, G9]

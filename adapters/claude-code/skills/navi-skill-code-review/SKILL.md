@@ -14,7 +14,7 @@ metadata:
   discipline: software-development
   lifecycle_phases: [5]
   used_by_agents: [navi-agent-fullstack-developer, navi-agent-architect]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "code-review, pull-request, quality, g5, collaboration"
   model: sonnet
 ---

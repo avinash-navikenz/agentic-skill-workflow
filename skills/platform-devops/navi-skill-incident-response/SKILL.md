@@ -18,7 +18,7 @@ metadata:
   discipline: platform-devops
   lifecycle_phases: [8, 9]
   used_by_agents: [navi-agent-devops-engineer, navi-agent-mlops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "devops, incident, severity, hotfix, postmortem, insights, g9"
   model: sonnet
 ---

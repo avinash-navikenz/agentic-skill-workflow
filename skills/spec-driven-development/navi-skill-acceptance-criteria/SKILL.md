@@ -13,7 +13,7 @@ metadata:
   discipline: spec-driven-development
   lifecycle_phases: [2, 6]
   used_by_agents: [navi-agent-business-analyst, navi-agent-qa-engineer, navi-agent-product-owner]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "sdd, requirements, quality"
   model: sonnet
 ---

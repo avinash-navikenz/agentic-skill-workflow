@@ -16,7 +16,7 @@ metadata:
   discipline: data-engineering
   lifecycle_phases: [4, 5]
   used_by_agents: [navi-agent-data-engineer, navi-agent-machine-learning-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "data, contract, schema, lineage, pii, freshness, handoff, g4"
   model: sonnet
 ---

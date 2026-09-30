@@ -17,7 +17,7 @@ metadata:
   discipline: product-management
   lifecycle_phases: [1, 9]
   used_by_agents: [navi-agent-product-owner]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "product, backlog, prioritisation, cost-of-delay, insights, declined, g1, g9"
   model: opus
 ---

@@ -17,7 +17,7 @@ metadata:
   discipline: machine-learning
   lifecycle_phases: [4, 6]
   used_by_agents: [navi-agent-machine-learning-engineer, navi-agent-mlops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "ml, evaluation, leakage, held-out, uncertainty, slices, thresholds, g4"
   model: opus
 ---

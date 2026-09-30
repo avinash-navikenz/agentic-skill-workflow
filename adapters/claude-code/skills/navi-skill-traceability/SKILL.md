@@ -15,7 +15,7 @@ metadata:
   discipline: lifecycle-method
   lifecycle_phases: [2, 3, 5, 6, 8, 9]
   used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner, navi-agent-business-analyst, navi-agent-architect, navi-agent-fullstack-developer, navi-agent-data-engineer, navi-agent-machine-learning-engineer, navi-agent-qa-engineer, navi-agent-devops-engineer, navi-agent-mlops-engineer, navi-agent-security-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "adlc, traceability, requirements, validation"
   model: sonnet
 ---

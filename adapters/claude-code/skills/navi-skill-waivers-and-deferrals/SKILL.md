@@ -14,7 +14,7 @@ metadata:
   discipline: lifecycle-method
   lifecycle_phases: [1, 2, 3, 4, 5, 6, 7, 8, 9]
   used_by_agents: [navi-agent-orchestrator, navi-agent-devops-engineer, navi-agent-mlops-engineer, navi-agent-product-owner, navi-agent-qa-engineer, navi-agent-security-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "adlc, waivers, governance, risk"
   model: sonnet
 ---

@@ -16,7 +16,7 @@ metadata:
   discipline: software-development
   lifecycle_phases: [5, 7]
   used_by_agents: [navi-agent-fullstack-developer, navi-agent-devops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "git, branching, merge, feature-flags, revert, trunk-based"
   model: sonnet
 ---

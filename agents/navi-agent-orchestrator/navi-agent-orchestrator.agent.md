@@ -11,7 +11,7 @@ metadata:
   kind: agent
   discipline: lifecycle-method
   lifecycle_phases: [1, 2, 3, 4, 5, 6, 7, 8, 9]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "adlc, routing, gates, lanes, rework, arbitration"
   model: opus
 owns_gates: []

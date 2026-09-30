@@ -14,7 +14,7 @@ metadata:
   discipline: software-development
   lifecycle_phases: [5]
   used_by_agents: [navi-agent-fullstack-developer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "testing, tdd, quality, traceability, regression"
   model: sonnet
 ---

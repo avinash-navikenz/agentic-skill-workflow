@@ -10,7 +10,7 @@ metadata:
   kind: agent
   discipline: business-analysis
   lifecycle_phases: [2]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "requirements, specification, ambiguity, nfr"
   model: opus
 owns_gates: [G2]

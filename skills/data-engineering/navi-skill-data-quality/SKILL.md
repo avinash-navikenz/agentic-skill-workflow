@@ -16,7 +16,7 @@ metadata:
   discipline: data-engineering
   lifecycle_phases: [4, 5, 8]
   used_by_agents: [navi-agent-data-engineer, navi-agent-mlops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "data, data-quality, checks, thresholds, quarantine, g4, g8"
   model: sonnet
 ---

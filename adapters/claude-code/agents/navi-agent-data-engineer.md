@@ -12,7 +12,7 @@ metadata:
   kind: agent
   discipline: data-engineering
   lifecycle_phases: [4, 5]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "data, schema, lineage, idempotency, data-quality, pipeline-cost"
   model: sonnet
 owns_gates: [G4, G5]

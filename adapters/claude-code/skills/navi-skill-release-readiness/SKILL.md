@@ -18,7 +18,7 @@ metadata:
   discipline: quality-engineering
   lifecycle_phases: [6, 7]
   used_by_agents: [navi-agent-qa-engineer, navi-agent-devops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "quality, release, readiness, residual-risk, defects, go-no-go, g6, g7"
   model: opus
 ---

@@ -19,7 +19,7 @@ metadata:
   discipline: business-analysis
   lifecycle_phases: [2, 3]
   used_by_agents: [navi-agent-business-analyst, navi-agent-architect]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "business-analysis, requirements, nfr, thresholds, privacy, accessibility, cost, g2"
   model: opus
 ---

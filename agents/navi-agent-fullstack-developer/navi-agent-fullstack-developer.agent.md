@@ -12,7 +12,7 @@ metadata:
   kind: agent
   discipline: software-development
   lifecycle_phases: [5]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "implementation, decomposition, contracts, testability, refactoring"
   model: sonnet
 owns_gates: [G5]

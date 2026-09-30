@@ -14,7 +14,7 @@ metadata:
   discipline: architecture
   lifecycle_phases: [3, 6]
   used_by_agents: [navi-agent-architect, navi-agent-qa-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "architecture, quality-attributes, nfr, performance, availability, trade-offs"
   model: opus
 ---

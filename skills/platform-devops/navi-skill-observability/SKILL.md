@@ -17,7 +17,7 @@ metadata:
   discipline: platform-devops
   lifecycle_phases: [7, 8]
   used_by_agents: [navi-agent-devops-engineer, navi-agent-mlops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "devops, observability, sli, slo, error-budget, alerting, runbooks, g8"
   model: sonnet
 ---

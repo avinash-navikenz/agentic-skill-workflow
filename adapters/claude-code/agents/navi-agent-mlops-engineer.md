@@ -11,7 +11,7 @@ metadata:
   kind: agent
   discipline: mlops
   lifecycle_phases: [7, 8]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "mlops, reproducibility, promotion, drift, rollback, inference-cost"
   model: sonnet
 owns_gates: [G7, G8]

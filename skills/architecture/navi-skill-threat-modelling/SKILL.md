@@ -15,7 +15,7 @@ metadata:
   discipline: architecture
   lifecycle_phases: [3, 6]
   used_by_agents: [navi-agent-security-engineer, navi-agent-architect]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "security, threat-modelling, trust-boundaries, stride, risk-acceptance, g3, g6"
   model: opus
 ---

@@ -17,7 +17,7 @@ metadata:
   discipline: mlops
   lifecycle_phases: [4, 7]
   used_by_agents: [navi-agent-mlops-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "mlops, registry, promotion, reproducibility, rollback, stages, g7"
   model: sonnet
 ---

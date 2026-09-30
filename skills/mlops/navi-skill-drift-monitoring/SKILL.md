@@ -17,7 +17,7 @@ metadata:
   discipline: mlops
   lifecycle_phases: [7, 8]
   used_by_agents: [navi-agent-mlops-engineer, navi-agent-machine-learning-engineer]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "mlops, drift, decay, monitoring, thresholds, slo, runbooks, g8"
   model: sonnet
 ---

@@ -14,7 +14,7 @@ metadata:
   discipline: spec-driven-development
   lifecycle_phases: [1, 2]
   used_by_agents: [navi-agent-product-owner, navi-agent-orchestrator, navi-agent-business-analyst, navi-agent-architect]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "sdd, proposal, scope, intent"
   model: sonnet
 ---

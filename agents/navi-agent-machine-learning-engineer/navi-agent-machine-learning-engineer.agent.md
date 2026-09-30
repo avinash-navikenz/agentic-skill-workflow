@@ -12,7 +12,7 @@ metadata:
   kind: agent
   discipline: machine-learning
   lifecycle_phases: [4, 5]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "ml, problem-framing, baselines, leakage, evaluation, fairness"
   model: opus
 owns_gates: [G4, G5]

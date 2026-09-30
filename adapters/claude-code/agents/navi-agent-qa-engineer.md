@@ -11,7 +11,7 @@ metadata:
   kind: agent
   discipline: quality-engineering
   lifecycle_phases: [6]
-  owner: OWNER_TBD
+  owner: avinash.negi@navikenz.com
   tags: "quality, risk-based-testing, coverage, flakiness, release-readiness"
   model: sonnet
 owns_gates: [G6]
