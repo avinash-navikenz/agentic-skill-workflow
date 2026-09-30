@@ -10,6 +10,24 @@
 
 **Spec:** `docs/superpowers/specs/2026-09-28-navi-delivery-framework-design.md`
 
+> **Post-execution note (2026-09-30, Task 18).** This plan is the execution record and its
+> steps are left as they were written and worked. Three of its stated numbers were overtaken
+> during execution and are corrected here rather than rewritten below:
+>
+> - The Goal says "10 persona agents and 37 skills". **11 agents and 39 skills across 12
+>   disciplines** shipped — the Security Engineer was added (spec §10 Q3, answered yes) and
+>   brought a `security/` discipline with it.
+> - The Goal and the §3.1 tree say "three validators". **Four** shipped:
+>   `validate_manifests.py`, `lint_separation.py`, `validate_traceability.py` and
+>   `validate_skill_checks.py`.
+> - `validate_manifests.py` is described throughout as carrying rules **M1–M6**. It ships
+>   **M1–M7**. `M7` enforces that a skill's `metadata.used_by_agents` equals exactly the set
+>   of agents listing that skill, reported in both directions because the fix differs by
+>   direction. It was added during execution; M4 and M5 could both stay clean while the two
+>   sides of that invariant drifted apart.
+>
+> The reconciled design record is the spec above, revised on the same date.
+
 ## Global Constraints
 
 - Skill names MUST match `navi-skill-<descriptive-name>`; agent names MUST match `navi-agent-<persona>`. Verbatim from spec §3.3.
