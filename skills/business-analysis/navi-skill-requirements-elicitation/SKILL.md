@@ -195,6 +195,15 @@ Capability: `theme`. Spec: `./spec.md`. Proposal outcome: KPI-001 in
 - **Source:** inferred, pending Q-009. REQ-017's criterion is written in this assumption's
   terms and is revisited when Q-009 closes.
 
+### ASSUM-005 — Preference-store growth follows the user table's
+
+- **States:** the preference store grows at the user table's contracted rate and not faster,
+  because the row count is one per user
+- **Falsified by:** a measured ratio of preference rows to user rows above 1.0 over any month.
+  A per-device override would break it, which is why REQ-028 records that as a `Won't`.
+- **Source:** inferred; Dan Okafor confirmed the contracted growth rate on 2026-09-19 but not
+  the one-row-per-user assumption, which is this change's own. REQ-022 cites it.
+
 ### ASSUM-004 — "Instant" means within first paint
 
 - **States:** the stakeholder's word `instantly` means before the first paint, not merely
@@ -331,7 +340,10 @@ for E in $(find delivery/changes/$CHANGE/specs -name elicitation.md 2>/dev/null)
     for k in "Reaches the system by" Wants Consulted "Harmed by getting it wrong"; do
       printf '%s\n' "$body" | grep -q "\*\*$k:\*\*" || echo "$id: missing $k"
     done
-    printf '%s\n' "$body" | grep '\*\*Consulted:\*\*' \
+    # Read the whole Consulted field, not its first line: these values wrap, and a
+    # single-line grep silently reports a dated consultation as undated.
+    printf '%s\n' "$body" \
+      | awk '/^- \*\*Consulted:\*\*/{on=1;print;next} /^- \*\*/{on=0} on' \
       | grep -qE '[0-9]{4}-[0-9]{2}-[0-9]{2}|not consulted' \
       || echo "$id: Consulted names neither a date nor 'not consulted — <reason>'"
   done
@@ -369,10 +381,13 @@ for E in $(find delivery/changes/$CHANGE/specs -name elicitation.md 2>/dev/null)
       || echo "$r: no '**Source:** Elicited from ACTOR-###' or 'Inferred — ASSUM-###' line"
   done
 
-  # No range word survived into a criterion
+  # No range word survived into a criterion. The boundary is written as a padded
+  # non-alphanumeric class, not as \< \> — those are a GNU extension that the awk shipped
+  # with macOS matches never, so the check would pass silently on every input.
   [ -f "$S" ] && awk '/^#### AC-/{on=1} /^### /{on=0}
-       on && /\<(quickly|fast|slow|most|large|small|regularly|soon|secure|reliable)\>/ {
-         print "an acceptance criterion contains an unquantified range word: " $0 }' "$S"
+       on { p = " " $0 " ";
+         if (p ~ /[^[:alnum:]](quickly|fast|slow|most|large|small|regularly|soon|secure|reliable)[^[:alnum:]]/)
+           print "an acceptance criterion contains an unquantified range word: " $0 }' "$S"
 
   # Every open question that blocks a requirement is reflected in the spec
   awk '/^## Open questions$/{on=1;next} /^## /{on=0}

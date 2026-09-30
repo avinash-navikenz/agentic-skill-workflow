@@ -174,6 +174,18 @@ cited in an argument about whether to ship.
   00:00–24:00 UTC, which is required because this alert can fire at any hour.
 - **Runbook:** `delivery/ops/runbooks/alert-001.md`
 
+### ALERT-002 — First render budget burning slowly
+
+- **Fires when:** the 6-hour failure ratio for SLI-001 exceeds 6x the budget's normal
+  consumption rate — above 0.09 — for 2 consecutive 30-minute windows. This is the partner to
+  ALERT-001: a degradation too slow to trip a 1-hour window still exhausts a 28-day budget in
+  under five days.
+- **Serves:** SLI-001
+- **Pages or notifies:** pages
+- **Owner:** Ana Costa, primary on the `#platform` rota; Dan Okafor secondary. The rota covers
+  00:00–24:00 UTC.
+- **Runbook:** `delivery/ops/runbooks/alert-002.md`
+
 ### ALERT-004 — Theme acceptance degrading
 
 - **Fires when:** the 6-hour override ratio for SLI-004 exceeds 4x normal consumption — above

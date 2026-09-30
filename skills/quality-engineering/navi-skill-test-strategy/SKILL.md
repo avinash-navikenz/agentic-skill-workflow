@@ -30,8 +30,10 @@ duration budget; or a release decision needs to know what was deliberately left 
 
 ## Rules
 
-1. Write the strategy at `delivery/changes/<name>/test-strategy.md` and add a row for it to the
-   `## Linked artifacts` table that `templates/change/design.md` ships into every `design.md`.
+1. Write the strategy at `delivery/changes/<name>/test-strategy.md`, link
+   `./test-design.md` from it, and add a row for the strategy to the `## Linked artifacts` table
+   that `templates/change/design.md` ships into every `design.md`. The design links the
+   strategy; the strategy links the cases.
    Write it at Phase 2, alongside the spec review for testability — `references/gates.md` makes
    it G6's **entry** criterion, so a strategy first written at Phase 6 is written after the
    decisions it was supposed to inform.
@@ -126,6 +128,7 @@ Copy into `delivery/changes/<name>/test-strategy.md`, and add its row to `design
 
 Lane: `standard` (G1, G2, G3, G5, G6, G7, G8). Pipeline duration budget: 21 minutes, of which
 this suite may take 8 — see `delivery/ops/delivery-pipeline.md` STAGE-002.
+Cases: `./test-design.md`. This file decides the levels; that one decides the cases at them.
 
 ## Source pass
 
@@ -165,6 +168,19 @@ this suite may take 8 — see `delivery/ops/delivery-pipeline.md` STAGE-002.
 - **Covered by:** AC-013 (the empty-state criterion)
 - **Owner:** Sam Idowu
 
+### RISK-003 — Cross-region preference reads exceed the render budget
+
+- **What breaks:** the preference read from a region that does not hold the primary store
+- **Who is affected:** the 23% of sessions served from ap-southeast — about 190,000 a day
+- **Consequence:** first render exceeds AC-016's 400ms bound for those sessions, which is the
+  criterion this change is measured on
+- **Likelihood evidence:** SLI-007 records the store's cross-region p95 at 61ms against 14ms
+  in-region over the 90 days to 2026-09-20; the budget has 28ms of headroom
+- **Level:** measurement — the integration environment is single-region, so the risk cannot be
+  expressed there at all, and a passing integration run would be evidence about nothing
+- **Covered by:** AC-016
+- **Owner:** Ana Costa
+
 ### RISK-004 — The preference store is unreachable at render time
 
 - **What breaks:** the resolver's dependency, not the resolver
@@ -177,6 +193,19 @@ this suite may take 8 — see `delivery/ops/delivery-pipeline.md` STAGE-002.
   the branch exists, not that paint is unblocked
 - **Covered by:** AC-015
 - **Owner:** Sam Idowu
+
+### RISK-005 — The store migration cannot be run backwards
+
+- **What breaks:** the rollback route, not the feature
+- **Who is affected:** every user, if a rollback is needed after the migration has run
+- **Consequence:** `design.md` `## Failure modes` states that the legacy column is retained
+  until TASK-034, so rollback is available — untested, that is an assertion rather than a fact
+- **Likelihood evidence:** first of its kind — this is the first migration on this table. The
+  2026-04 incident INC-2261 was a forward fix for exactly this reason.
+- **Level:** manual — running a migration backwards against production-shaped data is a
+  rehearsal, not a test, and there is no harness for it
+- **Covered by:** AC-015
+- **Owner:** Ana Costa
 
 ### RISK-006 — A crafted preference value reaches the renderer
 
@@ -239,7 +268,7 @@ Measurement and manual levels run outside STAGE-002 and do not consume its budge
 
 ## Checklist
 
-- [ ] `test-strategy.md` exists and `design.md`'s `## Linked artifacts` table names it
+- [ ] `test-strategy.md` exists, `design.md`'s `## Linked artifacts` table names it, and it links `./test-design.md`
 - [ ] It was written at Phase 2, before G6 is entered
 - [ ] The source pass names all three sources, with `none` and a reason where empty
 - [ ] Every `RISK-###` carries all seven fields
@@ -304,6 +333,10 @@ SPEC=$(find delivery/changes/$CHANGE/specs -name spec.md 2>/dev/null | head -1)
 test -f "$T" || echo "no test-strategy.md — G6's entry criterion is unmet"
 grep -q 'test-strategy.md' delivery/changes/$CHANGE/design.md 2>/dev/null \
   || echo "design.md's Linked artifacts table does not name test-strategy.md"
+grep -q 'test-design.md' "$T" 2>/dev/null \
+  || echo "test-strategy.md does not link test-design.md, so the cases have no home"
+
+
 
 # All three sources appear in the pass
 for s in 'REQ-###' 'Failure modes' 'THREAT-###'; do
@@ -320,7 +353,7 @@ for id in $(grep -o 'RISK-[0-9]\{3,\}' "$T" | sort -u); do
   done
   # Likelihood is an observation, not a rating
   printf '%s\n' "$body" | awk '/\*\*Likelihood evidence:\*\*/{on=1} /\*\*Level:\*\*/{on=0} on' \
-    | grep -qiE '[0-9]{4}-[0-9]{2}|INC-|first of its kind|no history|defect|advisory|SLI-' \
+    | grep -qiE '[0-9]{4}-[0-9]{2}|INC-|first of its kind|no history|defect|advisory|SLI-|THREAT-' \
     || echo "$id: likelihood evidence names no observation"
   printf '%s\n' "$body" | grep '\*\*Likelihood evidence:\*\*' \
     | grep -qiE '\*\* *(high|medium|low)\.?$' && echo "$id: likelihood is a rating, not evidence"

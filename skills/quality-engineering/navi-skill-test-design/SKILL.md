@@ -118,11 +118,35 @@ Levels are set by `test-strategy.md`; this file decides the cases at those level
 
 | AC | Equivalence | Boundary | Absent/empty | Decision table | State transition | Error/timeout |
 |---|---|---|---|---|---|---|
-| AC-011 | TC-001, TC-002 | none — the input is an enum with no order | TC-003 | TC-004 | TC-005 | TC-006 |
-| AC-013 | TC-007 | none — enum | TC-008, TC-009, TC-010 | none — one condition | none — single render, no ordering | TC-011 |
-| AC-016 | none — the criterion is a latency bound, not a value class | TC-012, TC-013, TC-014 | none — the request always has a duration | none — one condition | none | TC-015 |
+| AC-011 | TC-001 | none — the stored value is an enum with no order | none — an absent stored preference is AC-013's | none — one condition | TC-005 | none — the store's failure is AC-015's |
+| AC-013 | TC-007 | none — enum | TC-003, TC-008, TC-016 | none — one condition | none — single render, no ordering | none — AC-015 owns the store's failure |
+| AC-015 | none — one input class: the store does not answer within its budget | none — the budget bound itself is AC-016's | none — the store is unavailable, not absent | none — one condition | none | TC-011 |
+| AC-016 | none — the criterion is a latency bound, not a value class | TC-012, TC-013, TC-014 | none — the request always has a duration | none — one condition | none | none — the timeout path is AC-015's |
+
+Every `TC-###` named above has an entry below, and every entry is named above. An id in one and
+not the other is the inconsistency this table exists to make visible.
 
 ## Cases
+
+### TC-001 — A stored preference is applied
+
+- **Derives from:** AC-011
+- **Technique:** equivalence partitioning. `light` and `dark` are one class: the resolver passes
+  a stored value through unchanged, so a second value tests the same path.
+- **Input:** a returning session whose stored preference is `dark`, with the header set to
+  `light` so that a pass-through failure is visible rather than masked by agreement
+- **Expected observable:** the rendered document's `<html data-theme>` attribute is `dark`
+- **Level:** integration
+- **Automated by:** `test/integration/stored.spec.ts::AC-011 a stored preference wins over the header`
+
+### TC-007 — The header's value is applied when nothing is stored
+
+- **Derives from:** AC-013
+- **Technique:** equivalence partitioning. The two defined header values are one class.
+- **Input:** a first render with no stored preference and `Sec-CH-Prefers-Color-Scheme: dark`
+- **Expected observable:** `data-theme` is `dark`
+- **Level:** unit
+- **Automated by:** `test/resolve.spec.ts::AC-013 header value is applied when nothing is stored`
 
 ### TC-003 — `prefers-color-scheme` is absent
 
@@ -130,8 +154,7 @@ Levels are set by `test-strategy.md`; this file decides the cases at those level
 - **Technique:** absent value. The header is optional, so "not present" is its own input class
   and is not a variation of `light` or `dark`.
 - **Input:** a first-render request with no `Sec-CH-Prefers-Color-Scheme` header and no stored
-  preference. Not an empty header, and not the header set to `no-preference` — TC-008 and TC-009
-  are those.
+  preference. Not an empty header — TC-008 is that case.
 - **Expected observable:** the rendered document's `<html data-theme>` attribute is `light`, and
   the first paint is not delayed
 - **Level:** unit

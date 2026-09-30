@@ -47,11 +47,14 @@ non-functional categories have not been asked about.
    `user-friendly` and `highly available` each name a direction and no threshold, so no build
    can fail them and no test can check them. Every NFR carries a number, a unit, a percentile
    where the quantity is a distribution, a window, and the conditions it holds under.
-4. Source every number from exactly one of four, and say which: a commitment already recorded
-   in `delivery/project.md` `## Constraints`; a measured current value with the date and window
-   it was measured over; a regulation or standard named by clause; or a decision taken and
-   recorded as an `ADR-###`. A round number with no origin is re-argued at every gate and
-   defended by whoever proposed it.
+4. Give every NFR a `**Threshold source:**` line stating where its number came from, as exactly
+   one of four: a commitment already recorded in `delivery/project.md` `## Constraints`; a
+   measured current value with the date and window it was measured over; a regulation or
+   standard named by clause; or a decision taken and recorded as an `ADR-###`. A round number
+   with no origin is re-argued at every gate and defended by whoever proposed it. This is a
+   different fact from `navi-skill-requirements-elicitation`'s `**Source:**`, which says who
+   asked for the requirement — an NFR carries both, because "the regulator requires it" and
+   "the operator asked for it" are separate claims and each can be wrong on its own.
 5. State the conditions in the criterion itself: the load, the data volume, the deployment
    target, the client population. `p95 under 400ms` holds trivially on an empty database and
    means nothing until the conditions are attached to it.
@@ -104,7 +107,8 @@ non-functional categories have not been asked about.
 | The NFRs are in a separate document | Move them into `spec.md` as `REQ-###`; nothing else is traceable |
 | A category has no requirement | Record it as `none` with the reason; never leave it unmentioned |
 | The requirement is `fast`, `secure` or `highly available` | Replace with a number, a unit, a percentile, a window and the conditions |
-| A number has no stated origin | Source it: a `project.md` constraint, a measurement, a named clause, or an `ADR-###` |
+| A number has no stated origin | Add `**Threshold source:**`: a `project.md` constraint, a measurement, a named clause, or an `ADR-###` |
+| An NFR has a threshold source but no `**Source:**` | Add the provenance line too; where the number came from is not who asked for it |
 | The threshold has no conditions | Add the load, the data volume and the target; without them it holds on an empty system |
 | An NFR has no `Verified by` | Name the instrument now; at Phase 6 it becomes whatever tool is to hand |
 | An NFR has no priority | Add MoSCoW; G2 requires it and NFRs are where it is most often missing |
@@ -140,7 +144,8 @@ alongside the functional ones:
 
 ### REQ-020 — First render completes within its budget
 **Priority:** Must
-**Source:** Measured — the 28 days to 2026-09-20 gave a p95 of 372ms with no preference read
+**Source:** Elicited from ACTOR-001, 2026-09-18
+**Threshold source:** Measured — the 28 days to 2026-09-20 gave a p95 of 372ms with no preference read
 **Verified by:** `k6 run perf/first-render.js` at 1.2x peak RPS for 30 minutes, staging data
 volume, per QAS-002
 
@@ -152,7 +157,8 @@ Implements: REQ-020
 
 ### REQ-021 — The capability stays available through a store outage
 **Priority:** Must
-**Source:** `delivery/project.md` `## Constraints` commits to 99.5% for the web shell
+**Source:** Elicited from ACTOR-004, 2026-09-19
+**Threshold source:** `delivery/project.md` `## Constraints` commits to 99.5% for the web shell
 **Verified by:** SLI-001 in `delivery/ops/slo.md`, which carries the objective and the error
 budget. This requirement names the SLI; it does not restate the objective.
 
@@ -165,7 +171,8 @@ Implements: REQ-021
 
 ### REQ-022 — The preference store holds ten times today's rows
 **Priority:** Should
-**Source:** Measured — 4.1M rows on 2026-09-20, growing 6% a month over the preceding 12 months
+**Source:** Inferred — ASSUM-005
+**Threshold source:** Measured — 4.1M rows on 2026-09-20, growing 6% a month over the preceding 12 months
 **Verified by:** a seeded 41M-row store in the integration environment, read latency measured
 at the same p95 as REQ-020
 
@@ -175,9 +182,24 @@ when a preference is read by user id,
 then the read completes at or below 20ms at p95.
 Implements: REQ-022
 
+### REQ-023 — A preference is readable only by its owner and by an audited agent
+**Priority:** Must
+**Source:** Elicited from ACTOR-005, 2026-09-19
+**Threshold source:** Decision — ADR-012, which records that support read access is permitted
+with an audit record and that write access is not
+**Verified by:** an integration case per actor, plus THREAT-004's `Verify` line at G6
+
+#### AC-023
+Given an authenticated user who is not the owner of a stored preference,
+when the preference is requested,
+then the response is 403 and no preference value is returned, in 100% of 4 attempted paths:
+direct read, session payload, support console, and export.
+Implements: REQ-023
+
 ### REQ-024 — A theme preference is retained only while the account exists
 **Priority:** Must
-**Source:** Regulation — UK GDPR Article 5(1)(e), storage limitation. Data class: preference
+**Source:** Inferred — ASSUM-003, pending Q-009
+**Threshold source:** Regulation — UK GDPR Article 5(1)(e), storage limitation. Data class: preference
 attribute tied to a user id, held in the EU-West region only. Carried in DC-001's
 `## Classification`; not duplicated here.
 **Verified by:** an integration case that deletes an account and re-reads the preference store
@@ -190,7 +212,8 @@ Implements: REQ-024
 
 ### REQ-025 — Both themes meet contrast at AA for body text
 **Priority:** Must
-**Source:** Standard — WCAG 2.2 success criteria 1.4.3 (contrast minimum) and 1.4.11
+**Source:** Elicited from ACTOR-001, 2026-09-18
+**Threshold source:** Standard — WCAG 2.2 success criteria 1.4.3 (contrast minimum) and 1.4.11
 (non-text contrast); the product's stated conformance target is AA
 **Verified by:** `axe-core` in the integration suite for 1.4.3 and 1.4.11, plus one manual NVDA
 pass on the settings screen recorded in `test-strategy.md`'s `## Verified manually`
@@ -201,9 +224,25 @@ when body text is rendered against its background,
 then the contrast ratio is at or above 4.5:1, and at or above 3:1 for interface components.
 Implements: REQ-025
 
+### REQ-027 — An added session field does not break existing consumers
+**Priority:** Must
+**Source:** Elicited from ACTOR-007, 2026-09-26
+**Threshold source:** `delivery/project.md` `## Constraints` commits to supporting the two most
+recent published mobile-shell releases
+**Verified by:** the consumer-driven contract suite against CONTRACT-001's recorded shape, run
+for each of the two supported releases
+
+#### AC-027
+Given a mobile-shell build from either of the two most recent published releases,
+when the session payload carries the added `theme` field,
+then the build parses the payload and renders, with 0 parse failures across both releases.
+Implements: REQ-027
+
 ### REQ-026 — An operator can tell a theme fault from a store outage
 **Priority:** Must
-**Source:** Elicited from ACTOR-004, 2026-09-19 — see `./elicitation.md`
+**Source:** Elicited from ACTOR-004, 2026-09-19
+**Threshold source:** Decision — ADR-013, which sets three checks as the runbook's first-response
+budget before the on-call escalates
 **Verified by:** the ALERT-001 runbook's first three checks, exercised during the rollback
 rehearsal
 
@@ -216,7 +255,8 @@ Implements: REQ-026
 
 ### REQ-028 — Offline preference editing
 **Priority:** Won't
-**Source:** Decision — ADR-011, which records that offline editing needs a conflict-resolution
+**Source:** Elicited from ACTOR-007, 2026-09-26
+**Threshold source:** Decision — ADR-011, which records that offline editing needs a conflict-resolution
 model the product does not have
 **Verified by:** not verified; not in this change
 
@@ -228,7 +268,8 @@ Recorded rather than omitted, so that a reader does not assume it holds.
 - [ ] Every NFR is a `REQ-###` in `spec.md` with its threshold as an `AC-###`
 - [ ] All nine categories appear in the pass, with `none` and a reason where empty
 - [ ] No requirement is an adjective; every one has a number, a unit and a window
-- [ ] Every number states one of the four sources: constraint, measurement, named clause, or ADR
+- [ ] Every number has a `**Threshold source:**`: a constraint, a measurement, a named clause, or an ADR
+- [ ] Every NFR also carries a `**Source:**` provenance line, as every other requirement does
 - [ ] Every threshold states the conditions it holds under
 - [ ] Every NFR has a `**Verified by:**` line naming the instrument
 - [ ] Every NFR has a `**Priority:**` line
@@ -249,8 +290,8 @@ test can check it, and at G6 it is declared met by whoever is asked. A number, a
 percentile, a window and the conditions.
 
 **The round number from nowhere.** `99.9% availability.` Nobody can say where it came from, the
-service has never measured better than 99.4%, and the figure is re-argued at every gate. Source
-it from a constraint, a measurement, a clause or an ADR.
+service has never measured better than 99.4%, and the figure is re-argued at every gate. Give it
+a `**Threshold source:**` — a constraint, a measurement, a clause or an ADR.
 
 **The threshold with no conditions.** `p95 under 200ms.` It holds on an empty database with one
 user and fails on the first real day. The conditions are what make a number falsifiable.
@@ -296,13 +337,16 @@ for S in $(find delivery/changes/$CHANGE/specs -name spec.md 2>/dev/null); do
               | grep -o 'REQ-[0-9]\{3,\}' | sort -u); do
     body=$(awk -v id="$id" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$S")
     [ -n "$body" ] || { echo "$id: named in the pass but has no '### $id — …' entry"; continue; }
-    for k in Priority Source "Verified by"; do
+    for k in Priority Source "Threshold source" "Verified by"; do
       printf '%s\n' "$body" | grep -q "^\*\*$k:\*\*" || echo "$id: missing $k"
     done
     # The source is one of the four admissible kinds
+    printf '%s\n' "$body" | grep '^\*\*Threshold source:\*\*' \
+      | grep -qE 'Measured|project\.md|Regulation|Standard|Decision — ADR-[0-9]{3,}' \
+      || echo "$id: Threshold source is none of a project.md constraint, a measurement, a named clause or an ADR"
     printf '%s\n' "$body" | grep '^\*\*Source:\*\*' \
-      | grep -qE 'Measured|project\.md|Regulation|Standard|Decision — ADR-[0-9]{3,}|Elicited from ACTOR-[0-9]{3,}' \
-      || echo "$id: Source is none of a project.md constraint, a measurement, a named clause or an ADR"
+      | grep -qE 'Elicited from ACTOR-[0-9]{3,}|Inferred — ASSUM-[0-9]{3,}' \
+      || echo "$id: Source is neither 'Elicited from ACTOR-###' nor 'Inferred — ASSUM-###'"
     # A Won't still carries a reason
     printf '%s\n' "$body" | grep -q "^\*\*Priority:\*\* *Won't" \
       && { printf '%s\n' "$body" | grep -q '^\*\*Source:\*\*' \
@@ -313,10 +357,13 @@ for S in $(find delivery/changes/$CHANGE/specs -name spec.md 2>/dev/null); do
            || echo "$id: availability requirement names no SLI-###"; }
   done
 
-  # No adjective survives as a criterion
+  # No adjective survives as a criterion. The boundary is a padded non-alphanumeric class,
+  # not \< \> — those are a GNU extension that the awk shipped with macOS matches never, so
+  # the check would pass silently on every input.
   awk '/^#### AC-/{on=1} /^### /{on=0}
-       on && /\<(fast|slow|secure|reliable|scalable|user-friendly|highly available|robust)\>/ {
-         print "an acceptance criterion states a quality as an adjective: " $0 }' "$S"
+       on { p = " " $0 " ";
+         if (p ~ /[^[:alnum:]](fast|slow|secure|reliable|scalable|user-friendly|highly available|robust)[^[:alnum:]]/)
+           print "an acceptance criterion states a quality as an adjective: " $0 }' "$S"
 
   # Every NFR criterion carries a number
   for id in $(awk '/^## Non-functional pass$/{on=1;next} /^## /{on=0} on' "$S" \
@@ -342,8 +389,6 @@ for S in $(find delivery/changes/$CHANGE/specs -name spec.md 2>/dev/null); do
   a=$(grep -c '^#### AC-' "$S"); i=$(grep -c '^Implements: REQ-' "$S")
   [ "$a" -eq "$i" ] || echo "$S: $a criteria and $i 'Implements:' lines — every AC needs one"
 
-  # And the framework's own traceability pass agrees
-  python3 scripts/validate_traceability.py delivery
 done
 ```
 

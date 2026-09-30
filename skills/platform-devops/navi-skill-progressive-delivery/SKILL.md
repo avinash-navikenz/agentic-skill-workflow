@@ -68,7 +68,9 @@ full switch.
     removes it are `navi-skill-version-control-workflow`'s; this skill owns only the exposure
     ramp on top of them. The removal task exists in `tasks.md` from the day the flag is added.
 11. Record what each wave actually observed — the date, the exposure reached, the measured
-    value of every `Halt when` metric, and the promote-or-halt decision. A rollout plan with no
+    value of every `Halt when` metric, and the promote-or-halt decision. A wave that has not run
+    yet still takes a row, with the decision `pending` and the date it is expected, so a wave
+    nobody has started is distinguishable from a wave nobody recorded. A rollout plan with no
     observations is a plan; G7 is recorded on what happened.
 12. Roll a model out through shadow before canary where the prediction is cheap to compute and
     expensive to act on: serve the incumbent, compute the candidate, compare offline. Where
@@ -101,6 +103,8 @@ full switch.
 | Two changes are ramping through the same population | Separate them, or record `## Concurrent exposure` naming which halts first |
 | The old path was removed in the same merge | Restore it; it comes out in its own later merge after the final soak |
 | The rollout has no recorded observations | Record each wave's date, exposure and measured halt metrics before G7 |
+| A wave has not run yet | It still takes an observation row, with `pending` and the date it is expected |
+| A later wave's `Halt when` says "as the previous wave" | Write it out; the condition is read under pressure, at that wave |
 | A model prediction is cheap to compute and expensive to act on | Shadow first, then canary |
 | Exposure itself could harm a person | No canary — the offline evaluation decides |
 | The halt condition watches only the aggregate | Add the `SLICE-###` segments; a worse segment hides inside a better mean |
@@ -188,7 +192,10 @@ section would have to say so.
 - **Soak:** 24 hours, spanning one full weekday-to-weekend boundary, because the enterprise
   tenants' traffic pattern differs at the weekend and SLICE-005 is otherwise unobserved
 - **Promote when:** as ROLL-002, plus no new `ThemeResolveError` signature
-- **Halt when:** as ROLL-002. Evaluated automatically.
+- **Halt when:** SLI-004 below 0.76 on the aggregate or on SLICE-003 or SLICE-005 over any
+  rolling 2-hour window, or p99 render latency above 12ms, or any `ThemeResolveError`.
+  Evaluated automatically by `alert-sli-004-fast`. Written out rather than left as
+  "as ROLL-002": a halt condition read under pressure is read here, not two waves up.
 - **Rollback:** flag flip
 - **Owner:** Ana Costa, 09:00–17:00 UTC
 
@@ -197,11 +204,14 @@ section would have to say so.
 - **Exposure:** 100%
 - **Population:** every user of the web shell
 - **Selector:** flag default `true`; the targeting rules are removed
-- **Soak:** 7 days before TASK-034 removes the old path, so that a regression discovered in
-  the first week still has a flag to flip
+- **Soak:** 7 days. At full exposure SLI-004 accumulates ~820,000 first renders a day, so a
+  0.5-point move is observable within hours and the signal is not what sets this length. The 7
+  days is set by the second purpose of the soak — TASK-034 removes the old path at the end of
+  it, and a regression found in the first week must still have a flag to flip.
 - **Promote when:** the 7-day soak completes within objective; promotion here means merging
   TASK-034, not widening exposure
-- **Halt when:** as ROLL-002
+- **Halt when:** SLI-004 below 0.76 on the aggregate or on SLICE-003 or SLICE-005 over any
+  rolling 2-hour window, or p99 render latency above 12ms. Evaluated automatically.
 - **Rollback:** flag flip until TASK-034 merges; digest rollback afterwards
 - **Owner:** Ana Costa, 09:00–17:00 UTC
 
@@ -219,6 +229,7 @@ shared regression to it and re-observing is cheaper than the reverse. Agreed wit
 | 2026-09-28 | ROLL-001 | staff only | 0.79 | 8.4ms | 0 | promote |
 | 2026-09-29 | ROLL-002 | 5% | 0.78 (SLICE-003 0.77, SLICE-005 0.78) | 9.1ms | 0 | promote |
 | 2026-09-30 | ROLL-003 | 50% | 0.78 | 9.4ms | 0 | promote |
+| — | ROLL-004 | not yet run | — | — | — | pending, expected 2026-10-01 |
 ```
 
 Halting a wave from the command line, and recording what happened:
@@ -243,7 +254,7 @@ Halting a wave from the command line, and recording what happened:
 - [ ] Both rollback routes are stated with their propagation times
 - [ ] Concurrent ramps through the same population are recorded, with which halts first
 - [ ] The old path survives until the final soak, and its removal is a task in `tasks.md`
-- [ ] `## Wave observations` carries a dated row per completed wave with measured values
+- [ ] `## Wave observations` carries a row per wave — measured values, or `pending` with the expected date
 - [ ] Segment halt conditions name the `SLICE-###` populations, not only the aggregate
 - [ ] The data direction is stated, and rollback availability follows from it
 - [ ] Every wave names a person and the hours the wave runs in
@@ -338,7 +349,7 @@ awk '/^## Rollback$/{on=1;next} /^## /{on=0} on' "$R" \
 # Every completed wave has an observation row
 for id in $(grep -o 'ROLL-[0-9]\{3,\}' "$R" | sort -u); do
   awk '/^## Wave observations$/{on=1;next} /^## /{on=0} on' "$R" | grep -q "$id" \
-    || echo "$id: no row in ## Wave observations"
+    || echo "$id: no row in ## Wave observations (a wave that has not run records 'pending')"
 done
 
 # The old path's removal exists as a task

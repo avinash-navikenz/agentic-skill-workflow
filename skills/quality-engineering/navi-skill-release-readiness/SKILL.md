@@ -170,9 +170,10 @@ did not reach.
 
 | Item | Risk that remains | Accepted by |
 |---|---|---|
-| The kiosk fleet's own browser build | RISK-002's population includes ~2,000 kiosk sessions a day that only the single manual pass represents | Priya Raman, 2026-09-26 |
+| The kiosk fleet's own browser build | ~2,000 kiosk sessions a day are represented by a single manual pass and by no automated case. The resolver risk these sessions touch is proven at unit level and is recorded in `## Proven`, not restated here — an item belongs to one section only, and this row is the environment, not the risk. | Priya Raman, 2026-09-26 |
 | Concurrent writes from two tabs of different users sharing a device | A shared-device write could be attributed to the wrong user; last-write-wins is specified and the case is not exercised | Priya Raman, 2026-09-26 |
-| RISK-005 (store migration rollback) | The migration has not been run backwards against production-shaped data | Ana Costa, 2026-09-28 — and it is the reason this report recommends starting at ROLL-001 rather than ROLL-002 |
+| RISK-005 | The store migration has not been run backwards against production-shaped data, so the rollback route stated in `design.md` `## Failure modes` is an assertion rather than a fact | Ana Costa, 2026-09-28 — and it is the reason this report recommends starting at ROLL-001 rather than ROLL-002 |
+| RISK-003 | Cross-region read latency was measured in staging only; the ap-southeast path was never exercised at production data volume | Ana Costa, 2026-09-28 |
 
 ## Known defects
 
@@ -328,15 +329,20 @@ awk '/^## Proven$/{p=NR} /^## Sampled$/{s=NR} /^## Untouched$/{u=NR}
 
 # Every AC, RISK and THREAT is in exactly one of the three
 sec() { awk -v h="^## $1\$" '$0 ~ h {on=1;next} /^## /{on=0} on' "$R"; }
-for src in "$SPEC" "$T" "$TM"; do
-  [ -f "$src" ] || continue
-  for id in $(grep -oE '(AC|RISK|THREAT)-[0-9]{3,}' "$src" | sort -u); do
-    n=0
-    for s in Proven Sampled Untouched; do
-      sec "$s" | grep -q "$id" && n=$((n+1))
-    done
-    [ "$n" -eq 1 ] || echo "$id appears in $n of the three sections (must be exactly 1)"
+# Each id family is read from the one file that owns it: criteria from the change's spec, risks
+# from the strategy's own entries, threats from the threat model. Scanning every file for every
+# family picks up ids a file merely mentions — the strategy names threats it decided not to
+# cover — and reports them as missing from a report that was never meant to carry them.
+ids=""
+[ -f "$SPEC" ] && ids="$ids $(grep -oE 'AC-[0-9]{3,}' "$SPEC" | sort -u)"
+[ -f "$T" ]    && ids="$ids $(grep -oE '^### (RISK-[0-9]{3,})' "$T" | grep -oE 'RISK-[0-9]{3,}' | sort -u)"
+[ -f "$TM" ]   && ids="$ids $(grep -oE '^### (THREAT-[0-9]{3,})' "$TM" | grep -oE 'THREAT-[0-9]{3,}' | sort -u)"
+for id in $(printf '%s\n' $ids | sort -u); do
+  n=0
+  for sec_name in Proven Sampled Untouched; do
+    sec "$sec_name" | grep -q "$id" && n=$((n+1))
   done
+  [ "$n" -eq 1 ] || echo "$id appears in $n of the three sections (must be exactly 1)"
 done
 
 # Every Proven row names a run identifier or a person and a date
