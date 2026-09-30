@@ -231,8 +231,18 @@ for f in delivery/decisions/ADR-*.md; do
   done
 done
 
-# No duplicate numbers, and no status outside the permitted four
-ls delivery/decisions/ | grep -oE 'ADR-[0-9]+' | sort | uniq -d
+# No duplicate numbers, and no status outside the permitted four. Rule 1 mandates one file
+# per id at ADR-###.md, so a directory listing can never repeat a number and `ls | uniq -d`
+# is vacuous. Read the number each file declares instead: a heading that disagrees with its
+# own filename, or two files claiming one number, is the collision that actually happens.
+for f in delivery/decisions/ADR-*.md; do
+  n=$(basename "$f" .md)
+  h=$(grep -m1 -o '^# ADR-[0-9]\{3,\}' "$f" | grep -o 'ADR-[0-9]\{3,\}')
+  [ -n "$h" ] || { echo "$f: no '# ADR-### — …' heading"; continue; }
+  [ "$n" = "$h" ] || echo "$f: the filename says $n and the heading says $h"
+done
+grep -ho '^# ADR-[0-9]\{3,\}' delivery/decisions/ADR-*.md | grep -o 'ADR-[0-9]\{3,\}' \
+  | sort | uniq -d | sed 's/^/two files claim the same number: /'
 grep -A1 '^## Status$' delivery/decisions/ADR-*.md \
   | grep -vE '(Status|^--|Proposed|Accepted|Rejected|Superseded by ADR-[0-9]{3,})'
 

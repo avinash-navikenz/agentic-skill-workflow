@@ -373,9 +373,16 @@ for id in $(grep -o 'MON-[0-9]\{3,\}' "$M" | sort -u); do
   # The runbook it names exists
   rb=$(printf '%s\n' "$body" | awk '/\*\*Runbook:\*\*/{print}' | grep -o '`[^`]*`' | tr -d '`')
   [ -n "$rb" ] && { test -f "$rb" || echo "$id: runbook not found: $rb"; }
-  # Input-feature monitors name a CHK
-  printf '%s\n' "$body" | grep -q '\*\*Data-quality precedence:\*\*' \
-    || echo "$id: no data-quality precedence line"
+  # Every monitor carries the data-quality precedence line, and where it is not 'none' it
+  # names the CHK-### that takes precedence. The comment this replaces said the check was
+  # about input-feature monitors naming a CHK; the check tested only that a line was present.
+  dq=$(printf '%s\n' "$body" | awk '/\*\*Data-quality precedence:\*\*/{print}')
+  if [ -z "$dq" ]; then
+    echo "$id: no data-quality precedence line"
+  else
+    printf '%s\n' "$dq" | grep -qE 'CHK-[0-9]{3,}|none' \
+      || echo "$id: data-quality precedence names neither a CHK-### nor 'none'"
+  fi
 done
 
 # No monitor retrains
