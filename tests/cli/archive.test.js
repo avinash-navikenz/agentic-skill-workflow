@@ -16,12 +16,20 @@ function repo() {
   return root;
 }
 
-function proposeC(root, lane = "express") {
-  propose.run(["c", "--lane", lane], root, () => {});
-  const delta = path.join(root, "delivery", "changes", "c", "specs", "theme");
+// The shipped tasks.md template ships `Implements: REQ-001` as a placeholder,
+// so a change is only traceability-clean once a delta spec introduces REQ-001
+// with acceptance criteria. archive now enforces that (ruling D), which is why
+// every fixture that reaches archive writes the delta spec.
+function proposeNamed(root, name, lane = "express") {
+  propose.run([name, "--lane", lane], root, () => {});
+  const delta = path.join(root, "delivery", "changes", name, "specs", "theme");
   fs.mkdirSync(delta, { recursive: true });
   fs.writeFileSync(path.join(delta, "spec.md"), "# Theme\n## REQ-001 x\n### AC-001 y\n");
   return root;
+}
+
+function proposeC(root, lane = "express") {
+  return proposeNamed(root, "c", lane);
 }
 
 function evidenceFile(root) {
@@ -167,7 +175,7 @@ test("ruling C: archiving a change that is not the active change is refused and 
 
 test("ruling C: archiving is refused the same way when no change is active at all", () => {
   const root = repo();
-  propose.run(["a", "--lane", "express"], root, () => {});
+  proposeNamed(root, "a");
   const ev = evidenceFile(root);
   gate.run(["G2", "--pass", "--evidence", ev], root, () => {});
   gate.run(["G6", "--pass", "--evidence", ev], root, () => {});
@@ -228,4 +236,102 @@ test("added: folding a delta spec overwrites the existing specs/ file at the sam
   const folded = fs.readFileSync(path.join(root, "delivery", "specs", "theme", "spec.md"), "utf8");
   assert.match(folded, /REQ-001 x/);
   assert.ok(!folded.includes("OLD"));
+});
+
+// ---------------------------------------------------------------------------
+// Ruling D — archive gated on gate verdicts only. A standard-lane change
+// archived cleanly while `validate` was exiting 1 on a T3 finding: the
+// framework claims everything traces to a requirement, and nothing enforced
+// that at the exit. archive now runs the traceability validator and refuses on
+// findings, consistent with how it refuses on unsettled gates and stale
+// artifacts — nothing on disk changes.
+// ---------------------------------------------------------------------------
+function writeTasks(root, body) {
+  fs.writeFileSync(path.join(root, "delivery", "changes", "c", "tasks.md"), body);
+}
+
+function archiveOutcome(root) {
+  const lines = [];
+  const code = archive.run(["c"], root, (s) => lines.push(s));
+  return { code, out: lines.join("\n") };
+}
+
+test("archive refuses a change whose task implements an unknown requirement", () => {
+  const root = proposeC(repo());
+  writeTasks(root, "# Tasks\n\n- **TASK-001** Build it\n  - Implements: REQ-999\n");
+  passAll(root, ["G2", "G6", "G7"]);
+  const { code, out } = archiveOutcome(root);
+  assert.strictEqual(code, 1);
+  assert.match(out, /traceability findings are outstanding/);
+  assert.match(out, /T3 .*implements unknown REQ-999/);
+});
+
+test("a refused archive moves nothing and leaves the change active", () => {
+  const root = proposeC(repo());
+  writeTasks(root, "# Tasks\n\n- **TASK-001** Build it\n  - Implements: REQ-999\n");
+  passAll(root, ["G2", "G6", "G7"]);
+  assert.strictEqual(archiveOutcome(root).code, 1);
+
+  assert.ok(fs.existsSync(path.join(root, "delivery", "changes", "c")),
+    "the change directory was moved despite the refusal");
+  const archived = path.join(root, "delivery", "changes", "archive");
+  const contents = fs.existsSync(archived)
+    ? fs.readdirSync(archived).filter((f) => f !== ".gitkeep")
+    : [];
+  assert.deepStrictEqual(contents, []);
+  assert.ok(!fs.existsSync(path.join(root, "delivery", "specs", "theme", "spec.md")),
+    "the delta spec was folded into specs/ despite the refusal");
+  assert.ok(!fs.existsSync(path.join(root, "delivery", "ops", "postmortems", "c.md")),
+    "a postmortem was written despite the refusal");
+  assert.strictEqual(readState(root).change, "c", "state was reset despite the refusal");
+});
+
+test("archive refuses a requirement with no acceptance criteria", () => {
+  const root = repo();
+  propose.run(["c", "--lane", "express"], root, () => {});
+  const delta = path.join(root, "delivery", "changes", "c", "specs", "theme");
+  fs.mkdirSync(delta, { recursive: true });
+  // A Must with no AC — T2.
+  fs.writeFileSync(path.join(delta, "spec.md"), "# Theme\n## REQ-001 x\n**Priority:** Must\n");
+  passAll(root, ["G2", "G6", "G7"]);
+  const { code, out } = archiveOutcome(root);
+  assert.strictEqual(code, 1);
+  assert.match(out, /T2 .*no acceptance criteria/);
+});
+
+test("archive still succeeds once traceability is clean", () => {
+  const root = proposeC(repo());
+  writeTasks(root, "# Tasks\n\n- **TASK-001** Build it\n  - Implements: REQ-001\n");
+  passAll(root, ["G2", "G6", "G7"]);
+  const { code, out } = archiveOutcome(root);
+  assert.strictEqual(code, 0, out);
+  assert.match(out, /Archived to/);
+});
+
+test("a task bound to a requirement introduced by the change's own delta spec is accepted", () => {
+  // The delta spec is proposed truth for the lifetime of the change; archive
+  // must not demand the requirement already be canonical in delivery/specs/.
+  const root = proposeC(repo());
+  writeTasks(root, "# Tasks\n\n- **TASK-001** Build it\n  - Implements: REQ-001\n");
+  passAll(root, ["G2", "G6", "G7"]);
+  assert.strictEqual(archiveOutcome(root).code, 0);
+  assert.ok(fs.existsSync(path.join(root, "delivery", "specs", "theme", "spec.md")),
+    "the delta spec was not folded into specs/");
+});
+
+test("archive refuses on traceability only after the gate check, so the louder problem is reported first", () => {
+  const root = proposeC(repo());
+  writeTasks(root, "# Tasks\n\n- **TASK-001** Build it\n  - Implements: REQ-999\n");
+  // No gates recorded at all, and a T3 outstanding.
+  const { code, out } = archiveOutcome(root);
+  assert.strictEqual(code, 1);
+  assert.match(out, /gates and\/or artifacts are not settled/);
+  assert.doesNotMatch(out, /traceability/);
+});
+
+test("a traceability refusal names the command that re-checks it", () => {
+  const root = proposeC(repo());
+  writeTasks(root, "# Tasks\n\n- **TASK-001** Build it\n  - Implements: REQ-999\n");
+  passAll(root, ["G2", "G6", "G7"]);
+  assert.match(archiveOutcome(root).out, /navi-delivery validate/);
 });

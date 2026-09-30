@@ -16,6 +16,17 @@ function repo() {
   return root;
 }
 
+// archive now refuses on traceability findings (ruling D), and the shipped
+// tasks.md template ships `Implements: REQ-001` as a placeholder — so a change
+// is only archivable once a delta spec introduces REQ-001 with acceptance
+// criteria. Fixtures below that archive a change write that spec first.
+function withDeltaSpec(root, name) {
+  const delta = path.join(root, "delivery", "changes", name, "specs", "theme");
+  fs.mkdirSync(delta, { recursive: true });
+  fs.writeFileSync(path.join(delta, "spec.md"), "# Theme\n## REQ-001 x\n### AC-001 y\n");
+  return root;
+}
+
 // See tests/cli/init.test.js for the full reasoning: mutating the
 // repository's own shipped templates/ tree is unsafe under node:test's
 // default per-file parallelism, so tests that need to provoke a
@@ -83,6 +94,7 @@ test("a duplicate change name is refused", () => {
 test("a duplicate directory with no active change is refused for the original reason", () => {
   const root = repo();
   propose.run(["dup2", "--lane", "full"], root, () => {});
+  withDeltaSpec(root, "dup2");
   const ev = path.join(root, "evidence.md");
   fs.writeFileSync(ev, "proof");
   for (const g of ["G1", "G2", "G3", "G4", "G5", "G6", "G7", "G8", "G9"]) {
@@ -118,6 +130,7 @@ test("proposing while a change is already active is refused and creates no direc
 test("proposing succeeds normally once the active change has been archived", () => {
   const root = repo();
   propose.run(["x", "--lane", "express"], root, () => {});
+  withDeltaSpec(root, "x");
   const ev = path.join(root, "evidence.md");
   fs.writeFileSync(ev, "proof");
   for (const g of ["G2", "G6", "G7"]) gate.run([g, "--pass", "--evidence", ev], root, () => {});

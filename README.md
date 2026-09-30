@@ -125,6 +125,7 @@ navi-delivery status                           # change, lane, phase, gate verdi
 navi-delivery validate [--strict]              # frontmatter, separation, traceability
 navi-delivery gate <G#> --pass --evidence <p>  # record a gate decision
 navi-delivery archive <name>                   # fold the delta into specs/, emit the insight stub
+                                               # (refuses on unsettled gates, stale artifacts or traceability findings)
 navi-delivery doctor                           # harness detection, native vs fallback capabilities
 ```
 

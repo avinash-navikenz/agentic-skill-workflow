@@ -317,6 +317,23 @@ cannot archive 'add-csv-export': gates and/or artifacts are not settled. Nothing
   resolve by re-running 'navi-delivery gate <gate> ...' on each stale gate to clear its rework
 ```
 
+Traceability is checked too, with the same validator `validate` runs (non-strict, whole
+tree). The framework claims everything traces to a requirement; archive is where that claim
+becomes permanent, since it folds the delta spec into `delivery/specs/`:
+
+```text
+cannot archive 'add-csv-export': traceability findings are outstanding. Nothing was changed.
+T3 delivery/changes/add-csv-export/tasks.md: TASK-001 implements unknown REQ-999
+
+1 traceability finding(s)
+  resolve by binding each task to a requirement that exists, and giving every requirement acceptance criteria
+  re-check with: navi-delivery validate
+```
+
+> The shipped `tasks.md` carries `Implements: REQ-001` as a placeholder, so a change whose
+> tasks were never filled in is **not** archivable until its delta spec introduces that
+> requirement with acceptance criteria. That is the intent, not a side effect.
+
 It also refuses to archive over an existing `changes/archive/<date>-<name>/`, rather than
 overwriting recorded history, and refuses to archive a change that is not the one
 `state.json` holds verdicts for.

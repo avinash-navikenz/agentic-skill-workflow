@@ -1,6 +1,7 @@
 "use strict";
 const fs = require("node:fs");
 const path = require("node:path");
+const { spawnSync } = require("node:child_process");
 const { deliveryDir, changeDir } = require("../lib/paths");
 const { readState, writeState } = require("../lib/state");
 const { appendEvent } = require("../lib/events");
@@ -18,6 +19,24 @@ const INSIGHT = (name) => `# Postmortem — ${name}
 <what we predicted, what happened>
 `;
 
+const ROOT = path.join(__dirname, "..", "..");
+
+// Controller ruling D: archive gated on gate verdicts only, so a standard-lane
+// change archived cleanly while `validate` was exiting 1 on a T3 finding — a
+// task implementing a requirement that existed nowhere. The framework claims
+// everything traces to a requirement and nothing enforced that at the exit,
+// which is the one moment the claim becomes permanent: archive folds the delta
+// spec into specs/ and moves the change out of reach.
+//
+// The scope is the whole delivery tree, matching `validate`, not just this
+// change. That is deliberate rather than incidental: archiving *changes* the
+// global requirement set by folding the delta spec into specs/, so a finding
+// anywhere in the tree is a finding about the state this archive is about to
+// make canonical.
+//
+// Run in non-strict mode, again matching `validate`'s default: T4 ("implemented
+// by no task") is a --strict opinion about completeness, and archive refuses on
+// broken traceability, not on unfinished scope.
 function run(argv, cwd, emit = console.log) {
   const name = argv[0];
   if (!name) { emit("usage: navi-delivery archive <name>"); return 1; }
@@ -67,6 +86,23 @@ function run(argv, cwd, emit = console.log) {
       emit(`  ${s.stale.length} stale artifact(s): ${s.stale.join(", ")}`);
       emit(`  resolve by re-running 'navi-delivery gate <gate> ...' on each stale gate to clear its rework`);
     }
+    return 1;
+  }
+
+  // Traceability is checked here — after the gates, before anything on disk
+  // moves — so this refusal reads like the two above it: nothing was changed.
+  const script = path.join(ROOT, "scripts", "validate_traceability.py");
+  const trace = spawnSync("python3", [script, deliveryDir(cwd)], { encoding: "utf8" });
+  if (trace.error || trace.status === null) {
+    emit(`cannot archive '${name}': traceability could not be checked — ${trace.error ? trace.error.message : "the validator did not exit normally"}. Nothing was changed.`);
+    return 1;
+  }
+  if (trace.status !== 0) {
+    emit(`cannot archive '${name}': traceability findings are outstanding. Nothing was changed.`);
+    if (trace.stdout) emit(trace.stdout.trimEnd());
+    if (trace.stderr) emit(trace.stderr.trimEnd());
+    emit(`  resolve by binding each task to a requirement that exists, and giving every requirement acceptance criteria`);
+    emit(`  re-check with: navi-delivery validate`);
     return 1;
   }
 
