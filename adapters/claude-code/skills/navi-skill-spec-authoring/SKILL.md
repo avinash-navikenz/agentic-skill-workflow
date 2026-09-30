@@ -92,6 +92,7 @@ held only in memory. This capability makes the choice durable.
 
 ### REQ-001 — Theme preference persists across sessions
 **Priority:** Must
+**Source:** Elicited from ACTOR-001, 2026-09-18
 
 A signed-in user's chosen theme is reapplied on every subsequent page load, on every device
 where they are signed in.
@@ -104,6 +105,7 @@ Implements: REQ-001
 
 ### REQ-002 — Absent preference falls back to the system scheme
 **Priority:** Must
+**Source:** Elicited from ACTOR-001, 2026-09-18
 
 #### AC-002
 Given a signed-in user with no saved preference,
@@ -113,6 +115,7 @@ Implements: REQ-002
 
 ### REQ-003 — Preference survives a preference-store outage
 **Priority:** Should
+**Source:** Inferred — ASSUM-001
 
 #### AC-003
 Given the preference store is unreachable,
@@ -122,6 +125,7 @@ Implements: REQ-003
 
 ### REQ-004 — Per-device theme override
 **Priority:** Won't
+**Source:** Elicited from ACTOR-002, 2026-09-19
 
 Not in this change: a per-device override needs a device identity the product does not have.
 Revisit when device registration ships.
@@ -239,8 +243,16 @@ navi-delivery validate                                     # runs all three vali
 Confirm every requirement is on a heading line and carries a priority:
 
 ```bash
-grep -rcE '^#+.*REQ-[0-9]{3,}' --include=spec.md delivery/changes/<name>/specs
-grep -rc '\*\*Priority:\*\*' --include=spec.md delivery/changes/<name>/specs
+# Summed across every spec.md under the change, and compared rather than printed:
+# `grep -rc` prints one count per file, so two bare listings cannot be compared by eye
+# once a change has more than one capability.
+CHANGE=<name>
+count() { grep -rcE "$1" --include=spec.md delivery/changes/$CHANGE/specs \
+            | awk -F: '{n += $NF} END {print n + 0}'; }
+headings=$(count '^#+.*REQ-[0-9]{3,}')
+priorities=$(count '^\*\*Priority:\*\*')
+[ "$headings" -eq "$priorities" ] \
+  || echo "$headings requirement heading(s) and $priorities '**Priority:**' line(s) — every requirement carries one"
 ```
 
 The two counts must be equal. A requirement not on a heading is invisible to the validator; a

@@ -204,14 +204,56 @@ grep -n 'blocked_on\|decision:\|escalated_to' delivery/changes/*/handoffs.md
 
 Every `blocked_on: <checkpoint>` must have a later envelope with the same `blocked_on` plus a
 `decision`. A `blocked_on` with no answering `decision` is a change that is still blocked —
-whatever `status` shows about its gates.
-
-Confirm no gate that needs a checkpoint was recorded before its decision, by comparing the
-`decided_at` timestamp with the gate event:
+whatever `status` shows about its gates. The listing above is for reading; the check below
+pairs them mechanically, and compares each `decided_at` against the gate event that followed
+it. A gate recorded before its decision is a gate recorded without its checkpoint.
 
 ```bash
-grep '"gate":"G3"' delivery/.adlc/events.jsonl
+python3 - <<'CHECKPOINTS'
+import json, pathlib, re, sys, yaml
+
+def envelopes(path):
+    out = []
+    for block in re.findall(r"```yaml\n(.*?)```", path.read_text(encoding="utf-8"), re.S):
+        out += (yaml.safe_load(block) or [])
+    return out
+
+problems, decisions = [], []
+for path in sorted(pathlib.Path("delivery/changes").glob("*/handoffs.md")):
+    asked, answered = {}, {}
+    for env in envelopes(path):
+        key = env.get("blocked_on")
+        if not key:
+            continue
+        if "decision" in env:
+            answered[key] = str(env.get("decided_at") or "")
+        else:
+            asked[key] = True
+    for key in asked:
+        if key not in answered:
+            problems.append(f"{path}: checkpoint '{key}' was requested and never answered")
+        elif not answered[key]:
+            problems.append(f"{path}: checkpoint '{key}' was decided with no decided_at")
+    for key, when in answered.items():
+        if key not in asked:
+            problems.append(f"{path}: checkpoint '{key}' carries a decision with no request before it")
+        elif when:
+            decisions.append(when)
+
+events = pathlib.Path("delivery/.adlc/events.jsonl")
+if events.exists() and decisions:
+    latest = max(decisions)
+    for line in events.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        if event.get("gate") == "G3" and event.get("ts", "") < latest:
+            problems.append(f"G3 was recorded at {event['ts']}, before the checkpoint decided at {latest}")
+
+for problem in problems:
+    print(problem)
+sys.exit(1 if problems else 0)
+CHECKPOINTS
 ```
 
-The gate event's `ts` must be later than the matching `decided_at`. A gate recorded first is a
-gate recorded without its checkpoint.
+Each command prints nothing when the rule holds.

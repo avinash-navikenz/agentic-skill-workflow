@@ -153,6 +153,9 @@ recorded manual verification.
 | RISK-002 | unit, the resolver is a pure function and all input classes are covered | run 1842771903 |
 | RISK-004 | integration with the dependency faulted | run 1842771903 |
 | THREAT-004 | its `Verify` line, run against this build | `security/threat-004.sh`, run 1842771903 |
+| THREAT-001 | its `Verify` line, run against this build | `npm run test:security -- --grep "session-forgery"`, run 1842771903 |
+| THREAT-002 | designed out at G3; the control test asserts the write takes no user id from the request | `test/security/preference-write-ignores-body-userid.spec.ts`, run 1842771903 |
+| THREAT-003 | its `Verify` line, run against this build | `npm run test:security -- --grep "log-redaction"`, run 1842771903 |
 
 ## Sampled
 

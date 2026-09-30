@@ -136,7 +136,7 @@ Cases: `./test-design.md`. This file decides the levels; that one decides the ca
 |---|---|---|
 | `spec.md` REQ-### | RISK-001, RISK-002, RISK-003 | — |
 | `design.md` `## Failure modes` | RISK-004, RISK-005 | — |
-| `threat-model.md` THREAT-### | RISK-006 | THREAT-002 and THREAT-003 were designed out at G3 and have no build to exercise |
+| `threat-model.md` THREAT-### | RISK-006 | THREAT-002 and THREAT-003 were designed out at G3 and have no build to exercise. THREAT-001's control is the session layer's, unchanged by this change; its `Verify` line runs at G6 against the existing security suite and draws no new risk here. |
 
 ## Risks
 

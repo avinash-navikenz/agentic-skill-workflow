@@ -185,6 +185,28 @@ Inherited unchanged: none.
   sample for uuid-shaped strings at Phase 6
 - **Serves:** REQ-001
 
+## Boundary pass — CONTRACT-002 (theme.changed event)
+
+| STRIDE prompt | Threat |
+|---|---|
+| Spoofing | none — the event is published on an internal topic the shell alone can write, under the existing workload identity |
+| Tampering | THREAT-002 — the same write path carries the user id, and the control is the same one |
+| Repudiation | none — the broker records producer and offset for every message |
+| Information disclosure | none — the payload carries the user id and the theme name, both of which the consumer already holds |
+| Denial of service | none — the topic is bounded by the same per-user write limit as the preference write |
+| Elevation of privilege | none — no consumer gains a capability from the event |
+
+## Boundary pass — CONTRACT-003 (user_preferences table, read by reporting)
+
+| STRIDE prompt | Threat |
+|---|---|
+| Spoofing | none — reporting reads through a role with no write grant, issued by the existing warehouse identity |
+| Tampering | none — the grant is `SELECT` only; a write would fail at the database |
+| Repudiation | none — the warehouse audit log records every query with its role |
+| Information disclosure | THREAT-003 — the same user-id exposure, reached through the reporting copy rather than the log |
+| Denial of service | none — reporting reads a nightly snapshot, never the live table |
+| Elevation of privilege | none — the role grants nothing beyond this table |
+
 ### THREAT-004 — Anonymous enumeration of deployment ids via /status
 
 - **Boundary:** CONTRACT-004

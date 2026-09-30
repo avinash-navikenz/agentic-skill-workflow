@@ -173,7 +173,17 @@ navi-delivery status     # prints the lane and every gate it enforces
 
 The gate set printed by `status` must match the `gates:` line in `proposal.md`. A mismatch
 means one of the two was edited by hand; the source of truth is `state.json`, and the fix is
-to correct `proposal.md`, never the reverse.
+to correct `proposal.md`, never the reverse. Compare them mechanically rather than by eye —
+the two lists are read side by side and the difference is one gate:
+
+```bash
+CHANGE=<name>
+declared=$(grep -m1 '^gates:' delivery/changes/$CHANGE/proposal.md \
+  | grep -o 'G[1-9]' | sort -u | tr '\n' ' ')
+actual=$(navi-delivery status | grep -oE '^  G[1-9]' | grep -o 'G[1-9]' | sort -u | tr '\n' ' ')
+[ "$declared" = "$actual" ] \
+  || echo "proposal.md declares gates [$declared] and the lane enforces [$actual] — correct proposal.md"
+```
 
 Confirm the CLI agrees the lane exists before committing to it:
 

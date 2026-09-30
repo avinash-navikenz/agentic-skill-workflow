@@ -258,6 +258,10 @@ here; a monitor serving an undefined SLI has an objective nobody agreed:
 - **Alerts before the budget burns:** MON-002 and MON-004 fire on 3 consecutive 24-hour
   windows, which at the observed rate is about 11 days before a 28-day breach
 - **Runbook:** `delivery/ops/runbooks/mon-002.md`, `delivery/ops/runbooks/mon-004.md`
+- **Derivation:** 0.76 is EVAL-002's acceptance rate on the held-out set for the 90 days to
+  2026-09-20, taken at the lower bound of its interval rather than the point estimate.
+- **Cardinality:** labelled by `region` (12) and `prefers_color_scheme` (3) only. `user_id` is
+  excluded — it is unbounded and the objective is a population figure.
 
 ### SLI-005 — First-session theme switch rate
 
@@ -267,6 +271,9 @@ here; a monitor serving an undefined SLI has an objective nobody agreed:
 - **Alerts before the budget burns:** MON-005 fires at 3 consecutive days above 0.194, which is
   reached about 9 days before a 28-day breach at the observed rate
 - **Runbook:** `delivery/ops/runbooks/mon-005.md`
+- **Derivation:** 0.24 is the evaluation's observed switch rate (0.191) plus its interval's
+  upper margin, computed over the 90 days to 2026-09-20. It is not a product commitment.
+- **Cardinality:** labelled by `region` (12) and `device_class` (3) only.
 ```
 
 Confirming telemetry is arriving, not configured:

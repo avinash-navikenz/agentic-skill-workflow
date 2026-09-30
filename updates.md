@@ -1,0 +1,23 @@
+Updates to be made to this project:
+- Build all the pending skills which are not completed
+- Add general skill/skills for git which is anyhow needed for day to day operations, help in the following ways: 
+    - adding commits and push with descriptive commit message 
+    - creating PR with proper description based on the diff 
+    - creating new branches, checking out 
+    - resolving conflicts 
+    - etc, add whichever you think might be necessary utility 
+    Keep these skills inline with the best practices
+- Add generic utility skills which is needed for day to day operations such as syncing the work from ADO or Jira, writing back to confluence using MCP or whatever available method, reviewing security checks for the project, checking on the packages vulnerabilities etc, which is needed for any engineering work
+- DevOps should be catering to the Azure way of working with all the best practices needed for an enterprise
+- Create a html page where Navikenz internal team can visualize the existing skills, agent this framework, so that they can use it in there product. Also, it should contain the information how to download this framework for their project. Along with that, create manual to execute for a small project like some demo project so that use can learn from it, add it in the same html so that it's very lively and cleanly visible. Show proper working of individual agents as well as complete framework.  
+- Observability for the project along with enabling it for AgentObs, Opik, LangSmith etc like platform. Read about AgentObs from @/Users/avinashnegi/Documents/GitHub/adlc-workflow
+- keep some input points, jsons etc for the mcp connections etc
+- add cron setup to build by connecting to JIRA/ADO to create any feature and push with a new branch and with the PR for the project developer (it needs to be optional as per use by the project team)
+- Don't change the version until we reach to a stable stage of this product
+- The PPT needs to be updated with the following: 
+    - logo for Navikenz 
+    - Color schema for Navikenz 
+    - More information about what is there inside, flow charts for visualisation, better explainations
+- Add more document for someone to read it and understand it completely. 
+- Don't show the spec documents for superpowers in the readme as doesn't needed
+- AskUserQuestion wherevere there is a doubt or confusion. 

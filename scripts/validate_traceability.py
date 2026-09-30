@@ -8,6 +8,15 @@ from scripts.validate_manifests import Finding
 REQ = re.compile(r"\b(REQ-\d{3,})\b")
 AC = re.compile(r"\b(AC-\d{3,})\b")
 TASK_LINE = re.compile(r"\*\*(TASK-\d{3,})\*\*")
+# A requirement recorded as MoSCoW "Won't" is a decision not to build it. Both
+# navi-skill-spec-authoring and navi-skill-non-functional-requirements write one
+# with a reason and deliberately no acceptance criteria and no task — that is the
+# shape their own Templates ship and their own Validation blocks assert ("a Won't
+# still carries a reason"). Reporting T2/T4 against it made the framework's own
+# spec Template unable to pass `navi-delivery validate`, and the only way to
+# clear it was to delete the record of the decision. Matches both the ASCII and
+# the typographic apostrophe.
+WONT = re.compile(r"\*\*Priority:\*\*\s*Won[\u2019']t\b")
 IMPLEMENTS = re.compile(r"Implements:\s*(REQ-\d{3,})")
 
 # Validators must report the file and a readable message, never raise a
@@ -40,6 +49,7 @@ def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
     out: list[Finding] = []
     reqs: dict[str, Path] = {}
     reqs_with_ac: set[str] = set()
+    wont: set[str] = set()
 
     specs = [spec for pattern in SPEC_GLOBS for spec in sorted(delivery_root.glob(pattern))]
     for spec in specs:
@@ -65,6 +75,8 @@ def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
                 # SPEC_GLOBS' order), which is cosmetic only -- it decides
                 # where a T2/T4 Finding's path points, not whether one fires.
                 reqs[current] = spec
+            elif current and WONT.search(line):
+                wont.add(current)
             elif current and AC.search(line):
                 reqs_with_ac.add(current)
 
@@ -90,6 +102,8 @@ def trace_findings(delivery_root: Path, strict: bool = False) -> list[Finding]:
                 out.append(Finding("T3", tasks, f"{tm.group(1)} implements unknown {req}"))
 
     for req, spec in sorted(reqs.items()):
+        if req in wont:
+            continue
         if req not in reqs_with_ac:
             out.append(Finding("T2", spec, f"{req} has no acceptance criteria"))
         if strict and req not in implemented:

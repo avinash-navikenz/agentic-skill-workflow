@@ -281,5 +281,46 @@ class TestTrace(unittest.TestCase):
             self.assertEqual(fs, [])
 
 
+class WontRequirements(unittest.TestCase):
+    # A MoSCoW "Won't" requirement is a recorded decision not to build
+    # something. navi-skill-spec-authoring and
+    # navi-skill-non-functional-requirements both ship one in their Template,
+    # with a reason and deliberately no acceptance criteria and no task. T2 and
+    # T4 must not report it, or the only way to make `navi-delivery validate`
+    # pass is to delete the record of the decision.
+    SPEC_WONT = (
+        "# Spec\n"
+        "## REQ-001 Users can toggle theme\n"
+        "### AC-001 Given a logged-in user, when they toggle, then it persists.\n"
+        "## REQ-002 Per-device override\n"
+        "**Priority:** Won't\n"
+        "Not in this change: it needs a device identity the product does not have.\n"
+    )
+
+    def test_wont_requirement_is_exempt_from_t2(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = build(t, self.SPEC_WONT, TASKS_OK)
+            self.assertEqual(trace_findings(root), [])
+
+    def test_wont_requirement_is_exempt_from_t4(self):
+        with tempfile.TemporaryDirectory() as t:
+            root = build(t, self.SPEC_WONT, TASKS_OK)
+            self.assertEqual(trace_findings(root, strict=True), [])
+
+    def test_a_must_requirement_with_no_criteria_is_still_t2(self):
+        spec = self.SPEC_WONT.replace("**Priority:** Won't", "**Priority:** Must")
+        with tempfile.TemporaryDirectory() as t:
+            root = build(t, spec, TASKS_OK)
+            fs = trace_findings(root)
+            self.assertEqual([f.rule for f in fs], ["T2"])
+            self.assertIn("REQ-002", fs[0].message)
+
+    def test_typographic_apostrophe_is_recognised(self):
+        spec = self.SPEC_WONT.replace("Won't", "Won\u2019t")
+        with tempfile.TemporaryDirectory() as t:
+            root = build(t, spec, TASKS_OK)
+            self.assertEqual(trace_findings(root), [])
+
+
 if __name__ == "__main__":
     unittest.main()

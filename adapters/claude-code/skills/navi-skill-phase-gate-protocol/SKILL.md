@@ -120,6 +120,9 @@ The rework record appended to `delivery/changes/<name>/handoffs.md`:
   artifacts: [AC-007, AC-011]
   reason: "Empty-state criterion AC-011 has no implementation"
   stale: [gate:G6, gate:G7, gate:G8]
+  skills_used: [navi-skill-phase-gate-protocol, navi-skill-release-readiness]
+  assumptions: []
+  open_questions: []
   confidence: high
 ```
 
