@@ -134,8 +134,9 @@ Fill the `## Quality attributes` section that `templates/change/design.md` ships
 - **Response:** The session is established and the payload carries the stored preference
 - **Measure:** AC-012 — p95 sign-in under 900ms over a 5-minute window at 50 rps
 - **Measured-by:** `npm run perf -- --scenario=signin --rps=50 --window=5m`
-- **Costs:** Accepted. QAS-001 outranks this scenario in the ranking table above; ADR-007
-  records the reasoning.
+- **Costs:** QAS-001 — accepted: the preference field grows the session payload by 8KB, which
+  adds 15ms to p95 first paint against AC-004's 1200ms budget. QAS-001 outranks this scenario
+  in the ranking table above; ADR-007 records the reasoning.
 - **Serves:** REQ-004
 ```
 
@@ -191,19 +192,25 @@ volume and the deployment target.
 ```bash
 DESIGN=delivery/changes/<name>/design.md
 
-# Every scenario carries all six fields
+# Every scenario carries all six fields (rule 2), plus Measured-by (rule 9) and Costs (rule 8)
 for id in $(grep -o 'QAS-[0-9]\{3,\}' "$DESIGN" | sort -u); do
-  for f in Source Stimulus Environment Response Measure Serves; do
+  for f in Source Stimulus Environment Response Measure Serves Measured-by Costs; do
     awk -v id="$id" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$DESIGN" | grep -q "\*\*$f:\*\*" \
       || echo "$id: missing $f"
   done
 done
 
-# Every Measure carries a digit; a measure with no number is an aspiration
-grep -n '\*\*Measure:\*\*' "$DESIGN" | grep -v '[0-9]'
+# Every Measure carries a digit of its own; a measure with no number is an aspiration.
+# The cited AC-### is stripped first, or its own digits would satisfy the check for it.
+# Do not add -n here: the line-number prefix is itself a digit and passes every line.
+grep '\*\*Measure:\*\*' "$DESIGN" | sed 's/AC-[0-9]\{3,\}//g' | grep -v '[0-9]'
 
-# Adjectives with no figure anywhere in the section
-awk '/^## Quality attributes/,0' "$DESIGN" \
+# Rule 8: every Costs line says by how much, so it carries a figure of its own
+grep '\*\*Costs:\*\*' "$DESIGN" | sed 's/QAS-[0-9]\{3,\}//g; s/ADR-[0-9]\{3,\}//g' | grep -v '[0-9]'
+
+# Adjectives with no figure, in the quality-attributes section only — stop at the next
+# heading, or an adjective in any later section is reported as a defect here
+awk '/^## Quality attributes/{on=1; next} /^## /{on=0} on' "$DESIGN" \
   | grep -nE '\b(fast|quick|scalable|robust|reliable|responsive|highly available|maintainable)\b'
 
 # Every Measure opens with an AC-### that exists in the change's spec

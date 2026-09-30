@@ -273,8 +273,12 @@ grep -rhoE '"/v1/[a-z0-9/{}_-]+"' src/routes/ | tr -d '"' | sort -u | while read
   grep -q "  $p:" openapi.yaml || echo "route not in schema: $p"
 done
 
-# Every response schema forbids unlisted fields
-grep -c 'additionalProperties: false' openapi.yaml
+# Every object schema that lists its required fields also forbids unlisted ones. A bare count
+# asserts nothing; the comparison is what fails when a schema is added and left open.
+listed=$(grep -c 'required: \[' openapi.yaml)
+closed=$(grep -c 'additionalProperties: false' openapi.yaml)
+[ "$listed" -eq "$closed" ] \
+  || echo "object schemas: $listed list required fields, $closed forbid unlisted ones"
 
 # No collection endpoint without a limit parameter
 python3 - <<'PY'
@@ -289,6 +293,6 @@ PY
 grep -rnE '(stack|\.message.*err|sqlMessage|__dirname)' src/errors/
 ```
 
-Each command prints nothing (or, for the third, a count matching the number of response
-schemas) when the rule holds. The generated contract test is what enforces the shape at G5:
+Each command prints nothing when the rule holds. The generated contract test is what
+enforces the shape at G5:
 see `navi-skill-interface-contracts` for what that test must fail on.

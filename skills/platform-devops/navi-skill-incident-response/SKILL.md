@@ -317,15 +317,21 @@ grep -q 'The control that failed' "$P" || echo "$P: no named control that failed
 awk '/^## Contributing causes$/{on=1;next} /^## /{on=0}
      on && /^[0-9]+\. [A-Z][a-z]+ [A-Z][a-z]+ /{print "a contributing cause opens with a person name: "$0}' "$P"
 
-# Every insight has exactly one destination and a named target
-awk '/^- \*\*INSIGHT-/{id=$2}
-     /Destination:/{d=$0; n=gsub(/backlog|skill amendment/,"&");
-                    if (n != 1) print "insight " id " has " n " destination(s): " d}
-     /Target:/{t=1}
-     END{}' "$P"
-for id in $(grep -o 'INSIGHT-[0-9]\{3,\}' "$P" | sort -u); do
-  awk -v id="$id" '$0 ~ id {on=1} on && /Target:/{found=1; exit} END{if(!found) print id ": no Target line"}' "$P"
-done
+# Every insight has exactly one destination and a named target. Both are counted inside the
+# one insight's own block — a scan that stays on after the first id lets the last insight's
+# Target line satisfy every insight above it.
+awk '
+  function flush() {
+    if (id == "") return
+    if (dest != 1) print "insight " id " has " dest " destination(s)"
+    if (!target)   print "insight " id ": no Target line"
+  }
+  /^- \*\*INSIGHT-/ { flush(); id = $2; gsub(/[^A-Za-z0-9-]/, "", id); dest = 0; target = 0; next }
+  /^## /              { flush(); id = ""; dest = 0; target = 0; next }
+  id != "" && /Destination:/ { dest += gsub(/backlog|skill amendment/, "&") }
+  id != "" && /Target:/      { target = 1 }
+  END { flush() }
+' "$P"
 
 # Every corrective action has an owner and a date
 awk '/^## Corrective actions$/{on=1;next} /^## /{on=0}

@@ -280,8 +280,14 @@ grep -oE '[A-Za-z0-9_./-]+\.(spec|test)\.[a-z]+' "$TM" | sort -u | while read -r
   test -e "$t" || echo "control test missing: $t"
 done
 
-# The pipeline's own static analysis
-npx --yes semgrep --config p/security-audit --error src/
+# The pipeline's own static analysis. Semgrep ships via pip, brew or docker — the npm package
+# of that name is a 517-byte placeholder that scans nothing and exits 0, so never reach it
+# with npx. If semgrep is absent the check says so rather than passing.
+if command -v semgrep >/dev/null 2>&1; then
+  semgrep --config p/security-audit --error src/
+else
+  echo "static analysis did not run: semgrep is not installed (pip install semgrep, brew install semgrep, or the semgrep/semgrep image) — wire it into the pipeline or this step proves nothing"
+fi
 ```
 
 Each command prints nothing when the rule holds. The last check is the one G6 reads back: a
