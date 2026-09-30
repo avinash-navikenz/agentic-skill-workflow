@@ -313,16 +313,6 @@ grep -q 'waived' "$EV/g6-dependencies.md" \
 
 Each command prints nothing when the rule holds.
 
-**Known gap: the gate has three dispositions, a scanner produces four.** `references/gates.md`
-requires every G6 security finding to be `fixed`, `mitigated`, or `waived`. A scanner
-routinely reports a vulnerability in code that is not shipped or not called, which is none of
-the three: calling it `mitigated` claims a control that does not exist, and waiving it spends
-a gate waiver on a finding that was never real. This skill therefore adds `not-applicable` as
-a fourth disposition, admissible only with named evidence of non-reachability, and treats it
-as carrying no risk into the gate. Until `gates.md` is amended, a reviewer reading the gate
-text literally will find a disposition it does not list; the record names the evidence so the
-disagreement is visible rather than hidden inside `mitigated`.
-
 **Known gap: waivers are gate-shaped, findings are not.** `navi-delivery gate --waive` attaches
 one reason and one expiry to a whole gate, so a single unfixable advisory waives all of G6
 rather than itself. Rule 10 makes that explicit rather than papering over it: the reason names

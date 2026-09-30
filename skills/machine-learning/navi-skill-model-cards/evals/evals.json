@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-model-cards",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We're handing theme-ranker v7 to MLOps. Write the document that tells them how it was judged, who it's worst for and what it's not for.",
+      "expect": [
+        "model-card.md",
+        "## Identity",
+        "## Not fit for",
+        "NOTFIT-",
+        "## Segments",
+        "## Failure modes",
+        "## Maintenance"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G7 is coming up for a model release. What does the card have to say about the numbers in it?",
+      "expect": [
+        "EVAL-",
+        "interval",
+        "evaluation.md",
+        "no number",
+        "SLICE-",
+        "underpowered"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Design the dashboard cards for the ops overview page — which metrics get a tile and how they're laid out at narrow widths.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Work out whether we actually need a model here at all, or whether a rule on the header would do the job.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "For limitations just put 'use with care, not for critical decisions' — we don't want to scare anyone off using it.",
+      "expect": [
+        "not an entry",
+        "name the use",
+        "observable fact",
+        "consequence",
+        "read as boilerplate"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Version 7 is serving now. Copy the v6 card to model-card-v7.md and update the accuracy number.",
+      "expect": [
+        "one card per model",
+        "## Versions",
+        "never fork a new file",
+        "interval",
+        "whichever one search returns"
+      ]
+    }
+  ]
+}

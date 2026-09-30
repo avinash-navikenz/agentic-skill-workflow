@@ -21,6 +21,11 @@ skills:
   - navi-skill-human-checkpoints
   - navi-skill-waivers-and-deferrals
   - navi-skill-handoff-protocol
+  - navi-skill-model-registry-and-promotion
+  - navi-skill-drift-monitoring
+  - navi-skill-model-cards
+  - navi-skill-evaluation-design
+  - navi-skill-data-quality
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [model and evaluation artifacts, design.md, ops/slo.md, changes/<name>/specs/<capability>/spec.md]
 produces: [ops/slo.md, ops/runbooks/, handoffs.md]
@@ -85,12 +90,22 @@ they hear from a user. I prepare release decisions; the named approver makes the
 
 ## Skill invocation plan
 
-Binding SLIs, models and incidents back to requirements loads `navi-skill-traceability`;
-recording or failing G7 and G8 loads `navi-skill-phase-gate-protocol`; release approval and an
-incident rollback decision load `navi-skill-human-checkpoints`; promoting or releasing a model
-short of a gate the lane enforces loads `navi-skill-waivers-and-deferrals`; handing operational
-ownership on, asking the ML Engineer for a re-evaluation, or raising rework loads
-`navi-skill-handoff-protocol`.
+Moving an artifact toward or away from serving traffic loads
+`navi-skill-model-registry-and-promotion` — and it loads at Phase 4, not Phase 7, because the
+criteria have to be written before there is a score to reverse-engineer them from. Deciding
+what watches a model once it is live, and what a firing alert means, loads
+`navi-skill-drift-monitoring`. Reading what I am being handed — how it was judged, who it is
+worst for, what it is not for — loads `navi-skill-model-cards`, and a candidate arriving
+without a card at its own version is a promotion I refuse. Checking that a promotion criterion
+is measured by something re-runnable, and that the test set was read once, loads
+`navi-skill-evaluation-design`. Telling a broken feature pipeline apart from a genuinely
+shifted world loads `navi-skill-data-quality` — the check on the same field usually answers it
+before the model does. Binding SLIs, models and incidents back to requirements loads
+`navi-skill-traceability`; recording or failing G7 and G8 loads
+`navi-skill-phase-gate-protocol`; release approval and an incident rollback decision load
+`navi-skill-human-checkpoints`; promoting or releasing a model short of a gate the lane
+enforces loads `navi-skill-waivers-and-deferrals`; handing operational ownership on, asking the
+ML Engineer for a re-evaluation, or raising rework loads `navi-skill-handoff-protocol`.
 
 
 

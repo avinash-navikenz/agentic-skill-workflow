@@ -158,13 +158,21 @@ built the thing, and all of those that did
   dependency it ships is checked against known vulnerabilities. Where the lane enforces G3, the
   threat set is the one that gate's model named; where it does not, it is the change's own
   reach — what it newly lets someone see or do. Every finding carries a disposition: fixed,
-  mitigated, or waived under `navi-skill-waivers-and-deferrals`.
+  mitigated, not-applicable, or waived under `navi-skill-waivers-and-deferrals`.
+- `not-applicable` is admissible only where the finding cannot be reached from anything this
+  change ships — a dependency excluded from the shipped set, or a vulnerable path no shipped
+  code calls — and only with the evidence for that non-reachability stated in the record
+  beside it: the exclusion flag that removed it from the shipped set, or the reachability
+  output that shows the path is not called. A `not-applicable` carrying no stated reason is a
+  silent dismissal, not a disposition: the finding is still open and G6 is `--fail` until it
+  ends in one of the four with its reason recorded.
 
 **Evidence accepted**
 - The test report (TAP, JUnit XML, or the project's own format).
 - The defect list with severities.
 - The security verification record: what was exercised, what was found, and the disposition of
-  each finding, traced back to the threat it answers.
+  each finding, traced back to the threat it answers — and, for each `not-applicable`, the
+  named evidence of non-reachability.
 
 **Enforced by every lane.**
 

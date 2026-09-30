@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-problem-framing",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The proposal says we'll use a model to pick a default theme for first renders. Before anyone fits anything, write up whether that's the right instrument.",
+      "expect": [
+        "specs/models/",
+        "framing.md",
+        "## The decision",
+        "## Cost of being wrong",
+        "BASELINE-",
+        "## Verdict"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G4 asks for a baseline and a metric tied to the proposal's outcome. What has to be in place before we record it?",
+      "expect": [
+        "BASELINE-",
+        "constant",
+        "rule a domain expert would write",
+        "current production behaviour",
+        "quoted verbatim",
+        "proposal.md",
+        "EVAL-"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Design the dimensional model for the finance mart — the fact tables, the conformed dimensions, and the grain of each.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Set up the held-out split for this model and run the leakage checks before we fit anything.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Nobody in the business will commit to what a wrong prediction costs, so just use 0.5 as the threshold and we'll tune it later.",
+      "expect": [
+        "do not invent the cost",
+        "record",
+        "escalate",
+        "no threshold can be chosen",
+        "belongs to nobody"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The best feature is a 30-day session aggregate from the warehouse. Put it in the feature list — it lifts the score four points.",
+      "expect": [
+        "prediction time",
+        "not available at prediction time",
+        "not a feature",
+        "remove it",
+        "serving path"
+      ]
+    }
+  ]
+}

@@ -21,6 +21,11 @@ skills:
   - navi-skill-traceability
   - navi-skill-phase-gate-protocol
   - navi-skill-handoff-protocol
+  - navi-skill-problem-framing
+  - navi-skill-evaluation-design
+  - navi-skill-model-cards
+  - navi-skill-data-contracts
+  - navi-skill-drift-monitoring
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [changes/<name>/specs/<capability>/spec.md, design.md, datasets, tasks.md]
 produces: [tasks.md, model and evaluation artifacts, handoffs.md]
@@ -87,7 +92,18 @@ the whole.
 
 ## Skill invocation plan
 
-Sequencing experiments and model work into reviewable tasks loads
+Asking whether a model is the right instrument at all — the decision it informs, what an error
+costs, and the baselines that have to lose first — loads `navi-skill-problem-framing`, and it
+loads before anything is fitted, because it is also where the answer "no model" gets recorded
+rather than lost. Deciding how the model will be judged, and judging it, loads
+`navi-skill-evaluation-design`; it loads a second time at Phase 6, because the number that
+counts is the one the built path produces. Receiving a dataset loads
+`navi-skill-data-contracts` — its `## Produced by` and `## Not fit for` are what I read before
+fitting, and a stated unfit use that covers my intended one is work I return rather than
+absorb. Writing down how the model was judged, who it is worst for and what it is not to be used
+for loads `navi-skill-model-cards`, before the handover rather than after it. Stating what will
+need watching, so MLOps inherits the monitors rather than inventing them, loads
+`navi-skill-drift-monitoring`. Sequencing experiments and model work into reviewable tasks loads
 `navi-skill-task-decomposition`; binding datasets, experiments and evaluations to the
 requirements they serve loads `navi-skill-traceability`; recording or failing G4 and G5 loads
 `navi-skill-phase-gate-protocol`; handing a model to MLOps, asking the Data Engineer for a
