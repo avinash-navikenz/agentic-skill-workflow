@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>navi-delivery — field guide</title>
-<meta name="description" content="An agentic SDLC framework, plan to monitor: eleven persona agents over thirty-nine best-practice skills, nine gates, four lanes.">
+<title>Install — navi-delivery</title>
+<meta name="description" content="Install one skill on its own or the whole navi-delivery framework, through the generated claude-code adapter or install.sh.">
 <!-- BEGIN SHARED HEAD -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -367,125 +367,173 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 
 <main id="main">
 
-<!-- ================================================================ START -->
-<section id="start" class="hero">
+<!-- ================================================================ TWO WAYS -->
+<section id="ways">
   <div class="wrap">
-    <p class="kicker" id="top">Internal field guide &middot; v0.1.0</p>
-    <h1>An agentic SDLC framework, Plan to Monitor</h1>
-    <p class="tag">Agents hold the judgment. Skills hold the rules.</p>
-    <p class="lede">
-      Eleven persona agents carry each discipline's judgment. Thirty-nine skills across twelve
-      disciplines carry each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
-      your repo and records what actually happened at each of nine gates &mdash; so a phase that
-      emitted no telemetry did not happen, and a gate whose verdict was never recorded was
-      never passed.
-    </p>
-    <p class="lede sub small">
-      This site is generated from the repository. Every agent, skill, phase, gate, lane,
-      traceability link and validator finding is extracted from the source files by
-      <code>scripts/build_catalogue.py</code>, which also writes the README that sits beside each
-      <code>SKILL.md</code> and each <code>*.agent.md</code>; every command in the
-      <a href="demo.html">worked demo</a> was run against the committed tree and its output copied
-      verbatim. What v1 does <em>not</em> do is on <a href="limits.html">Limits</a> &mdash; read it
-      before you meet it.
-    </p>
-    <div class="stats" id="stats"></div>
-  </div>
-</section>
-
-<!-- ================================================================ MAP -->
-<section id="map">
-  <div class="wrap">
-    <p class="kicker">Where things are</p>
-    <h2>Six more pages</h2>
-    <div class="map">
-      <a href="how-it-works.html">
-        <div class="n">The design</div>
-        <div class="t">How it works</div>
-        <p>The four ideas: the separation, nine phases and nine gates, four lanes as gate subsets,
-        and the traceability chain. With the diagrams.</p>
-      </a>
-      <a href="agents.html">
-        <div class="n">Catalogue</div>
-        <div class="t">Agents</div>
-        <p>All eleven personas. Each card opens to that agent's README: the gates it owns, the
-        skills it holds, when it stops and asks a human, and how to install it.</p>
-      </a>
-      <a href="skills.html">
-        <div class="n">Catalogue</div>
-        <div class="t">Skills</div>
-        <p>All thirty-nine, searchable and filterable by discipline, phase and gate. Each card
-        opens to that skill's README and both install paths.</p>
-      </a>
-      <a href="install.html">
-        <div class="n">Getting it</div>
-        <div class="t">Install</div>
-        <p>The generated adapter, <code>install.sh</code>, the CLI, and what to do in a harness
-        with no plugin support at all.</p>
-      </a>
-      <a href="demo.html">
-        <div class="n">Evidence</div>
-        <div class="t">Worked demo</div>
-        <p>One change carried end to end, including a gate that fails. Every command was run;
-        every block of output is verbatim.</p>
-      </a>
-      <a href="limits.html">
-        <div class="n">Honesty</div>
-        <div class="t">Limits</div>
-        <p>What v1 does not do. Two adapters only, evidence checked by shape, gate actors derived
-        rather than proven, G4 on one lane.</p>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================================ SEPARATION -->
-<section id="separation">
-  <div class="wrap">
-    <p class="kicker">The one idea to take away</p>
-    <h2>Judgment and rules are separate files, and it is checked</h2>
+    <p class="kicker">Two ways in</p>
+    <h2>One item, or the framework</h2>
     <p class="lede small">
-      Coding assistants land in the middle of the lifecycle and leave both ends untouched.
-      Judgment gets re-derived at every prompt, standards live in a wiki detached from the work,
-      and the loop never closes. The response is to separate the two things that keep getting
-      fused &mdash; and then to check it mechanically, because a separation nobody checks merges
-      within months.
+      Every card on <a href="agents.html">Agents</a> and <a href="skills.html">Skills</a> carries
+      both of these, written for that item. They are not equivalent, and the difference is the
+      thing worth understanding before you pick one.
     </p>
     <div class="two">
-      <div class="half a">
-        <h3>Agents &mdash; the thinking</h3>
-        <dl>
-          <dt>Contain</dt><dd>mission &middot; mental model &middot; trade-off framing &middot; escalation triggers &middot; definition of good &middot; a skill-invocation plan</dd>
-          <dt>Answer</dt><dd>what, why, when</dd>
-          <dt>Voice</dt><dd>first person, persona</dd>
-          <dt>File</dt><dd><code>agents/navi-agent-&lt;persona&gt;/*.agent.md</code></dd>
-        </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="agents.html">Browse the eleven agents &rarr;</a></p>
-      </div>
       <div class="half b">
-        <h3>Skills &mdash; the rules</h3>
-        <dl>
-          <dt>Contain</dt><dd>standards &middot; decision tables &middot; templates &middot; checklists &middot; anti-patterns &middot; a mechanical validation step</dd>
-          <dt>Answer</dt><dd>how</dd>
-          <dt>Voice</dt><dd>impersonal, imperative</dd>
-          <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
-        </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="skills.html">Browse the thirty-nine skills &rarr;</a></p>
+        <h3>One skill on its own</h3>
+        <div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .
+<span class="p">$ </span>cp -R adapters/claude-code/skills/navi-skill-&lt;name&gt; ~/.claude/skills/</div>
+        <div class="warnline">
+          <p>A skill installed alone has <strong>no agent holding it</strong>. Nothing in the
+          lifecycle will invoke it &mdash; no phase loads it and no gate depends on it, because it
+          is an agent that decides when a skill applies. Useful for reading the rules or trying
+          them in one session. It is not how the framework is meant to run.</p>
+        </div>
+        <p class="small" style="margin-bottom:0">The copied directory carries
+        <code>SKILL.md</code> and that skill's <code>README.md</code>. An agent is a single flat
+        file in this layout and has no directory of its own, so an agent installed alone is
+        <code>cp adapters/claude-code/agents/navi-agent-&lt;name&gt;.md ~/.claude/agents/</code>
+        &mdash; and arrives without any of the skills it is written to load.</p>
+      </div>
+      <div class="half a">
+        <h3>The whole framework</h3>
+        <div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .   <span class="hash"># adapters/ is generated; refresh it first</span>
+<span class="p">$ </span>./install.sh --yes                    <span class="hash"># 39 skills + 11 agents</span></div>
+        <p class="small">This is the supported path: every agent, every skill it holds, and the
+        cross-references between them. <code>install.sh</code> symlinks by default, so an edit to
+        the repo takes effect live.</p>
+        <p class="small" style="margin-bottom:0">Verified into a scratch directory with
+        <code>CLAUDE_SKILLS_DIR</code> / <code>CLAUDE_AGENTS_DIR</code> pointed at it &mdash;
+        39 skill directories and 11 agent files land, each skill directory carrying both
+        <code>SKILL.md</code> and <code>README.md</code>, and <code>--uninstall</code> removes
+        exactly the 50 it created.</p>
       </div>
     </div>
-    <div class="note">
-      <p><strong>The falsifiable test.</strong> Delete every agent and the skills still fully
-      specify <em>how</em> work is done; delete every skill and the agents still specify
-      <em>what, why and when</em>.</p>
-      <p class="small sub" style="margin-bottom:0">Enforced by <code>scripts/lint_separation.py</code>.
-      The rest of the design &mdash; the gates, the lanes, the chain &mdash; is on
-      <a href="how-it-works.html">How it works</a>.</p>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <p class="kicker">How to get it</p>
+    <h2>Install the adapter, not the repo root</h2>
+
+    <div class="note warn">
+      <p><strong><code>adapters/claude-code/</code> is the installable artefact.</strong> It is
+      generated output with the flat layout the convention uses —
+      <code>skills/&lt;name&gt;/SKILL.md</code> and <code>agents/&lt;name&gt;.md</code>, discipline
+      folded away — plus its own <code>.claude-plugin/plugin.json</code>, so the directory is a
+      complete plugin on its own.</p>
+      <p style="margin-bottom:0">The repository root also carries a
+      <code>.claude-plugin/plugin.json</code>, but its skills are nested one level deeper
+      (<code>skills/&lt;discipline&gt;/&lt;name&gt;/SKILL.md</code>). That nesting is how the
+      <em>source</em> is organised so a reader can find things. <strong>Whether a harness loads a
+      nested layout correctly is unverified.</strong> Do not install the repo root and assume it
+      works.</p>
     </div>
-    <p class="small sub" style="margin-bottom:0">
-      Each item's README is a summary and carries no rules: <code>SKILL.md</code> and
-      <code>*.agent.md</code> stay the only authority, and the README links to them rather than
-      quoting them. Two copies of a rule drift, which is the thing this framework exists to stop.
+
+    <h3>1 · Install the agents and skills</h3>
+    <p class="small"><code>install.sh</code> installs <code>adapters/claude-code/</code> into your
+    Claude directory — symlinks by default, so edits to the repo take effect live.</p>
+    <div class="term">
+      <div class="term-head"><span class="dot"></span>./install.sh --yes</div>
+<pre><span class="c">$ ./install.sh --yes</span>
+<span class="o">navi-delivery installer (symlink)
+  39 skills -&gt; /Users/you/.claude/skills
+  11 agents -&gt; /Users/you/.claude/agents
+Installed 39 skill(s) and 11 agent(s).
+
+Next:
+  cd /path/to/your-repo
+  node /path/to/navi-delivery/cli/index.js init</span>
+</pre>
+    </div>
+    <p class="tiny sub">Run here against <code>CLAUDE_SKILLS_DIR</code> /
+    <code>CLAUDE_AGENTS_DIR</code> pointed at a scratch directory; the destination paths above are
+    rewritten to the defaults the installer uses when those variables are unset.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Form</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td><code>./install.sh</code></td><td>interactive; symlinks (edits to the repo take effect live)</td></tr>
+        <tr><td><code>./install.sh --yes</code></td><td>no prompt — this is the CI form</td></tr>
+        <tr><td><code>./install.sh --copy</code></td><td>copy instead of symlink, for a frozen install</td></tr>
+        <tr><td><code>./install.sh --uninstall</code></td><td>remove exactly what it installed (prompts for confirmation)</td></tr>
+        <tr><td><code>./install.sh --help</code></td><td>the flags, and why the repo root is not the thing to install</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small"><code>CLAUDE_SKILLS_DIR</code> and <code>CLAUDE_AGENTS_DIR</code> override the
+    destinations, which default to <code>$HOME/.claude/skills</code> and
+    <code>$HOME/.claude/agents</code>. The script is POSIX-only — no <code>sed -i</code>, no
+    <code>realpath</code> — so it runs on macOS and on the Linux runner CI uses.</p>
+
+    <h3 style="margin-top:26px">2 · Put the CLI on your PATH</h3>
+    <div class="term">
+      <div class="term-head"><span class="dot"></span>the CLI</div>
+<pre><span class="c">$ npm install --global .</span>
+<span class="dim"># or skip it entirely — the CLI is a plain Node script and runs by path:</span>
+<span class="c">$ node /path/to/navi-delivery/cli/index.js init</span>
+</pre>
+    </div>
+    <p class="small">Prerequisites: <strong>Node ≥ 20</strong> and <strong>Python 3</strong>.
+    Nothing else; the framework has no runtime dependencies.</p>
+
+    <h3 style="margin-top:26px">3 · A harness with no plugin support</h3>
+    <p class="small">
+      <code>adapters/generic/RUNBOOK.md</code> is generated for exactly this: one paste-in file
+      carrying the capability fallback table, every agent, and the skills each holds. Paste it into
+      the harness, then adopt each agent in turn, loading the skills it lists before producing any
+      artefact for that phase. Where a capability is not native, use its fallback.
     </p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Capability</th><th>claude_code</th><th>codex</th><th>cursor</th><th>Fallback when unavailable</th></tr></thead>
+      <tbody>
+        <tr><td><code>read_file</code></td><td>Read</td><td>file read</td><td>file read</td><td>ask the human to paste the file</td></tr>
+        <tr><td><code>write_file</code></td><td>Write</td><td>file write</td><td>file write</td><td>emit the file in a fenced block</td></tr>
+        <tr><td><code>run_command</code></td><td>Bash</td><td>shell</td><td>shell</td><td>ask the human to run it and paste output</td></tr>
+        <tr><td><code>search</code></td><td>Grep/Glob</td><td>search</td><td>search</td><td>ask for the relevant paths</td></tr>
+        <tr><td><code>ask_human</code></td><td>AskUserQuestion</td><td>prompt</td><td>prompt</td><td>ask a plain question, then wait</td></tr>
+        <tr><td><code>spawn_subagent</code></td><td>Agent</td><td>—</td><td>—</td><td>adopt the persona sequentially in this session</td></tr>
+      </tbody>
+    </table></div>
+    <p class="small"><code>navi-delivery doctor</code> reports which of these your harness supplies
+    natively:</p>
+    <div class="term">
+      <div class="term-head"><span class="dot"></span>navi-delivery doctor</div>
+<pre><span class="c">$ navi-delivery doctor</span>
+<span class="o">harness: claude-code
+
+  native   read_file -&gt; Read
+  native   write_file -&gt; Write
+  native   run_command -&gt; Bash
+  native   search -&gt; Grep/Glob
+  native   ask_human -&gt; AskUserQuestion
+  native   spawn_subagent -&gt; Agent</span>
+</pre>
+    </div>
+
+    <h3 style="margin-top:26px">Regenerating the generated trees</h3>
+    <p class="small"><code>adapters/</code> is generated output. Never hand-edit it; change the
+    source under <code>agents/</code> or <code>skills/</code> and regenerate. CI regenerates and
+    diffs, so a hand edit fails the build.</p>
+    <div class="term">
+      <div class="term-head"><span class="dot"></span>regenerate</div>
+<pre><span class="c">$ python3 scripts/build_adapters.py .</span>
+<span class="o">wrote 92 file(s)
+  adapters/claude-code/skills/navi-skill-decision-records/SKILL.md
+  adapters/claude-code/skills/navi-skill-decision-records/README.md
+  <span class="dim">… 88 more …</span>
+  adapters/generic/RUNBOOK.md
+  templates/delivery/AGENTS.md</span>
+
+<span class="dim"># the README beside every SKILL.md and *.agent.md:</span>
+<span class="c">$ python3 scripts/build_catalogue.py . --readmes</span>
+<span class="o">readmes: 50 written, 0 changed</span>
+
+<span class="dim"># and this site, from the same source tree:</span>
+<span class="c">$ python3 scripts/build_catalogue.py . --inject</span>
+<span class="o">0 of 7 page(s) updated (11 agents, 39 skills, 12 disciplines)</span>
+<span class="c">$ python3 scripts/build_catalogue.py . --check</span>
+<span class="o">docs/ is up to date (7 pages)</span>
+</pre>
+    </div>
   </div>
 </section>
 
@@ -542,145 +590,6 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 })();
 </script>
 <!-- END SHARED FOOT -->
-
-<!-- BEGIN GENERATED CATALOGUE -->
-<script id="navi-catalogue" type="application/json">
-{
- "counts": {
-  "agents": 11,
-  "skills": 39,
-  "disciplines": 12,
-  "phases": 9,
-  "gates": 9,
-  "lanes": 4
- },
- "disciplines": [
-  {
-   "id": "architecture",
-   "label": "architecture",
-   "skills": 4,
-   "agents": 1
-  },
-  {
-   "id": "business-analysis",
-   "label": "business analysis",
-   "skills": 2,
-   "agents": 1
-  },
-  {
-   "id": "data-engineering",
-   "label": "data engineering",
-   "skills": 3,
-   "agents": 1
-  },
-  {
-   "id": "lifecycle-method",
-   "label": "lifecycle method",
-   "skills": 6,
-   "agents": 1
-  },
-  {
-   "id": "machine-learning",
-   "label": "machine learning",
-   "skills": 3,
-   "agents": 1
-  },
-  {
-   "id": "mlops",
-   "label": "mlops",
-   "skills": 2,
-   "agents": 1
-  },
-  {
-   "id": "platform-devops",
-   "label": "platform devops",
-   "skills": 4,
-   "agents": 1
-  },
-  {
-   "id": "product-management",
-   "label": "product management",
-   "skills": 2,
-   "agents": 1
-  },
-  {
-   "id": "quality-engineering",
-   "label": "quality engineering",
-   "skills": 3,
-   "agents": 1
-  },
-  {
-   "id": "security",
-   "label": "security",
-   "skills": 1,
-   "agents": 1
-  },
-  {
-   "id": "software-development",
-   "label": "software development",
-   "skills": 5,
-   "agents": 1
-  },
-  {
-   "id": "spec-driven-development",
-   "label": "spec driven development",
-   "skills": 4,
-   "agents": 0
-  }
- ]
-}
-</script>
-<!-- END GENERATED CATALOGUE -->
-
-<script>
-(function () {
-  "use strict";
-
-  function esc(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-  // The source markdown carries inline code spans, bold and italics. Render just
-  // those three, on already-escaped text, so a card reads the way the source
-  // files do without pulling in a parser.
-  function md(s) {
-    return esc(s)
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/(^|[\s(])\*([^*]+)\*/g, "$1<em>$2</em>");
-  }
-  function el(tag, cls, html) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (html != null) n.innerHTML = html;
-    return n;
-  }
-
-  var DATA;
-  try {
-    DATA = JSON.parse(document.getElementById("navi-catalogue").textContent);
-  } catch (err) {
-    document.getElementById("stats").innerHTML =
-      '<p class="small">The embedded counts could not be parsed. Regenerate them with ' +
-      '<code>python3 scripts/build_catalogue.py . --inject</code>.</p>';
-    return;
-  }
-// ---------------------------------------------------------------- stats
-  (function () {
-    var c = DATA.counts;
-    var rows = [
-      [c.agents, "agents"], [c.skills, "skills"], [c.disciplines, "disciplines"],
-      [c.phases, "ADLC phases"], [c.gates, "gates"], [c.lanes, "lanes"], [7, "CLI verbs"]
-    ];
-    var host = document.getElementById("stats");
-    rows.forEach(function (r) {
-      host.appendChild(el("div", "stat", "<b>" + r[0] + "</b><span>" + r[1] + "</span>"));
-    });
-  })();
-
-  })();
-</script>
 
 </body>
 </html>

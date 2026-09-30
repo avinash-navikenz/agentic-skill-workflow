@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>navi-delivery — field guide</title>
-<meta name="description" content="An agentic SDLC framework, plan to monitor: eleven persona agents over thirty-nine best-practice skills, nine gates, four lanes.">
+<title>Limits — navi-delivery</title>
+<meta name="description" content="What navi-delivery v1 does not do: two adapters only, evidence checked by shape, gate actors derived rather than proven, G4 on one lane.">
 <!-- BEGIN SHARED HEAD -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -367,125 +367,122 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 
 <main id="main">
 
-<!-- ================================================================ START -->
-<section id="start" class="hero">
+<section id="limits">
   <div class="wrap">
-    <p class="kicker" id="top">Internal field guide &middot; v0.1.0</p>
-    <h1>An agentic SDLC framework, Plan to Monitor</h1>
-    <p class="tag">Agents hold the judgment. Skills hold the rules.</p>
-    <p class="lede">
-      Eleven persona agents carry each discipline's judgment. Thirty-nine skills across twelve
-      disciplines carry each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
-      your repo and records what actually happened at each of nine gates &mdash; so a phase that
-      emitted no telemetry did not happen, and a gate whose verdict was never recorded was
-      never passed.
-    </p>
-    <p class="lede sub small">
-      This site is generated from the repository. Every agent, skill, phase, gate, lane,
-      traceability link and validator finding is extracted from the source files by
-      <code>scripts/build_catalogue.py</code>, which also writes the README that sits beside each
-      <code>SKILL.md</code> and each <code>*.agent.md</code>; every command in the
-      <a href="demo.html">worked demo</a> was run against the committed tree and its output copied
-      verbatim. What v1 does <em>not</em> do is on <a href="limits.html">Limits</a> &mdash; read it
-      before you meet it.
-    </p>
-    <div class="stats" id="stats"></div>
-  </div>
-</section>
-
-<!-- ================================================================ MAP -->
-<section id="map">
-  <div class="wrap">
-    <p class="kicker">Where things are</p>
-    <h2>Six more pages</h2>
-    <div class="map">
-      <a href="how-it-works.html">
-        <div class="n">The design</div>
-        <div class="t">How it works</div>
-        <p>The four ideas: the separation, nine phases and nine gates, four lanes as gate subsets,
-        and the traceability chain. With the diagrams.</p>
-      </a>
-      <a href="agents.html">
-        <div class="n">Catalogue</div>
-        <div class="t">Agents</div>
-        <p>All eleven personas. Each card opens to that agent's README: the gates it owns, the
-        skills it holds, when it stops and asks a human, and how to install it.</p>
-      </a>
-      <a href="skills.html">
-        <div class="n">Catalogue</div>
-        <div class="t">Skills</div>
-        <p>All thirty-nine, searchable and filterable by discipline, phase and gate. Each card
-        opens to that skill's README and both install paths.</p>
-      </a>
-      <a href="install.html">
-        <div class="n">Getting it</div>
-        <div class="t">Install</div>
-        <p>The generated adapter, <code>install.sh</code>, the CLI, and what to do in a harness
-        with no plugin support at all.</p>
-      </a>
-      <a href="demo.html">
-        <div class="n">Evidence</div>
-        <div class="t">Worked demo</div>
-        <p>One change carried end to end, including a gate that fails. Every command was run;
-        every block of output is verbatim.</p>
-      </a>
-      <a href="limits.html">
-        <div class="n">Honesty</div>
-        <div class="t">Limits</div>
-        <p>What v1 does not do. Two adapters only, evidence checked by shape, gate actors derived
-        rather than proven, G4 on one lane.</p>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- ================================================================ SEPARATION -->
-<section id="separation">
-  <div class="wrap">
-    <p class="kicker">The one idea to take away</p>
-    <h2>Judgment and rules are separate files, and it is checked</h2>
+    <p class="kicker">Honesty</p>
+    <h2>What v1 does not do</h2>
     <p class="lede small">
-      Coding assistants land in the middle of the lifecycle and leave both ends untouched.
-      Judgment gets re-derived at every prompt, standards live in a wiki detached from the work,
-      and the loop never closes. The response is to separate the two things that keep getting
-      fused &mdash; and then to check it mechanically, because a separation nobody checks merges
-      within months.
+      These are real, recorded, and worth knowing before you meet them. All verified against the
+      committed tree at <code>f8707d3</code>.
     </p>
-    <div class="two">
-      <div class="half a">
-        <h3>Agents &mdash; the thinking</h3>
-        <dl>
-          <dt>Contain</dt><dd>mission &middot; mental model &middot; trade-off framing &middot; escalation triggers &middot; definition of good &middot; a skill-invocation plan</dd>
-          <dt>Answer</dt><dd>what, why, when</dd>
-          <dt>Voice</dt><dd>first person, persona</dd>
-          <dt>File</dt><dd><code>agents/navi-agent-&lt;persona&gt;/*.agent.md</code></dd>
-        </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="agents.html">Browse the eleven agents &rarr;</a></p>
+
+    <div class="grid2">
+      <div class="panel">
+        <h4 style="color:var(--bad)">Only two adapters are built</h4>
+        <p class="small"><strong>Claude Code</strong> (<code>adapters/claude-code/</code>) is
+        supported and exercised. <strong>Generic</strong>
+        (<code>adapters/generic/RUNBOOK.md</code>) is the paste-in fallback.</p>
+        <p class="small" style="margin-bottom:0">Codex and Cursor have sibling manifests at the repo
+        root (<code>.codex-plugin/</code>, <code>.cursor-plugin/</code>) and
+        <code>doctor</code> detects both harnesses and maps their capabilities — but
+        <strong>no adapter tree is built for either in v1</strong>, and neither has been loaded in
+        its harness. LangGraph, CrewAI and other SDK harnesses are named in the design and
+        <strong>not built</strong>. Use the generic RUNBOOK there today.</p>
       </div>
-      <div class="half b">
-        <h3>Skills &mdash; the rules</h3>
-        <dl>
-          <dt>Contain</dt><dd>standards &middot; decision tables &middot; templates &middot; checklists &middot; anti-patterns &middot; a mechanical validation step</dd>
-          <dt>Answer</dt><dd>how</dd>
-          <dt>Voice</dt><dd>impersonal, imperative</dd>
-          <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
-        </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="skills.html">Browse the thirty-nine skills &rarr;</a></p>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)"><code>gate --evidence</code> checks shape, never content</h4>
+        <p class="small">Evidence must be a <strong>regular, non-empty file</strong> — a directory,
+        a device and a zero-byte file are each refused, and a symlink is judged by what it resolves
+        to. That is the whole of the check. <strong>The file is never opened.</strong> One
+        character of anything is accepted:</p>
+        <div class="term" style="margin-bottom:8px">
+<pre><span class="c">$ printf 'x' &gt; $E/g6.md &amp;&amp; navi-delivery gate G6 --pass --evidence $E/g6.md</span>
+<span class="o">G6 pass (evidence: …/evidence/g6.md, by: dev@navikenz.com)</span>
+</pre>
+        </div>
+        <p class="small" style="margin-bottom:0">The gate records that evidence was <em>named</em>
+        and that something is there to open, not that it says what you claim. A human reviewing the
+        change is what establishes the second. Treat the path as a citation and make it one a reader
+        can follow.</p>
+      </div>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)">The actor on a gate event is <em>derived</em>, not proven</h4>
+        <p class="small">Every gate event now carries <code>actor</code> and
+        <code>actor_source</code>, so a gate co-owned by two agents — G3 by the Architect and the
+        Security Engineer, G6 by the QA Engineer and the Security Engineer — can show which owner
+        recorded the verdict. But unless <code>--actor</code> or
+        <code>$NAVI_DELIVERY_ACTOR</code> was used, the name is whatever
+        <code>git config user.email</code> or the shell login happened to say. <strong>It is a label,
+        not an authentication.</strong> <code>actor_source</code> is what lets a reader tell a
+        deliberate name (<code>flag</code>, <code>env</code>) from an inferred one
+        (<code>git</code>, <code>login</code>) — check it before trusting a name.</p>
+        <p class="small" style="margin-bottom:0">There is also no second-party approval step: the
+        person who records a waiver is the person accepting the debt, and the <em>Approved by</em>
+        column in <code>waivers.md</code> is that same derived name. The <code>G9 archived</code>
+        event carries no actor at all.</p>
+      </div>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)">G4 is enforced only on the <code>full</code> lane</h4>
+        <p class="small">The original design described <code>standard</code> as enforcing "G4 only
+        if data or ML is touched". <code>cli/lib/lanes.js</code> implements <code>standard</code> as
+        a fixed set that does not contain G4, and <code>gate</code> refuses anything outside the
+        set. <strong>A <code>standard</code> change that turns out to touch data or a model
+        therefore cannot record G4 at all.</strong></p>
+        <p class="small" style="margin-bottom:0">Until that is reconciled,
+        <code>navi-skill-lane-selection</code> routes anything touching a dataset, schema, feature
+        or model to <code>full</code> at proposal time. Discovering it mid-change is a re-proposal,
+        not a lane edit.</p>
+      </div>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)">A waiver attaches to the whole gate</h4>
+        <p class="small" style="margin-bottom:0">One reason and one expiry cover every criterion the
+        gate checks, so a single unfixable finding waives the gate rather than itself. G8 checks an
+        SLI, a runbook and telemetry confirmed arriving; one waiver silences all three.</p>
+      </div>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)"><code>status</code>'s <code>phase:</code> line does not advance</h4>
+        <p class="small" style="margin-bottom:0">It reads <code>1</code> throughout <a href="demo.html">the demo</a>,
+        because <code>state.phase</code> is set to 1 at <code>propose</code> and at
+        <code>archive</code> and is never moved by any command. The gate verdicts are the real
+        progress signal; treat the phase line as a placeholder.</p>
+      </div>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)">A failed gate writes no rework record</h4>
+        <p class="small"><code>ADLC.md</code> §4 says a <code>--fail</code> writes a rework record
+        to <code>changes/&lt;name&gt;/handoffs.md</code> naming the phase to re-enter, the gate, the
+        artifacts implicated and the reason. <strong>No CLI command touches
+        <code>handoffs.md</code> after <code>propose</code> scaffolds it</strong> — after the G6
+        failure in <a href="demo.html">the demo</a>, the file still held its empty template.</p>
+        <p class="small" style="margin-bottom:0">The stale-marking and the <code>validate</code>
+        block are real and were verified. The rework <em>record</em> is an agent's job, written by
+        hand under <code>navi-skill-handoff-protocol</code>.</p>
+      </div>
+
+      <div class="panel">
+        <h4 style="color:var(--bad)"><code>validate</code> lints the framework, not only your repo</h4>
+        <p class="small"><code>validate_manifests.py</code> and <code>lint_separation.py</code>
+        always run against the installed framework tree; only the traceability check runs against
+        your <code>delivery/</code>. So <code>validate</code> reports 50 framework files whichever
+        repo you run it in — as it does in <a href="demo.html">the worked demo</a>.</p>
+        <p class="small" style="margin-bottom:0">Separately,
+        <code>navi-skill-code-review</code> is <strong>not exercised by the validation
+        harness</strong>: its substantive checks read a live authenticated pull request, which
+        neither a fixture nor CI can supply. It is declared unharnessable, deliberately and visibly,
+        rather than stubbed.</p>
       </div>
     </div>
-    <div class="note">
-      <p><strong>The falsifiable test.</strong> Delete every agent and the skills still fully
-      specify <em>how</em> work is done; delete every skill and the agents still specify
-      <em>what, why and when</em>.</p>
-      <p class="small sub" style="margin-bottom:0">Enforced by <code>scripts/lint_separation.py</code>.
-      The rest of the design &mdash; the gates, the lanes, the chain &mdash; is on
-      <a href="how-it-works.html">How it works</a>.</p>
+
+    <div class="note warn" style="margin-top:20px">
+      <p style="margin-bottom:0"><strong>Maturity.</strong> Every agent and skill in the catalogue
+      carries <code>maturity: draft</code> and <code>version: 0.1.0</code>. The version stays put
+      until the framework is stable in real use.</p>
     </div>
-    <p class="small sub" style="margin-bottom:0">
-      Each item's README is a summary and carries no rules: <code>SKILL.md</code> and
-      <code>*.agent.md</code> stay the only authority, and the README links to them rather than
-      quoting them. Two copies of a rule drift, which is the thing this framework exists to stop.
-    </p>
   </div>
 </section>
 
@@ -542,145 +539,6 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 })();
 </script>
 <!-- END SHARED FOOT -->
-
-<!-- BEGIN GENERATED CATALOGUE -->
-<script id="navi-catalogue" type="application/json">
-{
- "counts": {
-  "agents": 11,
-  "skills": 39,
-  "disciplines": 12,
-  "phases": 9,
-  "gates": 9,
-  "lanes": 4
- },
- "disciplines": [
-  {
-   "id": "architecture",
-   "label": "architecture",
-   "skills": 4,
-   "agents": 1
-  },
-  {
-   "id": "business-analysis",
-   "label": "business analysis",
-   "skills": 2,
-   "agents": 1
-  },
-  {
-   "id": "data-engineering",
-   "label": "data engineering",
-   "skills": 3,
-   "agents": 1
-  },
-  {
-   "id": "lifecycle-method",
-   "label": "lifecycle method",
-   "skills": 6,
-   "agents": 1
-  },
-  {
-   "id": "machine-learning",
-   "label": "machine learning",
-   "skills": 3,
-   "agents": 1
-  },
-  {
-   "id": "mlops",
-   "label": "mlops",
-   "skills": 2,
-   "agents": 1
-  },
-  {
-   "id": "platform-devops",
-   "label": "platform devops",
-   "skills": 4,
-   "agents": 1
-  },
-  {
-   "id": "product-management",
-   "label": "product management",
-   "skills": 2,
-   "agents": 1
-  },
-  {
-   "id": "quality-engineering",
-   "label": "quality engineering",
-   "skills": 3,
-   "agents": 1
-  },
-  {
-   "id": "security",
-   "label": "security",
-   "skills": 1,
-   "agents": 1
-  },
-  {
-   "id": "software-development",
-   "label": "software development",
-   "skills": 5,
-   "agents": 1
-  },
-  {
-   "id": "spec-driven-development",
-   "label": "spec driven development",
-   "skills": 4,
-   "agents": 0
-  }
- ]
-}
-</script>
-<!-- END GENERATED CATALOGUE -->
-
-<script>
-(function () {
-  "use strict";
-
-  function esc(s) {
-    return String(s == null ? "" : s)
-      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
-  }
-  // The source markdown carries inline code spans, bold and italics. Render just
-  // those three, on already-escaped text, so a card reads the way the source
-  // files do without pulling in a parser.
-  function md(s) {
-    return esc(s)
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-      .replace(/(^|[\s(])\*([^*]+)\*/g, "$1<em>$2</em>");
-  }
-  function el(tag, cls, html) {
-    var n = document.createElement(tag);
-    if (cls) n.className = cls;
-    if (html != null) n.innerHTML = html;
-    return n;
-  }
-
-  var DATA;
-  try {
-    DATA = JSON.parse(document.getElementById("navi-catalogue").textContent);
-  } catch (err) {
-    document.getElementById("stats").innerHTML =
-      '<p class="small">The embedded counts could not be parsed. Regenerate them with ' +
-      '<code>python3 scripts/build_catalogue.py . --inject</code>.</p>';
-    return;
-  }
-// ---------------------------------------------------------------- stats
-  (function () {
-    var c = DATA.counts;
-    var rows = [
-      [c.agents, "agents"], [c.skills, "skills"], [c.disciplines, "disciplines"],
-      [c.phases, "ADLC phases"], [c.gates, "gates"], [c.lanes, "lanes"], [7, "CLI verbs"]
-    ];
-    var host = document.getElementById("stats");
-    rows.forEach(function (r) {
-      host.appendChild(el("div", "stat", "<b>" + r[0] + "</b><span>" + r[1] + "</span>"));
-    });
-  })();
-
-  })();
-</script>
 
 </body>
 </html>
