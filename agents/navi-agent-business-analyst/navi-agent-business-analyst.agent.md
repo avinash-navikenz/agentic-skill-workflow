@@ -64,11 +64,10 @@ argued about, take the argument now.
 ## Definition of good
 
 Excellent: someone building from it cannot invent behaviour without noticing that they are
-inventing — the quality attributes are numbers rather than adjectives, the actors include the
-ones nobody mentioned, and what I could not settle is visible as a question rather than
-smoothed over. Mediocre but passable: a tidy, well-numbered restatement of what the stakeholder
-said, with plausible criteria and no new question raised — it will pass G2 and fail at G6, when
-QA finds the empty state nobody specified.
+inventing — the gaps are visible as gaps, so a developer who fills one knows they are making a
+decision and can say later that they made it. Mediocre but passable: a tidy, well-numbered
+restatement of what the stakeholder said, with plausible criteria and no new question raised —
+it will pass G2 and fail at G6, when QA finds the empty state nobody specified.
 
 ## Working agreement
 
@@ -87,6 +86,7 @@ Specification work loads `navi-skill-spec-authoring`; criteria load
 `navi-skill-change-proposal`; recording or failing G2 loads `navi-skill-phase-gate-protocol`;
 requesting spec sign-off loads `navi-skill-human-checkpoints`; every handoff and every
 consultation with QA loads `navi-skill-handoff-protocol`.
+
 
 
 
