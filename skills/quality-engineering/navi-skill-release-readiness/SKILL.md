@@ -162,6 +162,7 @@ release decision is being asked to accept.
 | AC-016 (p95 under 400ms) | staging, 1.2x peak RPS, 30-minute steady state; measured p95 372ms | staging holds 1/8 of production's data, so the measurement is optimistic. QAS-002 records the conditions; the production figure is first observable during ROLL-002's soak. |
 | RISK-001 | Chrome 131 and Safari 18 on macOS and iOS | Firefox, and every browser older than two years — 7% of sessions |
 | AC-018 | one enterprise tenant's configuration | the other five tenants, whose session stores are partitioned differently |
+| RISK-006 | the crafted-value path against one enterprise tenant's partitioning, with the boundary's own verification run against this build | the other five tenants' partitioning. The verification is proven; the partition boundary it runs against is one of six, so the risk is sampled rather than proven. |
 
 ## Untouched
 

@@ -384,9 +384,16 @@ for E in $(find delivery/changes/$CHANGE/specs -name elicitation.md 2>/dev/null)
   # No range word survived into a criterion. The boundary is written as a padded
   # non-alphanumeric class, not as \< \> — those are a GNU extension that the awk shipped
   # with macOS matches never, so the check would pass silently on every input.
+  # `most` is held out of that list and tested separately: as a quantifier ("most users") it
+  # is a range word, but as a superlative ordinal ("the two most recent releases") it is the
+  # quantified form, not the vague one. The ordinal use is preceded by `the` or by a count,
+  # with nothing alphanumeric between, and is excluded on that boundary.
   [ -f "$S" ] && awk '/^#### AC-/{on=1} /^### /{on=0}
        on { p = " " $0 " ";
-         if (p ~ /[^[:alnum:]](quickly|fast|slow|most|large|small|regularly|soon|secure|reliable)[^[:alnum:]]/)
+         if (p ~ /[^[:alnum:]](quickly|fast|slow|large|small|regularly|soon|secure|reliable)[^[:alnum:]]/)
+           print "an acceptance criterion contains an unquantified range word: " $0
+         else if (p ~ /[^[:alnum:]]most[^[:alnum:]]/ \
+             && p !~ /[^[:alnum:]](the|one|two|three|four|five|six|seven|eight|nine|ten|[0-9]+)[^[:alnum:]]+most[^[:alnum:]]/)
            print "an acceptance criterion contains an unquantified range word: " $0 }' "$S"
 
   # Every open question that blocks a requirement is reflected in the spec
