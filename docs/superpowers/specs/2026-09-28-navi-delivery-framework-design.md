@@ -159,8 +159,22 @@ Agents use the same block with `kind: agent`, plus `owns_gates`, `skills`, `capa
   and a mechanical validation step.
 
 **Falsifiable test:** delete every agent and the skills still fully specify *how* work is
-done; delete every skill and the agents still specify *what, why and when*. A sentence
-present in both belongs in the skill.
+done; delete every skill and the agents still specify *what, why and when*.
+
+**Operational test for a rule in disguise.** A sentence in an agent is misplaced when **both**
+hold: (a) it tells the reader what to do, or what an artifact must contain, **and** (b) it adds
+no reason the governing skill does not already carry. A sentence that names a boundary the
+persona will not cross, or that gives a *reason* for choosing between permitted options, is
+judgment — **even when a skill covers the same mechanics**. An agent may restate a constraint
+when it says *why* that constraint binds it.
+
+*This replaces an earlier formulation, "a sentence present in both belongs in the skill", which
+was unsatisfiable: every escalation condition an agent states also lives in a skill, so the rule
+forbade agents from stating their own boundaries while this same section requires exactly that.
+Five review passes produced a rising count (2, then 9, then 14, then 15) — the signature of an
+unsatisfiable definition rather than a defective codebase. A companion test, "could a reader
+comply with this mechanically", was also withdrawn: a good reason is compliable, which is what
+makes it useful, so that test deleted judgment along with rules.*
 
 **Enforcement:** `lint_separation.py` fails the build on a numbered procedure or a template
 inside an `.agent.md`, and on second-person persona voice ("as the Architect, weigh…")
