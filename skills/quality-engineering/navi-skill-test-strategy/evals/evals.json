@@ -1,0 +1,69 @@
+{
+  "skill": "navi-skill-test-strategy",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We have two weeks of testing capacity and a change touching the render path, the preference store and a new boundary. Where should the effort go?",
+      "expect": [
+        "test-strategy.md",
+        "RISK-",
+        "Likelihood evidence",
+        "lowest level",
+        "Not covered",
+        "accepted"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G6's entry criterion wants a strategy naming the risks and the coverage for each. What has to be in it and when is it written?",
+      "expect": [
+        "Phase 2",
+        "entry criterion",
+        "REQ-",
+        "Failure modes",
+        "THREAT-",
+        "AC-",
+        "Verified manually"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our AI strategy for next year needs a testing narrative for the board deck. Draft the strategic positioning.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "AC-013 says an absent prefers-color-scheme header falls back to light. Derive the actual test cases, including the boundaries.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Target 90% line coverage and put everything through the browser suite so the tests look like real users.",
+      "expect": [
+        "percentage",
+        "per risk",
+        "per criterion",
+        "lowest level",
+        "end-to-end",
+        "localises nothing"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The cross-region latency risk passes in our compose stack, so mark it covered.",
+      "expect": [
+        "fidelity gap",
+        "cannot express",
+        "untested",
+        "tick",
+        "measurement"
+      ]
+    }
+  ]
+}
