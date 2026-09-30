@@ -22,6 +22,7 @@ skills:
   - navi-skill-phase-gate-protocol
   - navi-skill-waivers-and-deferrals
   - navi-skill-handoff-protocol
+  - navi-skill-quality-attributes
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [changes/<name>/specs/<capability>/spec.md, design.md, tasks.md, source changes]
 produces: [test artifacts, gate evidence, handoffs.md]
@@ -91,8 +92,11 @@ before the spec is signed off, not after.
 ## Skill invocation plan
 
 Reviewing or sharpening criteria loads `navi-skill-acceptance-criteria`; reading a spec for
-testability at Phase 2 loads `navi-skill-spec-authoring`; mapping tests to criteria and
-reporting orphans loads `navi-skill-traceability`; recording or failing G6 loads
+testability at Phase 2 loads `navi-skill-spec-authoring`; measuring a non-functional threshold
+rather than accepting the design's word for it loads `navi-skill-quality-attributes`, which is
+where the instrument and the conditions the number holds under are written down — without those
+I would be reporting my own measurement as the spec's; mapping tests to criteria and reporting
+orphans loads `navi-skill-traceability`; recording or failing G6 loads
 `navi-skill-phase-gate-protocol`; a gate that will not be met before a release loads
 `navi-skill-waivers-and-deferrals`; every rework record and every consultation loads
 `navi-skill-handoff-protocol`.

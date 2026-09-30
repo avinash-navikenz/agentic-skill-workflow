@@ -1,0 +1,294 @@
+---
+name: navi-skill-api-design
+description: >
+  Use when designing or changing an HTTP or RPC surface — its resources, methods, status
+  codes, error bodies, pagination, idempotency and authorisation. Defines the fixed status-code
+  mapping, the single error shape, the pagination and idempotency rules, and the schema every
+  endpoint is described by.
+  Trigger phrases include: API design, REST, endpoint, status code, 404 or 403, error
+  response, pagination, cursor, idempotency key, rate limit, OpenAPI, request validation.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: software-development
+  lifecycle_phases: [3, 5]
+  used_by_agents: [navi-agent-architect, navi-agent-fullstack-developer]
+  owner: OWNER_TBD
+  tags: "api, rest, http, openapi, errors, pagination, idempotency"
+  model: sonnet
+---
+
+## When to use
+
+An HTTP or RPC surface is being designed, an endpoint is being added to one that exists, or a
+response shape is being changed and the wire-level decisions have to be made consistently.
+
+## Rules
+
+1. Describe every endpoint in a machine-readable schema checked into the repository —
+   OpenAPI for HTTP, the `.proto` for gRPC — and generate the request validation and the
+   contract test from it. A surface described only in prose drifts from the code within one
+   change.
+2. Attach every endpoint to the `CONTRACT-###` that owns its boundary. This skill decides what
+   the surface looks like; `navi-skill-interface-contracts` decides what a change to it costs,
+   who its consumers are, and when a version is retired.
+3. Name collections as plural nouns and put the action in the method:
+   `GET /v1/orders`, `POST /v1/orders`, `GET /v1/orders/{order_id}`. A verb in the path is
+   permitted only for an action that is not a resource state transition — `POST
+   /v1/orders/{order_id}/cancel` — and every such action is listed in the contract.
+4. Use the status codes in the decision table below and no others without recording the
+   addition in the contract. A surface where `200` carries an error body in some endpoints and
+   not others forces every caller to parse before it can branch.
+5. Return one error shape from every endpoint in the surface:
+   `{"code": "<stable_snake_case>", "message": "<human sentence>", "details": [...],
+   "request_id": "<id>"}`. `code` is the field callers branch on and is never reworded once
+   shipped; `message` is for a human reading a log.
+6. Never put a stack trace, a SQL fragment, an internal hostname, a file path or any personal
+   data in `message` or `details`. The error body is read by whoever can call the endpoint.
+7. Paginate every collection endpoint from its first release, with a cursor, a default page
+   size and a maximum page size stated in the schema. An endpoint that returns all rows works
+   until the day the table is large, which is the day it matters.
+8. Accept an `Idempotency-Key` header on every non-idempotent mutation, store the key with its
+   response for a stated window, and replay the stored response for a repeat. Without it, a
+   client that retries a timeout cannot know whether it created one order or two.
+9. Validate every request against the schema and reject an unknown field or an unknown query
+   parameter with `400`. Silently ignoring a parameter turns a client's typo into behaviour
+   the client believes it configured.
+10. Write timestamps as RFC 3339 in UTC with a `Z` suffix; put the unit in the name of every
+    duration or size field (`timeout_ms`, `max_bytes`); write money as an integer in minor
+    units beside an ISO 4217 `currency` field. Never a float for money, never a bare number
+    for a duration.
+11. Expose identifiers as opaque strings. A sequential integer in a URL tells every caller how
+    many records exist and invites the next id to be tried.
+12. Distinguish absent from empty in exactly one way across the surface: an omitted field means
+    "not provided" and an explicit `null` means "set to nothing". Never encode absence as an
+    empty string, `0`, or a sentinel date.
+13. State for every endpoint which of the four reach levels from `navi-skill-threat-modelling`
+    may call it — `anonymous`, `authenticated`, `colleague`, `privileged` — in the schema.
+    Return `403` when the caller may know the resource exists and `404` when the existence of
+    the resource is itself the secret; decide per resource and record which in the contract.
+14. Return only the fields the contract lists. A response assembled by serialising an internal
+    object ships whatever that object gains next, which is how a field nobody designed for the
+    wire reaches a consumer.
+15. State a rate limit for every endpoint reachable from `anonymous` or `authenticated`,
+    return `429` with `Retry-After` when it is exceeded, and make the limit part of the schema.
+
+## Decision table
+
+| Observed condition | Required response or action |
+|---|---|
+| Read succeeded | `200` with the resource body |
+| Resource created synchronously | `201` with a `Location` header naming the new resource |
+| Work accepted and will finish later | `202` with a status resource the caller can poll |
+| Mutation succeeded with nothing to return | `204` with an empty body |
+| Request is malformed, or carries an unknown field or parameter | `400` with `code` naming the field |
+| No credentials, or credentials not verifiable | `401` |
+| Authenticated caller may not do this, and may know the resource exists | `403` |
+| Authenticated caller may not do this, and the resource's existence is sensitive | `404` |
+| Resource does not exist | `404` |
+| Request conflicts with current state (duplicate, version mismatch) | `409` with `code` naming the conflict |
+| Conditional request's precondition failed | `412` |
+| Rate limit exceeded | `429` with `Retry-After` |
+| Unhandled server fault | `500` with a `request_id` and no internals |
+| Dependency unavailable or shedding load | `503` with `Retry-After` where one is known |
+| A repeat arrives with the same `Idempotency-Key` | Replay the stored response; do not act twice |
+| A repeat arrives with the same key and a different body | `409`; the key is bound to its request |
+| A collection endpoint is being added | Cursor pagination, default and maximum page size, in the schema |
+| A response field is being removed | Breaking — route to `navi-skill-interface-contracts` for the version |
+| A new optional response field is being added | Not breaking — add it to the schema and the contract's `v1` |
+| An enumeration is gaining a value | Breaking for exhaustive consumers — state the default branch or version it |
+| A field would carry personal data | It appears in the schema or it is not returned; record it in the threat model |
+
+## Template
+
+`openapi.yaml`, checked in, generating both validation and the contract test:
+
+```yaml
+openapi: 3.1.0
+info: { title: Orders, version: "1.0.0" }
+paths:
+  /v1/orders:
+    get:
+      summary: List orders for the calling account
+      x-navi-contract: CONTRACT-011
+      x-navi-reach: authenticated
+      x-navi-rate-limit: "120/min per account; 429 with Retry-After"
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 25, maximum: 100 } }
+        - { name: status, in: query, schema: { type: string, enum: [open, shipped, cancelled] } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, next_cursor]
+                additionalProperties: false
+                properties:
+                  data: { type: array, items: { $ref: "#/components/schemas/Order" } }
+                  next_cursor: { type: [string, "null"] }
+        "400": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+    post:
+      summary: Create an order
+      x-navi-contract: CONTRACT-011
+      x-navi-reach: authenticated
+      parameters:
+        - { name: Idempotency-Key, in: header, required: true, schema: { type: string } }
+      responses:
+        "201":
+          headers: { Location: { schema: { type: string } } }
+          content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } }
+        "409": { $ref: "#/components/responses/Error" }
+components:
+  schemas:
+    Order:
+      type: object
+      required: [order_id, status, total_minor, currency, created_at]
+      additionalProperties: false
+      properties:
+        order_id:    { type: string, description: opaque }
+        status:      { type: string, enum: [open, shipped, cancelled] }
+        total_minor: { type: integer, description: minor units }
+        currency:    { type: string, pattern: "^[A-Z]{3}$" }
+        created_at:  { type: string, format: date-time, description: RFC 3339, UTC, Z }
+        cancelled_at: { type: [string, "null"], format: date-time }
+    Error:
+      type: object
+      required: [code, message, request_id]
+      additionalProperties: false
+      properties:
+        code:       { type: string, description: stable; callers branch on this }
+        message:    { type: string, description: for a human reading a log }
+        details:    { type: array, items: { type: object } }
+        request_id: { type: string }
+  responses:
+    Error:
+      description: Error
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+```
+
+The idempotent retry, end to end:
+
+```bash
+KEY=$(uuidgen)
+
+curl -sS -i -X POST https://api.example.com/v1/orders \
+  -H "Idempotency-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"sku":"AB-12","quantity":2}'
+# HTTP/1.1 201 Created
+# Location: /v1/orders/ord_9fZq
+# {"order_id":"ord_9fZq","status":"open","total_minor":2400,"currency":"GBP",
+#  "created_at":"2026-09-28T13:04:11Z","cancelled_at":null}
+
+# The client timed out and retries with the same key: the stored response is replayed.
+curl -sS -i -X POST https://api.example.com/v1/orders \
+  -H "Idempotency-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"sku":"AB-12","quantity":2}'
+# HTTP/1.1 201 Created
+# Location: /v1/orders/ord_9fZq          <- the same order, not a second one
+
+# The same key with a different body is a client bug, not a retry.
+curl -sS -i -X POST https://api.example.com/v1/orders \
+  -H "Idempotency-Key: $KEY" -H "Content-Type: application/json" \
+  -d '{"sku":"AB-12","quantity":3}'
+# HTTP/1.1 409 Conflict
+# {"code":"idempotency_key_reused","message":"This key was used with a different request body.",
+#  "details":[],"request_id":"req_77c1"}
+
+# An unknown query parameter is rejected rather than ignored.
+curl -sS -i "https://api.example.com/v1/orders?statuss=open"
+# HTTP/1.1 400 Bad Request
+# {"code":"unknown_parameter","message":"Unknown query parameter 'statuss'.",
+#  "details":[{"parameter":"statuss"}],"request_id":"req_77c2"}
+```
+
+## Checklist
+
+- [ ] Every endpoint is in the checked-in schema, and validation and the contract test are generated from it
+- [ ] Every endpoint names its `CONTRACT-###` and its reach level
+- [ ] Collections are plural nouns; every path verb is a listed action
+- [ ] Every status code used is in the decision table, or recorded in the contract
+- [ ] Every error returns the one error shape, with a stable `code`
+- [ ] No error body carries a trace, a query, a hostname, a path, or personal data
+- [ ] Every collection endpoint is paginated with a default and a maximum page size
+- [ ] Every non-idempotent mutation accepts `Idempotency-Key` and replays stored responses
+- [ ] Unknown fields and unknown parameters return `400`
+- [ ] Timestamps are RFC 3339 UTC; durations name their unit; money is minor units plus currency
+- [ ] Identifiers are opaque
+- [ ] Absent and null are distinguished the same way everywhere
+- [ ] `403` and `404` are chosen per resource, and the choice is recorded
+- [ ] Responses carry only the fields the contract lists
+- [ ] Every publicly reachable endpoint has a rate limit and returns `429` with `Retry-After`
+
+## Anti-patterns
+
+**200 with an error inside.** `200 OK {"success": false, "error": "not found"}`. Every caller,
+proxy, cache and dashboard now needs the body to know what happened. Return `404` with the
+error shape.
+
+**Verb paths.** `POST /v1/getOrders`, `POST /v1/createOrder`, `POST /v1/updateOrderStatus`.
+The method is already the verb, and no cache or client can reason about these. Use
+`GET /v1/orders`, `POST /v1/orders`, `PATCH /v1/orders/{order_id}`.
+
+**The unbounded collection.** `GET /v1/orders` returning every order. It is fine in staging
+with 40 rows and takes the service down the first time an account has 400,000. Paginate from
+the first release.
+
+**Retry without a key.** A client times out on `POST /v1/orders` and retries. Two orders, one
+customer, and no way to tell which is real. Require `Idempotency-Key` and replay.
+
+**The leaky error.** `{"message": "ERROR: duplicate key value violates unique constraint
+\"orders_pkey\" at /srv/app/db/orders.rb:212"}`. The caller now knows the database, the
+schema and the file layout. Return `409` with `code: "order_already_exists"`.
+
+**The ignored parameter.** `?statuss=open` returns every order because the typo was dropped.
+The client believes it filtered. Reject unknown parameters with `400`.
+
+**Reworded code.** `code: "not_found"` becomes `code: "resource_not_found"` in a tidy-up. Every
+caller branching on the old string silently stops matching. The `code` is a contract — change
+it only with a version.
+
+**Serialised internals.** The response is `JSON.stringify(orderEntity)`, and next month the
+entity gains `internal_risk_score`. It is now on the wire and someone is parsing it. List the
+fields.
+
+**Float money.** `"total": 24.00`. Two currencies and one rounding rule later the sums stop
+agreeing. Use `total_minor: 2400` with `currency: "GBP"`.
+
+**Sequential ids.** `/v1/orders/1041`. The caller now knows the order count and can try 1042.
+Use opaque identifiers.
+
+## Validation
+
+```bash
+# The schema is valid and internally consistent (any OpenAPI linter will do)
+npx --yes @stoplight/spectral-cli lint openapi.yaml
+
+# Every route in the code appears in the schema
+grep -rhoE '"/v1/[a-z0-9/{}_-]+"' src/routes/ | tr -d '"' | sort -u | while read -r p; do
+  grep -q "  $p:" openapi.yaml || echo "route not in schema: $p"
+done
+
+# Every response schema forbids unlisted fields
+grep -c 'additionalProperties: false' openapi.yaml
+
+# No collection endpoint without a limit parameter
+python3 - <<'PY'
+import re, sys, pathlib
+text = pathlib.Path("openapi.yaml").read_text()
+for path, block in re.findall(r"\n  (/v1/[^\n:]+):\n(.*?)(?=\n  /|\Z)", text, re.S):
+    if "\n    get:" in block and path.count("{") == 0 and "name: limit" not in block:
+        print(f"unpaginated collection: {path}")
+PY
+
+# Error bodies never carry internals — check the handlers, not the schema
+grep -rnE '(stack|\.message.*err|sqlMessage|__dirname)' src/errors/
+```
+
+Each command prints nothing (or, for the third, a count matching the number of response
+schemas) when the rule holds. The generated contract test is what enforces the shape at G5:
+see `navi-skill-interface-contracts` for what that test must fail on.

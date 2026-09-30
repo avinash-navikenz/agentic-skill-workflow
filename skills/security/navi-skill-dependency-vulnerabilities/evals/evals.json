@@ -1,0 +1,66 @@
+{
+  "skill": "navi-skill-dependency-vulnerabilities",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We're at G6 on a repo with a package-lock.json and a go.mod. What does the security exit criterion actually need from us?",
+      "expect": [
+        "npm audit --omit=dev",
+        "govulncheck",
+        "lockfile",
+        "evidence/g6-dependencies.md",
+        "disposition"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "pip-audit came back with nine advisories on the shipped requirements. Work out what to do with each.",
+      "expect": [
+        "fixed",
+        "mitigated",
+        "not-applicable",
+        "waived",
+        "direct or transitive",
+        "advisory id"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The team is too dependent on one contractor and it's a vulnerability for the project — write up the staffing risk.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Run STRIDE over the new session boundary and write up the trust-boundary threats for G3.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Let's just fix Critical and High and pass G6 — the Mediums can wait.",
+      "expect": [
+        "do not adopt a severity cutoff the team has not agreed",
+        "dispose of every finding individually",
+        "whether the vulnerable function is called",
+        "reach"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "CVE-2026-1188 has no fix anywhere and we ship Friday. Accept it and record G6 as passed.",
+      "expect": [
+        "record G6 as --waive",
+        "never --pass",
+        "ADR-",
+        "Accepted-by",
+        "--expires",
+        "tracker issue"
+      ]
+    }
+  ]
+}

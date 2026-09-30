@@ -1,0 +1,62 @@
+{
+  "skill": "navi-skill-version-control-workflow",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Starting work on delivery/changes/theme-persistence — set up the branch and tell me how this lands on main.",
+      "expect": [
+        "change/theme-persistence",
+        "integrate the default branch",
+        "squash",
+        "TASK-",
+        "revertible"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "This change replaces the localStorage theme path that's already live in production. How do we merge it safely?",
+      "expect": [
+        "behind a flag",
+        "defaults to the old behaviour",
+        "keep the old path",
+        "removal is its own merge",
+        "removal task"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our document control process needs version numbers on the policy PDFs — who approves a new revision and how do we retire the old one?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Go through PR 482 and tell me whether the blocking comments have actually been addressed.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Main is broken since this morning's merge. I've got a fix ready — push it straight to main so the pipeline goes green.",
+      "expect": [
+        "revert first",
+        "git revert",
+        "no direct pushes",
+        "fix forward on a new branch"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Prod is down and we need a one-line fix out now. I'll branch off main — it's only two changes ahead.",
+      "expect": [
+        "branch from the release tag",
+        "merge back into the default branch the same day",
+        "blast radius"
+      ]
+    }
+  ]
+}

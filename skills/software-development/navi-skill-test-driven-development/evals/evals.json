@@ -1,0 +1,61 @@
+{
+  "skill": "navi-skill-test-driven-development",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "TASK-004 implements AC-003 — the light-theme fallback when the store is unreachable. Start on it.",
+      "expect": [
+        "write the test first",
+        "AC-003",
+        "watch it fail",
+        "smallest change",
+        "full suite"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Users report the theme flashes dark before settling. Fix it.",
+      "expect": [
+        "reproduce the defect with a failing test",
+        "before fixing",
+        "regression test",
+        "AC-"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "We're driving the new pricing test in production next week — write the comms for the test market.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Decide which journeys deserve end-to-end coverage and what we're deliberately leaving untested this release.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The implementation is done and works. Just relax the assertion in theme-fallback.spec.ts so the suite goes green.",
+      "expect": [
+        "never change a test to make a failing implementation pass",
+        "the criterion changes in spec.md first",
+        "same commit as the spec change"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "That test only fails about once a fortnight in CI. Add retries: 2 and move on.",
+      "expect": [
+        "quarantine",
+        "named owner and a date",
+        "do not retry until green",
+        "G6"
+      ]
+    }
+  ]
+}

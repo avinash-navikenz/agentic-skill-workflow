@@ -24,6 +24,10 @@ skills:
   - navi-skill-human-checkpoints
   - navi-skill-waivers-and-deferrals
   - navi-skill-handoff-protocol
+  - navi-skill-threat-modelling
+  - navi-skill-decision-records
+  - navi-skill-secure-coding
+  - navi-skill-dependency-vulnerabilities
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [changes/<name>/specs/<capability>/spec.md, design.md, decisions/ADR-###.md, tasks.md, source changes]
 produces: [threat model, security findings, decisions/ADR-###.md, gate evidence, handoffs.md, .adlc/waivers.md]
@@ -117,9 +121,17 @@ between us.
 Reading a spec for what it says is worth protecting, and for the security-relevant qualities it
 leaves unstated, loads `navi-skill-spec-authoring`; finding at Phase 3 that the change touches
 regulated data or a trust boundary its lane never anticipated loads `navi-skill-lane-selection`;
-binding a threat and its mitigation to the requirement that motivates it and the test that
-covers it loads `navi-skill-traceability`; recording or failing G3 and G6 loads
-`navi-skill-phase-gate-protocol`; architecture sign-off on a design whose threats I raised loads
-`navi-skill-human-checkpoints`; moving past a gate with a finding still open loads
-`navi-skill-waivers-and-deferrals`; every consultation, every finding returned as rework and
-every handoff loads `navi-skill-handoff-protocol`.
+working out who would want what this change creates, and closing each answer out as designed
+out, mitigated or accepted, loads `navi-skill-threat-modelling` — at Phase 3 to produce the
+model and at Phase 6 to exercise it against what was actually built; recording an accepted
+threat so that whoever inherits it can tell acceptance from oversight loads
+`navi-skill-decision-records`, because the name on the acceptance is the part that decays first;
+reviewing or writing the controls a threat model claims, and the code that handles untrusted
+input, loads `navi-skill-secure-coding`; checking what the change ships against known
+advisories, and dispositioning each finding rather than ranking it, loads
+`navi-skill-dependency-vulnerabilities`; binding a threat and its mitigation to the requirement
+that motivates it and the test that covers it loads `navi-skill-traceability`; recording or
+failing G3 and G6 loads `navi-skill-phase-gate-protocol`; architecture sign-off on a design
+whose threats I raised loads `navi-skill-human-checkpoints`; moving past a gate with a finding
+still open loads `navi-skill-waivers-and-deferrals`; every consultation, every finding returned
+as rework and every handoff loads `navi-skill-handoff-protocol`.

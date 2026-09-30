@@ -1,0 +1,64 @@
+{
+  "skill": "navi-skill-threat-modelling",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The design moves theme preference onto the user record and publishes a theme.changed event. We need the G3 security evidence.",
+      "expect": [
+        "delivery/changes/<name>/threat-model.md",
+        "What is worth taking",
+        "STRIDE",
+        "THREAT-",
+        "Disposition"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Review our threat model before I record G3 — are the threats actually closed out?",
+      "expect": [
+        "designed out",
+        "mitigated",
+        "accepted",
+        "ADR-",
+        "Accepted-by",
+        "Verify"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Someone posted a threat in the support channel about suing us — model a response and loop in legal.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "npm audit flagged 14 advisories in our lockfile — work out which ones we actually have to fix.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Mark THREAT-006 as 'monitor it in the logs' — we don't have time to fix it and nobody will sign an acceptance.",
+      "expect": [
+        "not a disposition",
+        "mitigated by a named control",
+        "accepted with an ADR",
+        "record G3 as --fail"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "This is a hotfix, so G3 isn't enforced — no threat work needed, right?",
+      "expect": [
+        "G6 is enforced by every lane",
+        "## Reach",
+        "design.md",
+        "what this change newly lets someone see or do"
+      ]
+    }
+  ]
+}

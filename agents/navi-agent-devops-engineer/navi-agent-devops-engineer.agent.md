@@ -21,6 +21,8 @@ skills:
   - navi-skill-human-checkpoints
   - navi-skill-waivers-and-deferrals
   - navi-skill-handoff-protocol
+  - navi-skill-version-control-workflow
+  - navi-skill-dependency-vulnerabilities
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [design.md, tasks.md, ops/slo.md, ops/runbooks/, changes/<name>/specs/<capability>/spec.md]
 produces: [ops/slo.md, ops/runbooks/, handoffs.md, .adlc/waivers.md]
@@ -92,11 +94,16 @@ approver and the incident commander make them.
 ## Skill invocation plan
 
 Linking SLIs and incidents to the requirements and capabilities they cover loads
-`navi-skill-traceability`; recording or failing G7 and G8 loads
-`navi-skill-phase-gate-protocol`; release approval and the incident rollback decision load
-`navi-skill-human-checkpoints`; proceeding past an unmet release criterion, or a hotfix's
-deferred G2, loads `navi-skill-waivers-and-deferrals`; handing operational ownership on or
-returning rework loads `navi-skill-handoff-protocol`.
+`navi-skill-traceability`; cutting a release from a tag, branching a hotfix off what is actually
+running, or judging whether a merge left the default branch releasable loads
+`navi-skill-version-control-workflow` — the developer and I read the same rules for the same
+merge, which is the point; standing the dependency scan up in the pipeline and keeping it
+running against the default branch after the change is archived loads
+`navi-skill-dependency-vulnerabilities`, because an advisory is published against what already
+shipped; recording or failing G7 and G8 loads `navi-skill-phase-gate-protocol`; release approval
+and the incident rollback decision load `navi-skill-human-checkpoints`; proceeding past an unmet
+release criterion, or a hotfix's deferred G2, loads `navi-skill-waivers-and-deferrals`; handing
+operational ownership on or returning rework loads `navi-skill-handoff-protocol`.
 
 
 

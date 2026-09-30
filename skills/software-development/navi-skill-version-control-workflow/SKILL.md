@@ -1,0 +1,262 @@
+---
+name: navi-skill-version-control-workflow
+description: >
+  Use when branching, committing, merging or reverting work for a change, or when a change
+  replaces behaviour that is already running. Defines the branch-per-change naming, the
+  commit and merge rules, flag-guarded replacement with the old path retained, and how a bad
+  merge is undone.
+  Trigger phrases include: branching strategy, branch naming, commit message, squash merge,
+  rebase, force push, revert, feature flag, keep the old path, trunk based, branch protection,
+  hotfix branch, merge conflict.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: software-development
+  lifecycle_phases: [5, 7]
+  used_by_agents: [navi-agent-fullstack-developer, navi-agent-devops-engineer]
+  owner: OWNER_TBD
+  tags: "git, branching, merge, feature-flags, revert, trunk-based"
+  model: sonnet
+---
+
+## When to use
+
+Work on a `delivery/changes/<name>` is starting, a branch is ready to merge, a change replaces
+behaviour that is already running, or something merged and the default branch is no longer
+releasable.
+
+## Rules
+
+1. Branch per change, named `change/<name>` using the exact directory name under
+   `delivery/changes/`. The branch and the framework artifact then answer each other: `git
+   branch` and `navi-delivery status` name the same work.
+2. Branch from the default branch, and integrate the default branch back into the branch at
+   least once per working day the branch is open. Divergence costs conflict resolution that
+   grows with the square of the time nobody did it.
+3. Keep the default branch releasable after every merge, on its own. A merge that requires a
+   second merge before the branch can ship is one piece of work split in the wrong place:
+   split it so each half is releasable, or merge it as one.
+4. Prefer two small merges over one large one, and treat independently revertible as the test
+   of "small". Two merges that can only be reverted together are one merge wearing two hats;
+   one merge that touches four `TASK-###` ids which could each have landed alone is four
+   merges that were held back.
+5. Replace running behaviour behind a flag. When a change replaces a path that is already
+   live, merge the new path behind a flag that defaults to the old behaviour, and keep the
+   old path in the code until the new one has run in production for the period the release
+   plan states. Removing the old path is its own merge, after that period, not part of the
+   merge that introduces the new one.
+6. Give every flag a removal task in `tasks.md` and a tracker issue — Azure DevOps work item,
+   GitHub issue, or Jira issue — with an owner and the condition that triggers removal. A flag
+   with no removal task is a permanent branch in the code that every later reader must reason
+   about.
+7. Squash each branch into one commit on the default branch, whose subject names the change
+   and the tasks it completes. One merge is then one revert, and the history reads as a list
+   of changes rather than a list of keystrokes.
+8. Write the commit subject in the imperative, at most 72 characters, naming the `TASK-###`
+   ids; write in the body what the change does and which `AC-###` it satisfies. `fix stuff`
+   costs the next reader an archaeology session.
+9. Protect the default branch: no direct pushes, review required by someone other than the
+   author, and the automated checks required to pass. A rule nobody configured is a rule that
+   holds until the first busy afternoon.
+10. Force-push only to your own branch, and only to rebase onto the default branch. Never
+    force-push to change content a review thread is attached to — answer the comment, then
+    push. Never force-push the default branch or a release branch at all.
+11. Revert first when a merge leaves the default branch not releasable. `git revert` of the
+    squash commit restores a known state in one command; a forward fix under time pressure is
+    a second unreviewed change on top of a broken one.
+12. Branch a hotfix from the release tag, not from the default branch, and merge it back into
+    the default branch the same day. A fix that exists only on the release branch is a
+    regression scheduled for the next release.
+13. Tag releases immutably, with the tag name recorded as the artifact version in the G7
+    evidence. A tag that moves makes "which commit is in production" unanswerable.
+14. Never commit a secret. A credential that reaches any branch is exposed and is rotated,
+    not deleted in a follow-up commit — see `navi-skill-code-review`.
+15. Route the exposure ramp to the platform-devops discipline: what percentage of traffic sees
+    the new path, canaries, kill switches and the rollback decision at Phase 7 are progressive
+    delivery's. This skill owns the flag's introduction, the old path's retention, and the
+    merge that removes it.
+
+## Decision table
+
+| Observed condition | Required action |
+|---|---|
+| Work is starting on `delivery/changes/theme-persistence` | `git switch -c change/theme-persistence` from the default branch |
+| The branch has been open a day and the default branch moved | Integrate the default branch into the branch before continuing |
+| The change replaces a path that is already live | Merge behind a flag defaulting to the old behaviour; keep the old path |
+| The old path has run its stated period in production | Remove it in its own merge, with its own review |
+| A flag is being introduced | Add the removal task to `tasks.md` and the tracker issue with an owner |
+| A merge would leave the default branch unreleasable alone | Re-split the work, or merge both halves together |
+| One branch completes four independent tasks | Split into merges that can each be reverted alone |
+| The branch is ready and review is complete | Squash-merge, subject naming the change and its tasks |
+| A review thread is open on lines about to be rewritten | Answer the comment first; then push |
+| The default branch is broken by a merge | `git revert` the squash commit; fix forward on a new branch |
+| A production incident needs a fix now | Branch from the release tag; merge back to the default branch the same day |
+| A release is cut | Tag immutably; record the tag as the artifact version in the G7 evidence |
+| A credential was committed on any branch | Rotate it; removing the commit does not un-expose it |
+| Someone asks to push directly to the default branch | Refused by protection; open a pull request |
+| A branch has no matching `delivery/changes/<name>` | Either propose the change or the branch is untracked work |
+
+## Template
+
+A change, from branch to merge, with the old path kept:
+
+```bash
+# 1. The framework knows what is active; the branch takes its name from it.
+navi-delivery status
+#   change: theme-persistence   lane: standard   phase: 5
+git switch -c change/theme-persistence origin/main
+
+# 2. Work. Integrate the default branch daily.
+git fetch origin && git rebase origin/main
+
+# 3. Commit with the task ids in the subject and the criteria in the body.
+git commit -m "TASK-004 TASK-005: render stored theme before first paint" -m \
+"Reads the preference from the session payload (CONTRACT-001) and falls back to
+light when the store is unreachable. Satisfies AC-001, AC-002, AC-003.
+The old localStorage path stays behind THEME_SOURCE=session and is removed in
+TASK-011 once the new path has run for a full week."
+
+# 4. Open the pull request against one change only.
+gh pr create --title "theme-persistence: TASK-004, TASK-005" \
+  --body "Change: delivery/changes/theme-persistence. Flag: THEME_SOURCE (default: localstorage). Old path removal: TASK-011 / DEV-4421."
+
+# 5. Squash-merge after review; one merge, one revert.
+gh pr merge 482 --squash --delete-branch
+git log --oneline -1 origin/main
+# 9f31c07 theme-persistence: TASK-004, TASK-005 (#482)
+```
+
+The flag's removal, as its own merge a week later:
+
+```bash
+git switch -c change/theme-persistence-cleanup origin/main
+# delete the localStorage path and the flag in one commit
+git commit -m "TASK-011: remove localStorage theme path and THEME_SOURCE flag" -m \
+"THEME_SOURCE has defaulted to session for 7 days with no AC-003 fallbacks logged.
+Closes DEV-4421."
+gh pr create --title "theme-persistence: TASK-011 remove old theme path"
+```
+
+Undoing a bad merge:
+
+```bash
+git revert 9f31c07            # one squash commit, one revert
+git push origin HEAD:refs/heads/revert-9f31c07
+gh pr create --title "Revert theme-persistence (#482) — AC-003 fallback loops"
+# Fix forward on a fresh branch afterwards; do not amend the revert.
+```
+
+Branch protection — GitHub, then Azure DevOps:
+
+```bash
+gh api -X PUT repos/navikenz/shell/branches/main/protection --input - <<'JSON'
+{
+  "required_status_checks": { "strict": true, "contexts": ["build", "dependency-scan"] },
+  "required_pull_request_reviews": { "required_approving_review_count": 1 },
+  "enforce_admins": true,
+  "restrictions": null,
+  "allow_force_pushes": false,
+  "allow_deletions": false
+}
+JSON
+
+az repos policy approver-count create --repository-id "$REPO" --branch main \
+  --minimum-approver-count 1 --creator-vote-counts false --blocking true --enabled true
+az repos policy build create --repository-id "$REPO" --branch main \
+  --build-definition-id "$BUILD" --blocking true --enabled true --queue-on-source-update-only true
+```
+
+The tasks entry a flag obliges:
+
+```markdown
+- [ ] **TASK-011** Remove the localStorage theme path and the THEME_SOURCE flag
+  - Implements: REQ-001
+  - Trigger: THEME_SOURCE has defaulted to `session` for 7 days with no AC-003 fallback logged
+  - Owner: Dan Okafor — DEV-4421
+```
+
+## Checklist
+
+- [ ] The branch is named `change/<name>` after a real `delivery/changes/` directory
+- [ ] The default branch was integrated into the branch at least daily
+- [ ] Every merge leaves the default branch releasable on its own
+- [ ] Merges are split so each can be reverted alone
+- [ ] Behaviour that replaces a live path is behind a flag defaulting to the old path
+- [ ] The old path is still present, and its removal is a separate task and merge
+- [ ] Every flag has a removal task with an owner and a trigger condition
+- [ ] The merge is a squash whose subject names the change and its tasks
+- [ ] Commit subjects are imperative, under 72 characters, and carry `TASK-###`
+- [ ] The default branch is protected: no direct push, review required, checks required
+- [ ] No force-push rewrote content under an open review thread
+- [ ] A broken default branch was reverted, not fixed forward under pressure
+- [ ] A hotfix branched from the release tag and merged back the same day
+- [ ] No credential exists in any branch's history; any that did was rotated
+
+## Anti-patterns
+
+**The long-lived shared branch.** `develop`, six weeks old, forty commits behind. Integration
+is deferred until the day it is most expensive, and the merge conflict is resolved by whoever
+has least context. Branch per change and integrate daily.
+
+**Replace-and-delete in one merge.** The new path ships and the old one is deleted in the same
+commit. When the new path misbehaves at 2am the only way back is a revert of everything,
+including the four unrelated fixes that squashed in with it. Ship behind a flag; delete later.
+
+**The immortal flag.** `LEGACY_THEME_PATH` still in the code three years on, both branches
+maintained, nobody sure which is live. Every flag gets a removal task with an owner and a
+trigger the day it is introduced.
+
+**The heroic merge.** One branch, four features, 2,300 lines, "it's all related". It cannot be
+reviewed, and a defect in one feature reverts all four. Split into merges that each stand and
+revert alone.
+
+**Fix forward under pressure.** The default branch is broken, so a second unreviewed change
+lands on top to correct it. Now two unreviewed changes are live and the known-good state is
+two commits back. Revert first, then fix on a branch.
+
+**Force-push over a review.** The author rebases and rewrites the commented lines; the threads
+go stale and the reviewer cannot tell what was taken. Answer each comment, then push.
+
+**`fix stuff`.** A squash subject that carries nothing. Six months later the bisect finds this
+commit and the reader learns nothing. Name the tasks and say what changed.
+
+**The moving tag.** `v2.4.0` re-pointed after a late fix. Nobody can now say what is in
+production, and the G7 evidence names a commit that is not what ran. Cut `v2.4.1`.
+
+**Hotfix off the default branch.** The fix carries three unreleased changes into production
+with it. The blast radius is now everything merged since the release. Branch from the tag.
+
+## Validation
+
+```bash
+# The branch names a real change
+BRANCH=$(git branch --show-current)
+case "$BRANCH" in change/*)
+  test -d "delivery/changes/${BRANCH#change/}" || echo "branch names no change directory" ;;
+esac
+
+# The branch is not behind the default branch
+git fetch -q origin && git rev-list --count HEAD..origin/main   # expect 0 before merging
+
+# Every flag in the code has a removal task in the change's tasks.md
+test -d src/flags || echo "no src/flags — point this at wherever flags are declared"
+for flag in $(grep -rhoE '\b[A-Z][A-Z0-9_]{4,}\b' src/flags/ 2>/dev/null | sort -u); do
+  grep -rq "$flag" delivery/changes/*/tasks.md || echo "flag with no removal task: $flag"
+done
+
+# Nothing reached the default branch outside a pull request.
+# Squash merges leave no merge commit, so check the subjects rather than --merges.
+git log origin/main --no-merges --pretty='%h %s' -n 50 | grep -v '(#[0-9]\+)$'
+
+# No credential-shaped string in the branch history
+git log -p origin/main.. | grep -nEi '(api[_-]?key|secret|password|token)\s*[:=]\s*["\x27][A-Za-z0-9/+_-]{16,}'
+
+# Tags are immutable: a tag that moved shows a different commit than the one recorded at G7
+git tag --list 'v*' --format='%(refname:short) %(objectname:short)'
+```
+
+Each command prints nothing — or, for the second, `0` — when the rule holds. The flag check is
+the one that decays quietest: a flag whose removal task was never written is invisible until
+somebody wonders which path is live.

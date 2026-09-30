@@ -1,0 +1,63 @@
+{
+  "skill": "navi-skill-decision-records",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We're moving the theme preference out of localStorage and onto the user record. Record the decision before I open G3.",
+      "expect": [
+        "delivery/decisions/ADR-",
+        "Alternatives rejected",
+        "Consequences",
+        "Binds",
+        "Status"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Review delivery/decisions/ADR-004.md — is it good enough to offer as G3 evidence?",
+      "expect": [
+        "seven headings",
+        "at least one rejected alternative",
+        "a consequence that is a cost",
+        "Binds",
+        "Review"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The client made a decision on pricing during today's call — add it to the meeting record and email the summary round.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Record the G3 verdict for this change now that the design is signed off.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Write an ADR for renaming the private helper formatTheme() to normaliseTheme().",
+      "expect": [
+        "not consequential",
+        "no ADR",
+        "reversing it after G5",
+        "record the reasoning in the code"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "We changed our mind about ADR-007 — rewrite its Decision section to say we're keeping localStorage after all.",
+      "expect": [
+        "never edit the Decision of an accepted ADR",
+        "write a new ADR",
+        "Superseded by ADR-",
+        "only the old Status line changes"
+      ]
+    }
+  ]
+}

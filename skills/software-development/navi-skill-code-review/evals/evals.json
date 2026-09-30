@@ -1,0 +1,63 @@
+{
+  "skill": "navi-skill-code-review",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "PR 482 is open for TASK-004 and TASK-005. Review it before I record G5.",
+      "expect": [
+        "read spec.md and design.md first",
+        "blocking:",
+        "non-blocking:",
+        "question:",
+        "evidence/g5-review.md"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "A reviewer left three blocking comments on my PR and I think two of them are wrong. How do I get this merged?",
+      "expect": [
+        "answer every comment",
+        "the person who raised it resolves it",
+        "escalate",
+        "kind: review",
+        "never merge past an unresolved blocker"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Review the code of conduct draft before it goes to the all-hands and suggest wording changes.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Work out our branching model and whether we squash or merge commits into main.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The release is tonight and one blocking comment is still open. I'll approve my own PR and we'll fix the comment next sprint.",
+      "expect": [
+        "never approve a change you wrote",
+        "review before merge",
+        "no merge-then-address",
+        "waiver with an expiry"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The diff had an API key in it. I pushed a follow-up commit deleting the line — can we resolve the thread?",
+      "expect": [
+        "still in the branch history",
+        "rotate the credential",
+        "blocking",
+        "incident"
+      ]
+    }
+  ]
+}
