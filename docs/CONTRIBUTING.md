@@ -199,8 +199,8 @@ fail on every skill in it.
 Every one of these, from the repo root:
 
 ```bash
-npm test                                       # expect 91 pass / 0 fail
-python3 -m unittest discover -s tests/lint     # expect OK (77 tests)
+npm test                                       # expect 0 fail
+python3 -m unittest discover -s tests/lint     # expect OK
 python3 scripts/validate_manifests.py .        # expect 0 finding(s)
 python3 scripts/lint_separation.py .           # expect 0 separation finding(s)
 python3 scripts/validate_skill_checks.py .     # expect 0 failing
@@ -208,8 +208,15 @@ python3 scripts/golden_path.py                 # expect golden path: OK
 python3 scripts/build_adapters.py .            # then: git diff --exit-code adapters
 ```
 
-CI runs exactly these, in this order, on Ubuntu with Node 20 and Python 3.11. The adapter
-diff is last and catches the most common omission.
+CI runs exactly these, in this order, on Node 20 and Python 3.11, on **both Ubuntu and
+macOS**. The adapter diff is last and catches the most common omission.
+
+The macOS leg is there because a skill's `## Validation` block is shell, and `awk`, `grep`
+and `sed` are not the same program on BSD userland as on GNU. Three defects of exactly that
+kind were found by hand during the v1 build — two GNU-only `\<`/`\>` word boundaries that
+macOS `awk` silently never matches, and a `grep -n` whose line-number prefix broke the
+filter reading its own output. A check that passes on Ubuntu and silently matches nothing
+on a maintainer's laptop is worse than a check that fails.
 
 **Never run a `navi-delivery` command with the repo root as its working directory.** It
 writes a `delivery/` tree there. Use a temp directory.

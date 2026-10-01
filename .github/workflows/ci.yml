@@ -6,7 +6,19 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # The team works on macOS and CI ran only on ubuntu, so every macOS-only
+    # defect had to be found by hand. Three were, during the v1 build: two
+    # GNU-only `\<`/`\>` word boundaries that BSD awk never matches, and a
+    # `grep -n` whose line-number prefix defeated the filter reading its own
+    # output. Skill Validation blocks are shell, so they are exactly the thing
+    # a second platform catches and a second Linux distribution would not.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform failing must not cancel the other: when a step is
+      # platform-dependent, the useful signal is which platforms it failed on.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,6 +58,9 @@ jobs:
       # check. A check that stays silent on the violation fails here. A skill
       # missing from scripts/skill_harness.yaml fails here too, so a new skill
       # cannot arrive with unexercised checks.
+      #
+      # This is the step the macOS leg exists for: the blocks are shell, and
+      # awk, grep and sed differ between BSD and GNU userland.
       - name: skill Validation blocks
         run: python3 scripts/validate_skill_checks.py
 
@@ -56,6 +71,9 @@ jobs:
       # deterministic and already tested, so a diff here means someone edited
       # generated output by hand; the fix is to change the generator or its
       # source, never the artifact.
+      #
+      # Run on both platforms: a generator that emits different bytes on macOS
+      # than on Linux is a real defect, and this is what would surface it.
       - name: adapters are up to date
         run: |
           python3 scripts/build_adapters.py .
