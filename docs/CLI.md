@@ -384,6 +384,43 @@ the *environment* says, not which adapter tree exists.
 
 ---
 
+## `telemetry <doctor|preview|export>`
+
+Sends the delivery record to an OTLP backend — one trace per change, one span per gate
+decision. Off until you run it: no other command makes a network call, and there is no
+background exporter.
+
+What it exports is the gate ledger, not any model call: this CLI makes none. The full
+contract — backends, variables, span model, attributes — is in
+[`TELEMETRY.md`](TELEMETRY.md); this is the command surface.
+
+```
+navi-delivery telemetry doctor
+navi-delivery telemetry preview [--change <slug>|--all] [--out <file>]
+navi-delivery telemetry export --backend <agentobs|opik|langsmith|otlp>
+                               [--change <slug>|--all] [--dry-run]
+```
+
+| Flag | Effect |
+|---|---|
+| `--backend <name>` | required for `export`; `agentobs`, `opik`, `langsmith` or `otlp` |
+| `--change <slug>` | export one named change instead of the one in `state.json` |
+| `--all` | every change the event log knows about — how a backfill is done |
+| `--out <file>` | `preview` only; writes the exact payload that would be sent |
+| `--dry-run` | `export` only; resolves, builds, reports, sends nothing, records nothing |
+
+| Exit | When |
+|---|---|
+| 0 | everything selected was sent, or there was nothing recorded to send |
+| 1 | a backend is unconfigured, a flag is missing, or a send was refused |
+
+`doctor` prints header **names** and never header values — the value is the credential.
+A real export writes `delivery/.adlc/telemetry.json` with the outcome and no credential,
+which is the local answer to "did it arrive?". A refused export changes nothing about
+the delivery record.
+
+---
+
 ## The framework's own checks
 
 Run from the framework repo root, not from a consuming repo.
@@ -447,6 +484,7 @@ visibly rather than skipped quietly.
 | `delivery/.adlc/state.json` | `init`, `propose`, `gate`, `archive` | `status`, `validate`, `gate`, `archive` |
 | `delivery/.adlc/events.jsonl` | `gate`, `archive` | nothing — it is the audit record |
 | `delivery/.adlc/waivers.md` | `gate --waive` | humans |
+| `delivery/.adlc/telemetry.json` | `telemetry export` | humans — what was sent, and whether it arrived |
 | `delivery/specs/**` | `archive` | `validate` |
 | `delivery/changes/<name>/**` | `propose`, you | `validate`, `archive` |
 

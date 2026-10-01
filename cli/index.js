@@ -12,6 +12,7 @@ const COMMANDS = {
   validate: () => require("./commands/validate"),
   archive: () => require("./commands/archive"),
   doctor: () => require("./commands/doctor"),
+  telemetry: () => require("./commands/telemetry"),
 };
 
 function main(argv) {
@@ -32,5 +33,18 @@ function main(argv) {
   }
 }
 
-if (require.main === module) process.exit(main(process.argv.slice(2)));
+// `telemetry export` is the one command that waits on a network round trip, so
+// main may return a promise. process.exit(promise) coerces to NaN and exits 0 —
+// a failed export would report success — so a thenable result is awaited here.
+if (require.main === module) {
+  const result = main(process.argv.slice(2));
+  if (result && typeof result.then === "function") {
+    result.then(
+      (code) => process.exit(code),
+      (err) => { process.stderr.write(`error: ${err.message}\n`); process.exit(1); },
+    );
+  } else {
+    process.exit(result);
+  }
+}
 module.exports = { main };

@@ -144,7 +144,7 @@ CI regenerates and diffs, so a hand edit fails the build.
 
 ---
 
-## The seven verbs
+## The eight verbs
 
 ```bash
 navi-delivery init                             # scaffold delivery/, copy in AGENTS.md, detect harness
@@ -155,9 +155,12 @@ navi-delivery gate <G#> --pass --evidence <p>  # record a gate decision
 navi-delivery archive <name>                   # fold the delta into specs/, emit the insight stub
                                                # (refuses on unsettled gates, stale artifacts or traceability findings)
 navi-delivery doctor                           # harness detection, native vs fallback capabilities
+navi-delivery telemetry export --backend <b>   # send the delivery record to AgentObs, Opik or LangSmith
 ```
 
 Full reference, including flags and exit codes, in [`docs/CLI.md`](docs/CLI.md).
+`telemetry` is off until you run it, exports the gate ledger rather than any model call,
+and has its own page: [`docs/TELEMETRY.md`](docs/TELEMETRY.md).
 
 ---
 
