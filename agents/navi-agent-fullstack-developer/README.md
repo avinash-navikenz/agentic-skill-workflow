@@ -19,7 +19,7 @@ Reads `changes/<name>/specs/<capability>/spec.md`, `design.md`, `decisions/ADR-#
 - ADLC phases: 5
 - Gates: `G5`
 
-## Skills it holds (14)
+## Skills it holds (18)
 
 It loads these rather than working from memory, and records which it used in the handoff envelope:
 
@@ -32,7 +32,11 @@ It loads these rather than working from memory, and records which it used in the
 - [API design](../../skills/software-development/navi-skill-api-design/README.md) — `software-development`
 - [Secure coding](../../skills/software-development/navi-skill-secure-coding/README.md) — `software-development`
 - [Code review](../../skills/software-development/navi-skill-code-review/README.md) — `software-development`
+- [Pull requests](../../skills/software-development/navi-skill-pull-requests/README.md) — `software-development`
 - [Version control workflow](../../skills/software-development/navi-skill-version-control-workflow/README.md) — `software-development`
+- [Commit craft](../../skills/software-development/navi-skill-commit-craft/README.md) — `software-development`
+- [Branching](../../skills/software-development/navi-skill-branching/README.md) — `software-development`
+- [Merge conflicts](../../skills/software-development/navi-skill-merge-conflicts/README.md) — `software-development`
 - [Dependency vulnerabilities](../../skills/security/navi-skill-dependency-vulnerabilities/README.md) — `security`
 - [Pipeline automation](../../skills/platform-devops/navi-skill-pipeline-automation/README.md) — `platform-devops`
 - [Test strategy](../../skills/quality-engineering/navi-skill-test-strategy/README.md) — `quality-engineering`

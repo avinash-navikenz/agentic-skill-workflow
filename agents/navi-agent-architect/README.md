@@ -19,7 +19,7 @@ Reads `changes/<name>/specs/<capability>/spec.md`, `proposal.md`, `project.md`, 
 - ADLC phases: 3, 9
 - Gates: `G3`, `G9`
 
-## Skills it holds (15)
+## Skills it holds (16)
 
 It loads these rather than working from memory, and records which it used in the handoff envelope:
 
@@ -37,6 +37,7 @@ It loads these rather than working from memory, and records which it used in the
 - [API design](../../skills/software-development/navi-skill-api-design/README.md) — `software-development`
 - [Threat modelling](../../skills/architecture/navi-skill-threat-modelling/README.md) — `architecture`
 - [Decision records](../../skills/architecture/navi-skill-decision-records/README.md) — `architecture`
+- [Knowledge publishing](../../skills/integration/navi-skill-knowledge-publishing/README.md) — `integration`
 - [Code review](../../skills/software-development/navi-skill-code-review/README.md) — `software-development`
 
 ## When it stops and asks a human

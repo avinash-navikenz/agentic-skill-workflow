@@ -19,7 +19,7 @@ Reads `project.md`, `specs/<capability>/spec.md`, `ops/slo.md`, `ops/postmortems
 - ADLC phases: 1, 9
 - Gates: `G1`, `G9`
 
-## Skills it holds (12)
+## Skills it holds (13)
 
 It loads these rather than working from memory, and records which it used in the handoff envelope:
 
@@ -34,6 +34,7 @@ It loads these rather than working from memory, and records which it used in the
 - [Handoff protocol](../../skills/lifecycle-method/navi-skill-handoff-protocol/README.md) — `lifecycle-method`
 - [Outcome and KPI definition](../../skills/product-management/navi-skill-outcome-and-kpi-definition/README.md) — `product-management`
 - [Backlog prioritisation](../../skills/product-management/navi-skill-backlog-prioritisation/README.md) — `product-management`
+- [Work item sync](../../skills/integration/navi-skill-work-item-sync/README.md) — `integration`
 - [Requirements elicitation](../../skills/business-analysis/navi-skill-requirements-elicitation/README.md) — `business-analysis`
 
 ## When it stops and asks a human

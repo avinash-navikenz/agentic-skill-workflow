@@ -19,7 +19,7 @@ Reads `design.md`, `tasks.md`, `ops/slo.md`, `ops/runbooks/`, `changes/<name>/sp
 - ADLC phases: 7, 8
 - Gates: `G7`, `G8`
 
-## Skills it holds (12)
+## Skills it holds (15)
 
 It loads these rather than working from memory, and records which it used in the handoff envelope:
 
@@ -29,11 +29,14 @@ It loads these rather than working from memory, and records which it used in the
 - [Waivers and deferrals](../../skills/lifecycle-method/navi-skill-waivers-and-deferrals/README.md) — `lifecycle-method`
 - [Handoff protocol](../../skills/lifecycle-method/navi-skill-handoff-protocol/README.md) — `lifecycle-method`
 - [Version control workflow](../../skills/software-development/navi-skill-version-control-workflow/README.md) — `software-development`
+- [Branching](../../skills/software-development/navi-skill-branching/README.md) — `software-development`
+- [Merge conflicts](../../skills/software-development/navi-skill-merge-conflicts/README.md) — `software-development`
 - [Dependency vulnerabilities](../../skills/security/navi-skill-dependency-vulnerabilities/README.md) — `security`
 - [Pipeline automation](../../skills/platform-devops/navi-skill-pipeline-automation/README.md) — `platform-devops`
 - [Progressive delivery](../../skills/platform-devops/navi-skill-progressive-delivery/README.md) — `platform-devops`
 - [Observability](../../skills/platform-devops/navi-skill-observability/README.md) — `platform-devops`
 - [Incident response](../../skills/platform-devops/navi-skill-incident-response/README.md) — `platform-devops`
+- [Knowledge publishing](../../skills/integration/navi-skill-knowledge-publishing/README.md) — `integration`
 - [Release readiness](../../skills/quality-engineering/navi-skill-release-readiness/README.md) — `quality-engineering`
 
 ## When it stops and asks a human

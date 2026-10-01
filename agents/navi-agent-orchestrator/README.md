@@ -19,7 +19,7 @@ Reads `.adlc/state.json`, `.adlc/events.jsonl`, `.adlc/waivers.md`, `proposal.md
 - ADLC phases: 1, 2, 3, 4, 5, 6, 7, 8, 9
 - Gates: none — it enforces the gates the persona agents own
 
-## Skills it holds (8)
+## Skills it holds (9)
 
 It loads these rather than working from memory, and records which it used in the handoff envelope:
 
@@ -31,6 +31,7 @@ It loads these rather than working from memory, and records which it used in the
 - [Traceability](../../skills/lifecycle-method/navi-skill-traceability/README.md) — `lifecycle-method`
 - [Change proposal](../../skills/spec-driven-development/navi-skill-change-proposal/README.md) — `spec-driven-development`
 - [Task decomposition](../../skills/spec-driven-development/navi-skill-task-decomposition/README.md) — `spec-driven-development`
+- [Work item sync](../../skills/integration/navi-skill-work-item-sync/README.md) — `integration`
 
 ## When it stops and asks a human
 
