@@ -136,7 +136,7 @@ navi-delivery validate --strict
 ```
 
 ```text
-0 finding(s) across 50 file(s)
+0 finding(s) across 56 file(s)
 
 0 separation finding(s)
 
@@ -150,8 +150,8 @@ validate: OK
 | The separation law (SEP1–SEP4) | `lint_separation.py` | **the framework tree** |
 | The ID chain (T0–T4) | `validate_traceability.py` | **your `delivery/`** |
 
-The first two always lint the installed framework, not your repo — which is why the output
-says `50 file(s)` whichever repo you run it in. Only traceability is about your change.
+The first two always lint the installed framework, not your repo — which is why the file
+count is the same whichever repo you run it in. Only traceability is about your change.
 
 `--strict` adds **T4**: a requirement that no task implements. Run it before G5.
 
@@ -423,11 +423,11 @@ the other means an agent acquired the skill without being recorded.
 ### Expected output
 
 ```text
-91 pass / 0 fail
-OK (77 tests)
-0 finding(s) across 50 file(s)
+125 pass / 0 fail
+OK (99 tests)
+0 finding(s) across 56 file(s)
 0 separation finding(s)
-38 harnessed · 1 declared-unharnessable · 0 failing  (of 39 skill(s) considered)
+44 harnessed · 1 declared-unharnessable · 0 failing  (of 45 skill(s) considered)
 golden path: OK
 ```
 

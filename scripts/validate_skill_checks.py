@@ -3,7 +3,7 @@
 
 Why this exists
 ---------------
-Each of the 39 skills ships a `## Validation` section: shell a team runs to
+Every skill ships a `## Validation` section: shell a team runs to
 check the artifact the skill's `## Template` describes. A content review found
 fourteen defects in those blocks, four of which *could not fail* — a `grep -n`
 whose line-number prefix satisfied the digit filter it was meant to apply, an

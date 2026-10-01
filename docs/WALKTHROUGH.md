@@ -162,7 +162,7 @@ navi-delivery validate --strict
 ```
 
 ```text
-0 finding(s) across 50 file(s)
+0 finding(s) across 56 file(s)
 
 0 separation finding(s)
 
@@ -170,10 +170,9 @@ navi-delivery validate --strict
 validate: OK
 ```
 
-Three checks ran. The first two — `0 finding(s) across 50 file(s)` and
-`0 separation finding(s)` — lint the **framework's own** agents and skills, not your repo;
-they report 50 files whichever repo you run them in. Only the third, traceability, is about
-your change.
+Three checks ran. The first two — the file count and `0 separation finding(s)` — lint the
+**framework's own** agents and skills, not your repo; they report the same file count
+whichever repo you run them in. Only the third, traceability, is about your change.
 
 `--strict` adds T4: *is any task actually building this requirement?* Run it before G5. A
 requirement with no task is scope that was specified and then quietly dropped.

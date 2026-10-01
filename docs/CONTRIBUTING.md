@@ -32,8 +32,8 @@ skills/<discipline>/navi-skill-<name>/
 ```
 
 The directory name and the `name:` in the frontmatter must match exactly (`M3`), and the
-name must start with `navi-skill-` (`M3`). The discipline folder must be one of the twelve
-that exist, or you are also adding a discipline — see below.
+name must start with `navi-skill-` (`M3`). The discipline folder must be one that already
+exists, or you are also adding a discipline — see below.
 
 ### 2. The frontmatter
 
