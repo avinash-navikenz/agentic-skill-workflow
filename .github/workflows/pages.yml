@@ -37,10 +37,16 @@ on:
   workflow_dispatch:
 
 concurrency:
-  # One deployment at a time, and never cancel one in flight: a half-uploaded
-  # site is worse than a late one.
+  # One deployment at a time, and the newest wins.
+  #
+  # Cancelling a deploy is normally wrong, but not here: every run checks out
+  # BOTH branches and assembles the same complete artifact, so a later run
+  # publishes a superset of what an earlier one would have. Pushing to main and
+  # dev seconds apart raced two runs for one Pages deployment and the loser
+  # failed the check — with no effect on the site, which is the worst kind of
+  # red: alarming and meaningless.
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 permissions:
   contents: read
