@@ -181,6 +181,26 @@ standard cannot close.
 
 ---
 
+## Connecting Jira, Azure DevOps and Confluence
+
+Two skills reach outside the repository — `navi-skill-work-item-sync` reads and writes
+work items, `navi-skill-knowledge-publishing` publishes pages. Both prefer an MCP server
+when the session has one connected, because the server holds the credential and no token
+reaches the shell or the transcript.
+
+[`config/mcp/`](config/mcp/README.md) holds ready-to-install connection files for
+Atlassian, Azure DevOps and GitHub, hosted and local routes for each, with every secret
+written as a `${NAME}` the harness expands. The CLI never reads them; your harness does.
+
+```bash
+cp config/mcp/github.mcp.json .mcp.json     # or: claude mcp add --transport http ...
+```
+
+`scripts/validate_mcp_configs.py` runs in CI and fails on a credential written into one
+of those files, so a pasted token is caught before it is committed, not after.
+
+---
+
 ## The two halves
 
 | | Agents — the thinking | Skills — the rules |

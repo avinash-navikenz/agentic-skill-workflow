@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ado": {
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp", "${ADO_ORGANIZATION}"],
+      "env": {
+        "ado_mcp_project": "${ADO_PROJECT}"
+      }
+    }
+  }
+}

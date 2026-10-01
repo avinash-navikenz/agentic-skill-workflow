@@ -84,9 +84,12 @@ boundary, and reports when the two sides disagree.
 13. Close with a reason; never delete. `gh issue close --reason "not planned"`, an Azure
     DevOps state of `Removed`, a Jira transition to a cancelled state. A deleted work item
     takes the discussion that justified it, and the audit trail at the gate, with it.
-14. Keep credentials out of the register and out of every sync script. `az devops login`,
-    `gh auth login` and a Jira API token read from the environment all work; a token pasted
-    into a markdown table is a token in the repository's history.
+14. Keep credentials out of the register and out of every sync script. Prefer an MCP server
+    for the tracker when the session has one connected: it holds the credential, so nothing is
+    typed into a shell or written into the register, and the tool list names its query and
+    update tools — read that list rather than assuming the names. Without one, `az devops
+    login`, `gh auth login` and a Jira API token read from the environment all work; a token
+    pasted into a markdown table is a token in the repository's history.
 15. Page every query, and never assume the first page is the answer. Jira's old
     `/rest/api/3/search` has been removed and returns 410 — use `POST /rest/api/3/search/jql`
     and follow `nextPageToken`; `gh` needs `--limit` because it stops at 30; `az boards query`
@@ -114,6 +117,7 @@ boundary, and reports when the two sides disagree.
 | A sync run failed halfway | Re-run it; every write looks the item up first |
 | The tracker holds an item with no task | Decide: add the task, or move it to the backlog |
 | An item is no longer wanted | Close it with a reason; never delete |
+| An MCP server for the tracker is connected | Sync through it; no token reaches the shell or the register |
 | A token is needed for the sync | `az devops login` / `gh auth login` / a Jira token from the environment |
 | A query returned exactly 30, or 100, rows | It was truncated; page it |
 | Jira's `/rest/api/3/search` returns 410 | `POST /rest/api/3/search/jql`, following `nextPageToken` |

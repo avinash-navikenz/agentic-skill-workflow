@@ -64,6 +64,12 @@ jobs:
       - name: skill Validation blocks
         run: python3 scripts/validate_skill_checks.py
 
+      # The MCP connection files are inputs a team edits and installs, so the
+      # failure they invite is a credential pasted where a ${NAME} reference
+      # belongs — and then committed. This step is what refuses that commit.
+      - name: MCP connection files carry no credentials
+        run: python3 scripts/validate_mcp_configs.py .
+
       - name: golden path across all four lanes
         run: python3 scripts/golden_path.py
 
