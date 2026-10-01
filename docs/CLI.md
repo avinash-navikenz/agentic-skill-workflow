@@ -396,14 +396,14 @@ contract — backends, variables, span model, attributes — is in
 
 ```
 navi-delivery telemetry doctor
-navi-delivery telemetry preview [--change <slug>|--all] [--out <file>]
+navi-delivery telemetry preview [--backend <name>] [--change <slug>|--all] [--out <file>]
 navi-delivery telemetry export --backend <agentobs|opik|langsmith|otlp>
                                [--change <slug>|--all] [--dry-run]
 ```
 
 | Flag | Effect |
 |---|---|
-| `--backend <name>` | required for `export`; `agentobs`, `opik`, `langsmith` or `otlp` |
+| `--backend <name>` | required for `export`; optional for `preview`, which then builds exactly that backend's payload; `agentobs`, `opik`, `langsmith` or `otlp` |
 | `--change <slug>` | export one named change instead of the one in `state.json` |
 | `--all` | every change the event log knows about — how a backfill is done |
 | `--out <file>` | `preview` only; writes the exact payload that would be sent |

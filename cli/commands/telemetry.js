@@ -22,6 +22,7 @@ const USAGE = `usage: navi-delivery telemetry <doctor|preview|export> [options]
 
   doctor                    which backends are configured, and what is missing
   preview [--out <file>]    build the payload and write it; sends nothing
+                            takes --backend too, to preview exactly that backend's payload
   export  --backend <name>  send it
 
   --backend <name>   ${Object.keys(BACKENDS).join(" | ")}
@@ -130,13 +131,25 @@ function preview(argv, cwd, env, emit) {
   const built = build(cwd, env, changes, events, state);
   const out = flagValue(argv, "--out");
 
+  // A preview that could differ from what export sends would be worth nothing,
+  // so when a backend is named the preview is built with that backend's own
+  // settings. All four currently agree on the span-kind attribute; this is what
+  // keeps the promise true if one ever stops agreeing.
+  const backendFlag = flagValue(argv, "--backend");
+  let opts = {};
+  if (backendFlag.value) {
+    try {
+      opts = { kindAttribute: resolve(backendFlag.value, env).kindAttribute };
+    } catch (e) { emit(e.message); return 1; }
+  }
+
   const payloads = [];
   for (const { change, folded } of built) {
     if (!folded) { emit(`${change}: no gate decisions recorded — nothing to export`); continue; }
     payloads.push({
       change, traceId: folded.traceId, spans: folded.spans.length,
       payload: toPayload(folded.traceId, folded.spans,
-                         { "navi.change": change, "navi.framework": "navi-delivery" }),
+                         { "navi.change": change, "navi.framework": "navi-delivery" }, opts),
     });
     emit(`${change}: trace ${folded.traceId}, ${folded.spans.length} span(s)`);
   }

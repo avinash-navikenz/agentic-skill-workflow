@@ -321,3 +321,12 @@ test("naming a change with nothing recorded says so rather than sending an empty
   assert.strictEqual(code, 0);
   assert.match(lines.join("\n"), /ghost: no gate decisions recorded/);
 });
+
+test("preview with a backend named builds that backend's payload, and rejects an unknown one", () => {
+  const root = repo();
+  const { lines, emit } = capture();
+  assert.strictEqual(telemetry.run(["preview", "--backend", "langsmith"], root, emit, {}), 0);
+  const bad = capture();
+  assert.strictEqual(telemetry.run(["preview", "--backend", "datadog"], root, bad.emit, {}), 1);
+  assert.match(bad.lines.join("\n"), /one of agentobs, opik, langsmith, otlp/);
+});
