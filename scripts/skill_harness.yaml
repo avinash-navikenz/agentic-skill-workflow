@@ -447,6 +447,7 @@ stage:
   - { skill: navi-skill-merge-conflicts, fence: 0, path: ".gitattributes" }
   - { skill: navi-skill-merge-conflicts, fence: 1, path: ".git/config", mode: append }
   - { skill: navi-skill-pull-requests, fence: 0, path: "delivery/changes/{change}/pull-request.md" }
+  - { skill: navi-skill-work-item-sync, fence: 0, path: "delivery/changes/{change}/work-items.md" }
   - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
   - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
   - { skill: navi-skill-handoff-protocol, fence: 0, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
@@ -891,3 +892,30 @@ skills:
         file: delivery/.adlc/waivers.md
         replace: ["| 2026-09-28 | theme-persistence | G6 |", "| 2026-09-28 | theme-persistence |"]
         expects: "malformed waiver row"
+
+  navi-skill-work-item-sync:
+    mutations:
+      - name: a task is added and never reaches the board
+        file: "delivery/changes/{change}/tasks.md"
+        append: "\n- [ ] **TASK-099** Backfill the preference for dormant accounts\n  - Implements: REQ-001\n"
+        expects: "task carries no work item — TASK-099"
+      - name: a work item is recorded against a task that does not exist
+        file: "delivery/changes/{change}/work-items.md"
+        replace: ["| TASK-022 | #4422", "| TASK-099 | #4422"]
+        expects: "work item recorded against a task tasks.md does not have — TASK-099"
+      - name: an id from another platform is recorded under this tracker
+        file: "delivery/changes/{change}/work-items.md"
+        replace: ["| TASK-003 | #4413", "| TASK-003 | SHELL-4413"]
+        expects: "is not a github issue reference"
+      - name: one work item is recorded against two tasks
+        file: "delivery/changes/{change}/work-items.md"
+        replace: ["| TASK-004 | #4414", "| TASK-004 | #4413"]
+        expects: "one work item is recorded against two tasks"
+      - name: a task is ticked while its work item is still open
+        file: "delivery/changes/{change}/tasks.md"
+        replace: ["- [ ] **TASK-001**", "- [x] **TASK-001**"]
+        expects: "is ticked in tasks.md while its work item is not closed"
+      - name: a credential is pasted into the register
+        file: "delivery/changes/{change}/work-items.md"
+        append: "\n**Token:** glpat-s3cr3tV4lu3AbCdEf12\n"
+        expects: "carries a credential"

@@ -1,0 +1,59 @@
+{
+  "skill": "navi-skill-work-item-sync",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "tasks.md for theme-persistence is finished and the team runs off GitHub Issues. Get the work items created and recorded.",
+      "expect": [
+        "gh issue create",
+        "work-items.md",
+        "up before creating it",
+        "--limit"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Move SHELL-4411 to In Progress for me.",
+      "expect": [
+        "transitions",
+        "transition id",
+        "/rest/api/3/issue/SHELL-4411/transitions",
+        "does not take a state"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The replica is out of sync with the source after last night's failed batch. Work out which work items in the queue were processed twice and reconcile the offsets.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Break REQ-004 into tasks that can each be finished in under a day, and order them by what depends on what.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Put AB#4414 in the pull request title so the board picks the link up — that's the most visible place.",
+      "expect": [
+        "a title creates no link",
+        "pull request description",
+        "commit message body"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The sync script timed out at task eleven. I'll just run the whole thing again.",
+      "expect": [
+        "up before creating it",
+        "second copy",
+        "idempotent"
+      ]
+    }
+  ]
+}

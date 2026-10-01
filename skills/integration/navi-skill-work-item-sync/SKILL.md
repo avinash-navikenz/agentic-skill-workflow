@@ -1,0 +1,380 @@
+---
+name: navi-skill-work-item-sync
+description: >
+  Use when work has to move between the framework's `delivery/` artefacts and a tracker —
+  creating work items from a change's tasks, keeping state and assignment in step, linking a
+  commit or pull request to an item, and reconciling the two sides when they have drifted.
+  Covers Azure DevOps Boards, GitHub Issues and Jira as three different systems rather than one,
+  because the id shape, the state model and the linking syntax differ in ways that matter.
+  Trigger phrases include: create work items from tasks, sync with Azure Boards, push tasks to
+  Jira, GitHub issues from tasks, link commit to work item, AB#, closing keyword, smart commit,
+  transition the issue, work item state, reconcile the board, tracker drift, az boards, gh issue,
+  Jira REST API.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: integration
+  lifecycle_phases: [1, 5, 9]
+  used_by_agents: [navi-agent-orchestrator, navi-agent-product-owner]
+  owner: avinash.negi@navikenz.com
+  tags: "work items, tracker, azure-devops, github, jira, traceability, reconciliation, integration"
+  model: sonnet
+---
+
+## When to use
+
+A change's `tasks.md` has been written and the team works off a board; a work item's state has
+moved and the change's artefacts have not; a commit or pull request has to point at the item it
+completes; or the two sides have been apart long enough that nobody is sure which is right.
+
+This skill owns only the **link** between the two systems and the direction each fact flows.
+`navi-skill-task-decomposition` owns what a task is and how a change is broken into tasks;
+`navi-skill-traceability` owns the `REQ → AC → TASK` chain inside `delivery/`;
+`navi-skill-backlog-prioritisation` owns what should be worked on next. None of those changes
+because a tracker exists, and this skill never proposes a task, re-orders a backlog or
+re-opens a traceability decision — it moves what those skills have already decided across a
+boundary, and reports when the two sides disagree.
+
+## Rules
+
+1. Split authority, and write each fact once. `tasks.md` owns whether a task exists, its
+   wording and its `Implements:` line. The tracker owns assignment, current state, and the
+   discussion. A fact written in both places is a fact that will disagree with itself by Friday.
+2. One task, one work item, recorded as one row in the change's `work-items.md`. A task with
+   no row is work the board cannot see; a row with no task is a work item nobody is accountable
+   for inside the change.
+3. Never create a work item for a task that has no `Implements:` line. The item would arrive
+   on the board with no requirement behind it, and `navi-skill-traceability` is the place that
+   is fixed, not the board.
+4. Declare the tracker once per change, by name — `azure-devops`, `github` or `jira`. The id
+   shape, the state model and the linking syntax all differ, so a register that does not say
+   which platform it is cannot be checked by anything.
+5. Record the id in the platform's own reference form: `AB#1234` for Azure Boards, `#4411` or
+   `owner/repo#4411` for GitHub, `SHELL-4411` for Jira. That is the form the commit and pull
+   request linking syntax expects, so recording it in any other shape guarantees a hand
+   translation at the moment it is used.
+6. Put the reference in the commit message body or the pull request **description**, never in
+   the title and never in a comment. Azure Boards creates no link from a title or a comment,
+   and GitHub's closing keywords are only honoured in the body of the pull request or of a
+   commit on it. The link that was typed into the title simply does not exist.
+7. Link by reference; never copy the task's prose into the work item. Put the path —
+   `delivery/changes/<name>/tasks.md#TASK-004` — in the item's description. Two copies of a
+   sentence diverge, and the board's copy is the one people read.
+8. Transition the item the way the platform transitions items, and never assume a state name
+   will be accepted. Azure DevOps takes a workflow state directly (`--state Active`). GitHub
+   has exactly two states, open and closed, and everything finer is a label. Jira takes
+   neither: it takes a transition **id**, which you read from
+   `GET /rest/api/3/issue/{key}/transitions` for that issue, because the available transitions
+   depend on the workflow and on where the issue currently is.
+9. Close from the merge, not by hand. A closing keyword in the pull request body — `Fixes
+   AB#4414`, `Closes #4414`, or the Jira integration's smart commit — closes the item when the
+   merge lands and never when the merge is reverted. A hand-closed item stays closed through
+   the revert.
+10. Make every write idempotent. Look the item up before creating it, and key the lookup on
+    something the register holds. A sync that failed halfway and is run again must not produce
+    a second copy of every item, which is what a blind `create` loop does.
+11. Never generate `tasks.md` from the tracker. The board is a view of the change; the change
+    is not a view of the board. Reversing it means a requirement can be deleted by somebody
+    closing a ticket.
+12. A work item that exists with no task is a decision, not a sync error. It is either a task
+    that belongs in `tasks.md` — add it there and re-link — or work that belongs in the
+    backlog. Do not resolve it by inventing a task to match.
+13. Close with a reason; never delete. `gh issue close --reason "not planned"`, an Azure
+    DevOps state of `Removed`, a Jira transition to a cancelled state. A deleted work item
+    takes the discussion that justified it, and the audit trail at the gate, with it.
+14. Keep credentials out of the register and out of every sync script. `az devops login`,
+    `gh auth login` and a Jira API token read from the environment all work; a token pasted
+    into a markdown table is a token in the repository's history.
+15. Page every query, and never assume the first page is the answer. Jira's old
+    `/rest/api/3/search` has been removed and returns 410 — use `POST /rest/api/3/search/jql`
+    and follow `nextPageToken`; `gh` needs `--limit` because it stops at 30; `az boards query`
+    returns a flat result that the WIQL itself must bound.
+16. Reconcile in both directions, on a schedule, and record the date. One direction finds
+    tasks that never reached the board; the other finds items nobody is tracking. Running only
+    the first is how a board quietly fills with work that no change owns.
+17. Reconcile before the gate, not after. The register is evidence at G5 and G9; a register
+    last touched three weeks ago is evidence of nothing.
+
+## Decision table
+
+| Observed condition | Required action |
+|---|---|
+| A change's `tasks.md` is complete and the team works off a board | Create one work item per task; write the register |
+| A task has no `Implements:` line | Fix the task first; do not create the item |
+| The register does not name a tracker | Add `**Tracker:**` — `azure-devops`, `github` or `jira` |
+| An id is recorded as a bare number | Record the platform's reference form: `AB#1234`, `#4411`, `SHELL-4411` |
+| A work item reference was typed into a pull request title | Move it into the description; a title creates no link |
+| The task's text was pasted into the work item | Replace it with the path to `tasks.md` |
+| An Azure DevOps item has to move state | `az boards work-item update --id <n> --state "<state>"` |
+| A GitHub issue has to show progress finer than open/closed | A label; there is no third state |
+| A Jira issue has to move state | `GET .../transitions` for that issue, then POST the transition **id** |
+| A task is finished | Let the merge close the item through the keyword in the pull request body |
+| A sync run failed halfway | Re-run it; every write looks the item up first |
+| The tracker holds an item with no task | Decide: add the task, or move it to the backlog |
+| An item is no longer wanted | Close it with a reason; never delete |
+| A token is needed for the sync | `az devops login` / `gh auth login` / a Jira token from the environment |
+| A query returned exactly 30, or 100, rows | It was truncated; page it |
+| Jira's `/rest/api/3/search` returns 410 | `POST /rest/api/3/search/jql`, following `nextPageToken` |
+| The two sides have not been compared this week | Reconcile both directions and record the date |
+| G5 or G9 is being recorded | Reconcile first; the register is the evidence |
+
+## Template
+
+The register, at `delivery/changes/<name>/work-items.md`:
+
+```markdown
+# Work items — theme-persistence
+
+**Tracker:** github
+**Project:** navikenz/shell
+**Reconciled:** 2026-09-28, both directions
+**Authority:** `tasks.md` owns whether a task exists, its wording and its `Implements:` line.
+The tracker owns assignment, state and the discussion. Neither is copied into the other; the
+table below is the only place the two are tied together.
+
+| Task | Work item | Tracker state | Note |
+|---|---|---|---|
+| TASK-001 | #4411 | open | |
+| TASK-002 | #4412 | open | |
+| TASK-003 | #4413 | open | |
+| TASK-004 | #4414 | open | |
+| TASK-005 | #4415 | open | |
+| TASK-006 | #4416 | open | |
+| TASK-007 | #4417 | open | |
+| TASK-008 | #4418 | open | |
+| TASK-020 | #4420 | open | |
+| TASK-021 | #4421 | open | |
+| TASK-022 | #4422 | open | |
+| TASK-023 | #4423 | open | |
+| TASK-024 | #4424 | open | |
+| TASK-025 | #4425 | open | |
+| TASK-026 | #4426 | open | |
+| TASK-027 | #4427 | open | |
+| TASK-034 | #4434 | open | blocked until the flag has run its week in production |
+```
+
+Creating the items, and reading the board back — GitHub:
+
+```bash
+CHANGE=theme-persistence
+REPO=navikenz/shell
+
+# Create one issue per task, keyed on the task id so a re-run finds it instead
+# of making a second copy.
+grep -oE '\*\*TASK-[0-9]{3,}\*\*' "delivery/changes/$CHANGE/tasks.md" | tr -d '*' | sort -u \
+| while read -r task; do
+    existing=$(gh issue list --repo "$REPO" --state all --search "$task in:title" \
+                 --json number,title --jq ".[] | select(.title | startswith(\"$task\")) | .number")
+    [ -n "$existing" ] && { echo "$task already #$existing"; continue; }
+    title=$(grep -F "**$task**" "delivery/changes/$CHANGE/tasks.md" | sed "s/.*\*\*$task\*\* //")
+    gh issue create --repo "$REPO" --title "$task $title" \
+      --label "change:$CHANGE" \
+      --body "Task: \`delivery/changes/$CHANGE/tasks.md\` → $task
+The task's wording and its Implements line live there and are not copied here."
+  done
+
+# Read the board back for the reconciliation. --limit, because the default is 30.
+gh issue list --repo "$REPO" --label "change:$CHANGE" --state all --limit 200 \
+  --json number,title,state --jq '.[] | "#\(.number)\t\(.state)\t\(.title)"'
+
+# Close from the merge, not by hand: the keyword goes in the pull request body.
+gh pr create --title "theme-persistence: TASK-004, TASK-005" \
+  --body "Change: delivery/changes/$CHANGE
+
+Closes #4414
+Closes #4415"
+```
+
+The same two operations on Azure DevOps Boards and on Jira:
+
+```bash
+# --- Azure DevOps -----------------------------------------------------------
+# Create. The reference form is AB#<id>, and the id comes back as `id`.
+az boards work-item create --type Task --title "TASK-004 Degrade to the light theme" \
+  --org https://dev.azure.com/navikenz --project shell \
+  --fields "System.Description=delivery/changes/theme-persistence/tasks.md -> TASK-004" \
+  --query id -o tsv
+
+# Move state. Azure DevOps takes the workflow state by name.
+az boards work-item update --id 4414 --state "Active" --org https://dev.azure.com/navikenz
+
+# Read the board back. The WIQL bounds the result; there is no --limit.
+az boards query --org https://dev.azure.com/navikenz --project shell \
+  --wiql "SELECT [System.Id], [System.State], [System.Title] FROM WorkItems \
+          WHERE [System.TeamProject] = 'shell' AND [System.Tags] CONTAINS 'theme-persistence'"
+
+# Link a pull request to its items — and note that AB#4414 in a commit message
+# body or a pull request description also links, while the same text in a title
+# or a comment does not.
+az repos pr work-item add --id 482 --work-items 4414 4415 \
+  --org https://dev.azure.com/navikenz
+
+# --- Jira -------------------------------------------------------------------
+# Create. The key comes back in .key, e.g. SHELL-4411.
+curl -sS -u "$JIRA_USER:$JIRA_API_TOKEN" -X POST \
+  -H "Content-Type: application/json" \
+  "$JIRA_SITE/rest/api/3/issue" \
+  -d '{"fields":{"project":{"key":"SHELL"},"issuetype":{"name":"Task"},
+       "summary":"TASK-004 Degrade to the light theme"}}' | jq -r .key
+
+# Move state. Jira does not accept a state name: read this issue's transitions,
+# which depend on its workflow and on where it is now, and post the id.
+curl -sS -u "$JIRA_USER:$JIRA_API_TOKEN" \
+  "$JIRA_SITE/rest/api/3/issue/SHELL-4411/transitions" | jq -r '.transitions[] | "\(.id)\t\(.name)"'
+curl -sS -u "$JIRA_USER:$JIRA_API_TOKEN" -X POST \
+  -H "Content-Type: application/json" \
+  "$JIRA_SITE/rest/api/3/issue/SHELL-4411/transitions" -d '{"transition":{"id":"21"}}'
+
+# Read the board back. /rest/api/3/search was removed and returns 410.
+curl -sS -u "$JIRA_USER:$JIRA_API_TOKEN" -X POST \
+  -H "Content-Type: application/json" \
+  "$JIRA_SITE/rest/api/3/search/jql" \
+  -d '{"jql":"project = SHELL AND labels = theme-persistence","maxResults":100,
+       "fields":["summary","status"]}' | jq -r '.issues[] | "\(.key)\t\(.fields.status.name)"'
+```
+
+The reconciliation, run before the gate:
+
+```bash
+CHANGE=theme-persistence
+REG="delivery/changes/$CHANGE/work-items.md"
+
+comm -23 <(grep -oE '\*\*TASK-[0-9]{3,}\*\*' "delivery/changes/$CHANGE/tasks.md" | tr -d '*' | sort -u) \
+         <(grep -oE '^\|[[:space:]]*TASK-[0-9]{3,}' "$REG" | grep -oE 'TASK-[0-9]{3,}' | sort -u)
+#   -> tasks the board has never seen
+
+comm -13 <(grep -oE '\*\*TASK-[0-9]{3,}\*\*' "delivery/changes/$CHANGE/tasks.md" | tr -d '*' | sort -u) \
+         <(grep -oE '^\|[[:space:]]*TASK-[0-9]{3,}' "$REG" | grep -oE 'TASK-[0-9]{3,}' | sort -u)
+#   -> rows pointing at tasks that no longer exist
+
+# Items on the board, under this change's label, that the register does not hold.
+gh issue list --repo navikenz/shell --label "change:$CHANGE" --state all --limit 200 \
+  --json number --jq '.[] | "#\(.number)"' | sort > /tmp/board.txt
+grep -oE '#[0-9]+' "$REG" | sort -u > /tmp/register.txt
+comm -23 /tmp/board.txt /tmp/register.txt
+#   -> work items nobody in this change is accountable for
+```
+
+## Checklist
+
+- [ ] Every task in `tasks.md` has exactly one row in `work-items.md`
+- [ ] Every row names a task that `tasks.md` still has
+- [ ] No work item was created for a task with no `Implements:` line
+- [ ] The register names the tracker: `azure-devops`, `github` or `jira`
+- [ ] Every id is in the platform's reference form, not a bare number
+- [ ] No two tasks share a work item, and no two rows share an id
+- [ ] Every reference sits in a commit body or a pull request description, never a title
+- [ ] No work item repeats the task's prose; each points at the path instead
+- [ ] State was moved by the platform's own mechanism — a Jira move used a transition id
+- [ ] Finished tasks are closed by the merge's keyword, not by hand
+- [ ] Every sync write looks the item up before creating it
+- [ ] No work item was deleted; unwanted ones are closed with a reason
+- [ ] No credential appears in the register or in any sync script
+- [ ] Every query was paged, and no result was taken at its default limit
+- [ ] Both directions were reconciled, and the date is in the register
+- [ ] A task ticked in `tasks.md` has a work item that is closed
+
+## Anti-patterns
+
+**Two sources of truth.** The task's wording lives in `tasks.md` and in the work item's
+description, and somebody edits the board because it is quicker. A fortnight later the
+acceptance criteria are being argued from a copy nobody updated. Put the path in the item and
+the words in one place.
+
+**The bare number.** `| TASK-004 | 4414 |`. Nothing on any platform links from `4414`: Azure
+Boards wants `AB#4414`, GitHub wants `#4414`, Jira wants `SHELL-4414`. Every use of that row
+now needs a human to remember which platform this project is on.
+
+**The reference in the title.** `AB#4414` typed into the pull request title, because that is
+where it is most visible. Azure Boards creates no link from a title, so the work item shows no
+pull request, the policy that requires a linked item does not pass, and everyone looks for the
+outage in the integration.
+
+**One state model for three platforms.** A sync script that sets `state: "In Progress"` on all
+three. Azure DevOps accepts it; GitHub silently has no such concept and the issue stays open;
+Jira rejects it because Jira does not take a state at all, only a transition id it will give
+you if you ask for this issue's transitions. Write three code paths, not one average.
+
+**The blind create loop.** The sync timed out at task eleven of seventeen, so it was run again.
+There are now two issues for each of the first eleven tasks, both open, both labelled, and the
+register points at the first set. Look the item up before creating it.
+
+**Generating `tasks.md` from the board.** The board is treated as the master and the file is
+regenerated from it nightly. Somebody closes a stale ticket and a task that implements REQ-003
+disappears from the change, taking its traceability with it. The board is a view.
+
+**The deleted work item.** A duplicate was tidied away with a delete. The duplicate carried
+the thread where the approach was argued out, and the gate evidence now points at a 404. Close
+with a reason.
+
+**The first page.** `gh issue list` returned 30 issues and the reconciliation declared the
+board clean. There were 94. Every query on every platform needs its paging written, not assumed.
+
+**The register nobody reconciled.** It was written the day the change started and never again.
+Six tasks were added since, three items were closed on the board, and the file at the gate
+describes a change that no longer exists. Reconcile both directions, and date it.
+
+## Validation
+
+```bash
+for dir in delivery/changes/*/; do
+  chg=${dir#delivery/changes/}; chg=${chg%/}
+  [ "$chg" = "archive" ] && continue
+  [ -f "${dir}tasks.md" ] || continue
+  reg="${dir}work-items.md"
+  if [ ! -f "$reg" ]; then
+    echo "$chg has tasks.md but no work-items.md — nothing records which tracker item each task is"
+    continue
+  fi
+  tracker=$(sed -n 's/^\*\*Tracker:\*\*[[:space:]]*//p' "$reg" | head -1)
+  case "$tracker" in
+    azure-devops|github|jira) ;;
+    *) echo "$reg declares tracker '$tracker' — it must be azure-devops, github or jira, because the id shape and the state model differ per platform" ;;
+  esac
+
+  comm -23 <(grep -oE '\*\*TASK-[0-9]{3,}\*\*' "${dir}tasks.md" | tr -d '*' | sort -u) \
+           <(grep -oE '^\|[[:space:]]*TASK-[0-9]{3,}' "$reg" | grep -oE 'TASK-[0-9]{3,}' | sort -u) \
+    | sed "s|^|$chg: task carries no work item — |"
+  comm -13 <(grep -oE '\*\*TASK-[0-9]{3,}\*\*' "${dir}tasks.md" | tr -d '*' | sort -u) \
+           <(grep -oE '^\|[[:space:]]*TASK-[0-9]{3,}' "$reg" | grep -oE 'TASK-[0-9]{3,}' | sort -u) \
+    | sed "s|^|$chg: work item recorded against a task tasks.md does not have — |"
+
+  sed -n 's/^|[[:space:]]*\(TASK-[0-9]\{3,\}\)[[:space:]]*|[[:space:]]*\([^|]*[^| ]\)[[:space:]]*|.*/\1 \2/p' "$reg" \
+  | while read -r task id; do
+      case "$tracker" in
+        github)
+          echo "$id" | grep -qE '^(#[0-9]+|[A-Za-z0-9._-]+/[A-Za-z0-9._-]+#[0-9]+)$' \
+            || echo "$chg: $task is recorded as '$id', which is not a github issue reference (#123 or owner/repo#123)" ;;
+        azure-devops)
+          echo "$id" | grep -qE '^AB#[0-9]+$' \
+            || echo "$chg: $task is recorded as '$id', which is not an Azure Boards reference (AB#123)" ;;
+        jira)
+          echo "$id" | grep -qE '^[A-Z][A-Z0-9]+-[0-9]+$' \
+            || echo "$chg: $task is recorded as '$id', which is not a Jira issue key (PROJ-123)" ;;
+      esac
+    done
+
+  sed -n 's/^|[[:space:]]*TASK-[0-9]\{3,\}[[:space:]]*|[[:space:]]*\([^|]*[^| ]\)[[:space:]]*|.*/\1/p' "$reg" \
+    | sort | uniq -d | sed "s|^|$chg: one work item is recorded against two tasks — |"
+
+  grep -E '^- \[x\][[:space:]]+\*\*TASK-' "${dir}tasks.md" | grep -oE 'TASK-[0-9]{3,}' | while read -r t; do
+    grep -E "^\|[[:space:]]*$t[[:space:]]*\|" "$reg" \
+      | grep -qiE '\|[[:space:]]*(closed|done|resolved|completed)[[:space:]]*\|' \
+      || echo "$chg: $t is ticked in tasks.md while its work item is not closed — the two sides disagree about finished work"
+  done
+
+  grep -nEi '(token|password|secret|api[_-]?key)[^A-Za-z0-9]{1,4}[A-Za-z0-9/+_=-]{16,}' "$reg" \
+    | sed "s|^|$reg carries a credential — rotate it and use the platform's credential helper: |"
+  grep -n '<[a-z][a-z0-9 _-]*>' "$reg" \
+    | sed "s|^|$reg has an unfilled placeholder — |"
+done
+```
+
+Each command prints nothing when the rule holds. What this block cannot reach is the tracker
+itself: every check above reads the register and `tasks.md`, so a register that is internally
+consistent and three weeks out of date passes it completely. The third fence in the Template is
+the half that has to run against the live board, and it needs credentials, which is exactly why
+it belongs in the reconciliation that is run before the gate rather than in a check anyone can
+run offline. The `**Reconciled:**` date is the only evidence that it was.
