@@ -1,0 +1,58 @@
+{
+  "skill": "navi-skill-knowledge-publishing",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "ADR-007 is Accepted. The platform team never clones this repo and they need to read it. Get it onto Confluence.",
+      "expect": [
+        "delivery/published.md",
+        "version.number",
+        "storage",
+        "published from"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Someone is quoting the ADR page on the wiki at me. Is it still what the repository says?",
+      "expect": [
+        "git log -1 --format=%h",
+        "Published from",
+        "republish"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Publish version 2.4.0 of the shell package to the internal npm registry and tag the release.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "We're choosing between the session payload and a dedicated preferences service. Write the decision up, with the alternatives we rejected and why.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Somebody fixed a typo straight on the Confluence page. Leave it — it's one word and the page is right now.",
+      "expect": [
+        "nobody can diff",
+        "in `delivery/` and republish",
+        "republish"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The 409 on the page update is maddening. Drop version from the body and it goes through.",
+      "expect": [
+        "current version plus one",
+        "overwrote",
+        "token is the safety"
+      ]
+    }
+  ]
+}

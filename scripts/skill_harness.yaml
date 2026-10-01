@@ -448,6 +448,7 @@ stage:
   - { skill: navi-skill-merge-conflicts, fence: 1, path: ".git/config", mode: append }
   - { skill: navi-skill-pull-requests, fence: 0, path: "delivery/changes/{change}/pull-request.md" }
   - { skill: navi-skill-work-item-sync, fence: 0, path: "delivery/changes/{change}/work-items.md" }
+  - { skill: navi-skill-knowledge-publishing, fence: 0, path: "delivery/published.md" }
   - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
   - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
   - { skill: navi-skill-handoff-protocol, fence: 0, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
@@ -626,6 +627,35 @@ skills:
         file: "delivery/changes/{change}/design.md"
         replace: ["  - duplicate → the call is a read;", "  - repeated → the call is a read;"]
         expects: "no behaviour stated for 'duplicate'"
+
+  navi-skill-knowledge-publishing:
+    mutations:
+      - name: an Accepted decision record is published nowhere
+        file: "delivery/published.md"
+        delete_line: "ADR-014"
+        expects: "delivery/decisions/ADR-014.md is Accepted and no row"
+      - name: two sources are published onto one page
+        file: "delivery/published.md"
+        replace: ["| 884736002 |", "| 884736001 |"]
+        expects: "publishes two different sources onto one page"
+      - name: a page outlives the artefact it was published from
+        file: "delivery/published.md"
+        replace:
+          - "delivery/ops/postmortems/theme-persistence.md"
+          - "delivery/ops/postmortems/theme-ranker.md"
+        expects: "which this repository does not have"
+      - name: a publication names a commit this repository has never had
+        file: "delivery/published.md"
+        append: "| delivery/decisions/ADR-009.md | ENG/Archive/ADR-009 | 884736099 | 1 | `0000000` | 2026-09-29 |\n"
+        expects: "published from 0000000, which is not a commit in this repository"
+      - name: a Confluence page is addressed by something that is not a version number
+        file: "delivery/published.md"
+        replace: ["| 884736020 | 7 |", "| 884736020 | latest |"]
+        expects: "records version 'latest'"
+      - name: a credential is written into the register
+        file: "delivery/published.md"
+        append: "\n**Token:** ATATT3xFfGF0abcdef1234567890zz\n"
+        expects: "carries a credential"
 
   navi-skill-lane-selection:
     informational:
