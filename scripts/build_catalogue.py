@@ -441,6 +441,16 @@ README_STAMP = (
     "inside the NOTES block, which regeneration preserves."
 )
 
+# Both local install routes run scripts and copy files FROM a checkout, so they
+# need one. The marketplace route deliberately does not, which is most of why it
+# is the preferred one — and saying both plainly is cheaper than a reader
+# discovering the difference by running a command that is not there.
+CLONE_STEPS = [
+    "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+    "cd agentic-skill-workflow",
+]
+
+
 def install_framework(counts: dict) -> dict:
     """The whole-framework install block every README and the page carry.
 
@@ -458,6 +468,7 @@ def install_framework(counts: dict) -> dict:
             "in any harness — do not install the repo root."
         ),
         "steps": [
+            *CLONE_STEPS,
             "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
             "./install.sh --yes                    "
             f"# symlinks {counts['skills']} skills + {counts['agents']} agents into ~/.claude",
@@ -560,6 +571,7 @@ def _skill_readme(s: dict, agents_by_name: dict) -> dict:
         },
         "install_alone": {
             "steps": [
+                *CLONE_STEPS,
                 "python3 scripts/build_adapters.py .",
                 f"cp -R {adapter_dir} ~/.claude/skills/",
             ],
@@ -607,6 +619,7 @@ def _agent_readme(a: dict, skills_by_name: dict, agents_by_name: dict) -> dict:
         },
         "install_alone": {
             "steps": [
+                *CLONE_STEPS,
                 "python3 scripts/build_adapters.py .",
                 f"cp adapters/claude-code/agents/{a['name']}.md ~/.claude/agents/",
             ],

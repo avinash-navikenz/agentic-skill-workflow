@@ -59,6 +59,8 @@ QA Engineer, Architect, DevOps Engineer, Orchestrator.
 ### This agent on its own
 
 ```sh
+git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
+cd agentic-skill-workflow
 python3 scripts/build_adapters.py .
 cp adapters/claude-code/agents/navi-agent-fullstack-developer.md ~/.claude/agents/
 ```
@@ -70,6 +72,8 @@ Installed on its own, this agent arrives **without the skills it holds**. It is 
 `adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.
 
 ```sh
+git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
+cd agentic-skill-workflow
 python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first
 ./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude
 ```

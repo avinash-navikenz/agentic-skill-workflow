@@ -871,7 +871,9 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <div class="two">
       <div class="half b">
         <h3>One skill on its own</h3>
-        <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .
+        <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
+<span class="p">$ </span>cd agentic-skill-workflow
+<span class="p">$ </span>python3 scripts/build_adapters.py .
 <span class="p">$ </span>cp -R adapters/claude-code/skills/navi-skill-&lt;name&gt; ~/.claude/skills/</div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
         <div class="warnline">
           <p>A skill installed alone has <strong>no agent holding it</strong>. Nothing in the
@@ -946,14 +948,18 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <p class="small"><code>install.sh</code> installs the same <code>adapters/claude-code/</code>
     tree into your Claude directory — symlinks by default, so edits to the repo take effect live.
     That is what you want when you are changing the framework rather than using it, and it is the
-    form CI runs.</p>
+    form CI runs. <strong>It needs a checkout</strong>, as does the single-item copy above: both
+    run scripts and copy files out of the repository. The marketplace route above needs none,
+    which is most of why it is the preferred one.</p>
     <div class="term">
       <div class="term-head"><span class="dot"></span>./install.sh --yes<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
-<pre><span class="c">$ ./install.sh --yes</span>
+<pre><span class="c">$ git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
+$ cd agentic-skill-workflow
+$ ./install.sh --yes</span>
 <span class="o">navi-delivery installer (symlink)
-  45 skills -&gt; /Users/you/.claude/skills
+  50 skills -&gt; /Users/you/.claude/skills
   11 agents -&gt; /Users/you/.claude/agents
-Installed 45 skill(s) and 11 agent(s).
+Installed 50 skill(s) and 11 agent(s).
 
 Next:
   cd /path/to/your-repo
@@ -983,7 +989,9 @@ Next:
     part of the plugin, so this step wants the clone either way.</p>
     <div class="term">
       <div class="term-head"><span class="dot"></span>the CLI<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
-<pre><span class="c">$ npm install --global .</span>
+<pre><span class="c">$ git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
+$ cd agentic-skill-workflow
+$ npm install --global .</span>
 <span class="dim"># or skip it entirely — the CLI is a plain Node script and runs by path:</span>
 <span class="c">$ node /path/to/navi-delivery/cli/index.js init</span>
 </pre>
@@ -2294,6 +2302,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-architect.md ~/.claude/agents/"
      ],
@@ -2432,6 +2442,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-business-analyst.md ~/.claude/agents/"
      ],
@@ -2570,6 +2582,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-data-engineer.md ~/.claude/agents/"
      ],
@@ -2782,6 +2796,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-devops-engineer.md ~/.claude/agents/"
      ],
@@ -2976,6 +2992,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-fullstack-developer.md ~/.claude/agents/"
      ],
@@ -3126,6 +3144,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-machine-learning-engineer.md ~/.claude/agents/"
      ],
@@ -3301,6 +3321,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-mlops-engineer.md ~/.claude/agents/"
      ],
@@ -3477,6 +3499,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-orchestrator.md ~/.claude/agents/"
      ],
@@ -3641,6 +3665,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-product-owner.md ~/.claude/agents/"
      ],
@@ -3792,6 +3818,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-qa-engineer.md ~/.claude/agents/"
      ],
@@ -3974,6 +4002,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp adapters/claude-code/agents/navi-agent-security-engineer.md ~/.claude/agents/"
      ],
@@ -4049,6 +4079,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-decision-records ~/.claude/skills/"
      ],
@@ -4122,6 +4154,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-interface-contracts ~/.claude/skills/"
      ],
@@ -4196,6 +4230,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-quality-attributes ~/.claude/skills/"
      ],
@@ -4271,6 +4307,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-threat-modelling ~/.claude/skills/"
      ],
@@ -4354,6 +4392,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-non-functional-requirements ~/.claude/skills/"
      ],
@@ -4432,6 +4472,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-requirements-elicitation ~/.claude/skills/"
      ],
@@ -4507,6 +4549,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-data-contracts ~/.claude/skills/"
      ],
@@ -4589,6 +4633,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-data-quality ~/.claude/skills/"
      ],
@@ -4659,6 +4705,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-pipeline-design ~/.claude/skills/"
      ],
@@ -4740,6 +4788,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-knowledge-publishing ~/.claude/skills/"
      ],
@@ -4816,6 +4866,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-work-item-sync ~/.claude/skills/"
      ],
@@ -4987,6 +5039,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-handoff-protocol ~/.claude/skills/"
      ],
@@ -5114,6 +5168,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-human-checkpoints ~/.claude/skills/"
      ],
@@ -5205,6 +5261,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-lane-selection ~/.claude/skills/"
      ],
@@ -5382,6 +5440,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-phase-gate-protocol ~/.claude/skills/"
      ],
@@ -5554,6 +5614,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-traceability ~/.claude/skills/"
      ],
@@ -5676,6 +5738,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-waivers-and-deferrals ~/.claude/skills/"
      ],
@@ -5759,6 +5823,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-evaluation-design ~/.claude/skills/"
      ],
@@ -5840,6 +5906,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-model-cards ~/.claude/skills/"
      ],
@@ -5906,6 +5974,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-problem-framing ~/.claude/skills/"
      ],
@@ -5987,6 +6057,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-drift-monitoring ~/.claude/skills/"
      ],
@@ -6054,6 +6126,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-model-registry-and-promotion ~/.claude/skills/"
      ],
@@ -6129,6 +6203,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-agent-observability ~/.claude/skills/"
      ],
@@ -6204,6 +6280,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-azure-deployment-safety ~/.claude/skills/"
      ],
@@ -6292,6 +6370,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-azure-identity-and-secrets ~/.claude/skills/"
      ],
@@ -6364,6 +6444,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-azure-landing-zone ~/.claude/skills/"
      ],
@@ -6436,6 +6518,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-azure-pipelines ~/.claude/skills/"
      ],
@@ -6519,6 +6603,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-incident-response ~/.claude/skills/"
      ],
@@ -6599,6 +6685,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-observability ~/.claude/skills/"
      ],
@@ -6679,6 +6767,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-pipeline-automation ~/.claude/skills/"
      ],
@@ -6758,6 +6848,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-progressive-delivery ~/.claude/skills/"
      ],
@@ -6826,6 +6918,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-backlog-prioritisation ~/.claude/skills/"
      ],
@@ -6907,6 +7001,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-outcome-and-kpi-definition ~/.claude/skills/"
      ],
@@ -6985,6 +7081,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-release-readiness ~/.claude/skills/"
      ],
@@ -7061,6 +7159,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-test-design ~/.claude/skills/"
      ],
@@ -7135,6 +7235,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-test-strategy ~/.claude/skills/"
      ],
@@ -7227,6 +7329,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-dependency-vulnerabilities ~/.claude/skills/"
      ],
@@ -7303,6 +7407,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-api-design ~/.claude/skills/"
      ],
@@ -7381,6 +7487,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-branching ~/.claude/skills/"
      ],
@@ -7454,6 +7562,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-code-review ~/.claude/skills/"
      ],
@@ -7520,6 +7630,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-commit-craft ~/.claude/skills/"
      ],
@@ -7601,6 +7713,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-merge-conflicts ~/.claude/skills/"
      ],
@@ -7663,6 +7777,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-pull-requests ~/.claude/skills/"
      ],
@@ -7740,6 +7856,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-secure-coding ~/.claude/skills/"
      ],
@@ -7799,6 +7917,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-test-driven-development ~/.claude/skills/"
      ],
@@ -7876,6 +7996,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-version-control-workflow ~/.claude/skills/"
      ],
@@ -7955,6 +8077,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-acceptance-criteria ~/.claude/skills/"
      ],
@@ -8046,6 +8170,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-change-proposal ~/.claude/skills/"
      ],
@@ -8154,6 +8280,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-spec-authoring ~/.claude/skills/"
      ],
@@ -8253,6 +8381,8 @@ lane:   standard
     },
     "install_alone": {
      "steps": [
+      "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+      "cd agentic-skill-workflow",
       "python3 scripts/build_adapters.py .",
       "cp -R adapters/claude-code/skills/navi-skill-task-decomposition ~/.claude/skills/"
      ],
@@ -8354,6 +8484,8 @@ lane:   standard
  "install_framework": {
   "intro": "`adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.",
   "steps": [
+   "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
+   "cd agentic-skill-workflow",
    "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
    "./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude"
   ],
