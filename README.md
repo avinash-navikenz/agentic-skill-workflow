@@ -3,9 +3,10 @@
 **An agentic SDLC framework — Plan to Monitor, in any harness.**
 Agents hold the judgment. Skills hold the rules.
 
-Eleven persona agents carry each discipline's judgment. Thirty-nine skills across twelve
-disciplines carry each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
-your repo and records what actually happened at each of nine gates.
+The framework ships 11 persona agents carrying each discipline's judgment, and 45
+skills across 13 disciplines carrying each discipline's rules. A seven-verb CLI
+scaffolds the lifecycle into your repo and records what actually happened at each of
+nine gates.
 
 | Doc | What it covers |
 |---|---|
@@ -29,7 +30,7 @@ cd navi-delivery
 
 # 1. Install the agents and skills into your Claude directory.
 ./install.sh --yes
-# => Installed 39 skill(s) and 11 agent(s).
+# => Installed 45 skill(s) and 11 agent(s).
 
 # 2. Put the CLI on your PATH.
 npm install --global .
@@ -234,7 +235,7 @@ These are real, recorded, and worth knowing before you meet them:
   It is declared unharnessable, deliberately and visibly, rather than stubbed.
 - **`validate` lints the framework tree, not only your repo.** `validate_manifests.py` and
   `lint_separation.py` always run against the installed framework; only the traceability
-  check runs against your `delivery/`. So `validate` output mentions 50 framework files
+  check runs against your `delivery/`. So `validate` output mentions every framework file
   whichever repo you run it in.
 
 ---
@@ -244,16 +245,27 @@ These are real, recorded, and worth knowing before you meet them:
 Everything CI runs, runnable locally:
 
 ```bash
-npm test                                       # 91 tests
-python3 -m unittest discover -s tests/lint     # 77 tests
+npm test                                       # the CLI — every verb, end to end
+python3 -m unittest discover -s tests/lint     # the linters, the builders, traceability
 python3 scripts/validate_manifests.py .        # frontmatter, naming, referential integrity
 python3 scripts/lint_separation.py .           # the separation law
 python3 scripts/validate_skill_checks.py .     # every skill's own Validation block
 python3 scripts/golden_path.py                 # a toy change through all four lanes
+
+# adapters/, docs/index.html and every README.md beside a SKILL.md are generated;
+# regenerate them and nothing should have changed.
+python3 scripts/build_adapters.py .
+python3 scripts/build_catalogue.py . --readmes --inject
+git diff --exit-code adapters templates/delivery/AGENTS.md docs/index.html skills agents
 ```
 
-Expected: `91 pass / 0 fail`, `OK (77)`, `0 finding(s)`, `0 separation finding(s)`,
-`38 harnessed · 1 declared-unharnessable · 0 failing`, `golden path: OK`.
+Expected: `0 fail`, `OK`, `0 finding(s)`, `0 separation finding(s)`,
+`0 failing`, `golden path: OK`, and an empty diff.
+
+No test total is quoted here on purpose. A figure that has to be hand-edited after
+every test is a drift source — these two were thirty-four and twenty-two tests behind
+by the time anyone noticed. The suites print their own totals; what a reader checking
+out the repo needs to know is that nothing failed.
 
 ---
 
