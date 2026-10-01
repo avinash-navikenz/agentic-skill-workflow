@@ -99,6 +99,22 @@ ul,ol{margin:0 0 .8em; padding-left:1.15em}
 li{margin:.2em 0}
 hr{border:0;border-top:1px solid var(--line);margin:2rem 0}
 
+/* ---------------------------------------------------------------- icons
+   One <symbol> in the sprite, one <use> at each site: the geometry is written
+   once however many times an icon appears, which is what keeps 50-odd icon
+   sites off the page weight. Stroke-only and currentColor, so an icon is
+   whatever colour its context already is and both themes are covered by the
+   tokens that were already there. Every decorative icon is aria-hidden; the
+   only icon with a name of its own is the theme toggle's, which is named by
+   the button's aria-label rather than by the glyph. */
+.sprite{display:none}
+.ico{
+  width:1em;height:1em;flex:0 0 auto;
+  fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round;
+  vertical-align:-.14em;
+}
+
 .skip{position:absolute;left:-9999px;top:0;background:var(--navy);color:#fff;padding:.6em 1em;z-index:100}
 .skip:focus{left:8px;top:8px}
 
@@ -118,15 +134,24 @@ hr{border:0;border-top:1px solid var(--line);margin:2rem 0}
 .brand .name{font-weight:800;font-size:.96rem;letter-spacing:.01em;white-space:nowrap}
 .bar nav{display:flex;gap:2px;flex-wrap:wrap;margin-left:auto}
 .bar nav a{
+  display:inline-flex; align-items:center; gap:.4em;
   color:rgba(250,243,231,.82); text-decoration:none; font-size:.82rem; font-weight:700;
   padding:.36em .6em; border-radius:6px; white-space:nowrap;
 }
+.bar nav a .ico{width:14px;height:14px;opacity:.72}
+.bar nav a:hover .ico,.bar nav a.on .ico{opacity:1}
+/* Below this the bar is already a wrapped block rather than one row, and seven
+   icons push it to another line — which would move the sticky offsets every
+   catalogue depends on. The labels alone carry it there. */
+@media (max-width:999px){ .bar nav a .ico{display:none} }
 .bar nav a:hover{background:rgba(250,243,231,.12);color:#fff}
 .bar nav a.on{background:var(--cream);color:var(--navy)}
 #themeBtn{
+  display:inline-flex;align-items:center;justify-content:center;
   background:transparent;border:1px solid rgba(250,243,231,.4);color:var(--cream);
-  border-radius:6px;font:inherit;font-size:.78rem;font-weight:700;padding:.3em .6em;cursor:pointer;
+  border-radius:6px;font:inherit;padding:0;width:28px;height:28px;flex:0 0 auto;cursor:pointer;
 }
+#themeBtn .ico{width:16px;height:16px}
 #themeBtn:hover{background:rgba(250,243,231,.14)}
 
 section{padding-block:44px; border-top:1px solid var(--line)}
@@ -212,6 +237,7 @@ svg text{font-family:"Mulish",Calibri,Arial,sans-serif}
   font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--term-dim);
 }
 .term-head .dot{width:8px;height:8px;border-radius:50%;background:var(--term-dim);opacity:.5;flex:0 0 auto}
+.term-head .copybtn{margin-left:auto}
 .term pre{
   margin:0;padding:12px 14px;overflow-x:auto;
   font-size:.79rem;line-height:1.6;white-space:pre;
@@ -235,6 +261,9 @@ svg text{font-family:"Mulish",Calibri,Arial,sans-serif}
   border:1px solid var(--line-strong);background:var(--surface);color:var(--text);
 }
 .controls input[type=search]{flex:1 1 220px;min-width:0}
+.qwrap{position:relative;display:flex;align-items:center;flex:1 1 220px;min-width:0}
+.qwrap .qico{position:absolute;left:.66em;width:15px;height:15px;color:var(--muted);pointer-events:none}
+.controls .qwrap input[type=search]{flex:1 1 auto;padding-left:2.2em}
 .seg{display:inline-flex;border:1px solid var(--line-strong);border-radius:8px;overflow:hidden;background:var(--surface)}
 .seg button{
   font:inherit;font-size:.82rem;font-weight:700;padding:.44em .8em;border:0;cursor:pointer;
@@ -245,6 +274,9 @@ svg text{font-family:"Mulish",Calibri,Arial,sans-serif}
 .count{font-size:.8rem;color:var(--muted);font-weight:700}
 .linkbtn{background:none;border:0;padding:0;font:inherit;font-size:.8rem;color:var(--accent-text);
   text-decoration:underline;cursor:pointer;font-weight:700}
+/* scoped to the reset control so `.backbtn`'s display rules keep working */
+.linkbtn[data-reset]{display:inline-flex;align-items:center;gap:.32em;text-decoration-thickness:1px}
+.linkbtn[data-reset] .ico{width:13px;height:13px}
 
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;align-items:start}
 .card{
@@ -317,6 +349,8 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 .rm ul{padding-left:1.1em;margin-bottom:.6em}
 .rm .meta{font-size:.76rem;color:var(--muted);margin:.2em 0 .9em;line-height:1.5}
 .rm a.chip{text-decoration:none}
+.rm a .ico{width:12px;height:12px;opacity:.8}
+.rm a.chip .ico{opacity:.65}
 .rm a.chip:hover{border-color:var(--accent);color:var(--accent-text)}
 .cmd{
   background:var(--term-bg);color:var(--term-text);border-radius:8px;
@@ -325,6 +359,28 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
   font-size:.76rem;line-height:1.7;white-space:pre;
 }
 .cmd .p,.cmd .hash{color:var(--term-dim)}
+/* `.cmd` scrolls its own overflow, so the copy control hangs off a wrapper
+   rather than the block — inside it, it would scroll away with the text. */
+.cmdwrap{position:relative;min-width:0;max-width:100%}
+.cmdwrap .copybtn{position:absolute;top:6px;right:6px;z-index:1}
+.cmdwrap > .cmd{padding-right:38px}
+.cmdwrap > .term{margin-top:0}
+.cmdwrap > .term > pre{padding-right:42px}
+.copybtn{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(250,243,231,.1);border:1px solid rgba(250,243,231,.22);
+  color:var(--term-dim);border-radius:6px;padding:0;width:24px;height:24px;
+  font:inherit;cursor:pointer;flex:0 0 auto;
+}
+/* A command block scrolls under this control, so it has to be opaque: a
+   translucent chip would sit on top of a half-read line. */
+.cmdwrap .copybtn{background:var(--term-bg);box-shadow:0 0 0 4px var(--term-bg)}
+.cmdwrap .copybtn:hover{background:var(--term-bg);border-color:var(--term-cmd)}
+.copybtn:hover{background:rgba(250,243,231,.2);color:var(--term-text)}
+.copybtn:focus-visible{outline:2px solid var(--term-cmd);outline-offset:1px}
+.copybtn .ico{width:13px;height:13px;stroke-width:2.1}
+.copybtn.done{color:#7ED9A8;border-color:rgba(126,217,168,.6)}
+.copybtn.fail{color:#F2938A;border-color:rgba(242,147,138,.6)}
 /* A grid item defaults to min-width:auto, so a `white-space:pre` block inside one
    widens its whole track instead of scrolling within it — which put a horizontal
    scrollbar on the page itself at phone width. */
@@ -348,9 +404,13 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
   position:sticky;top:124px;max-height:calc(100vh - 146px);
 }
 .list a{
-  display:block;text-decoration:none;color:var(--text);
+  display:flex;gap:9px;align-items:flex-start;text-decoration:none;color:var(--text);
   border-bottom:1px solid var(--line);border-left:4px solid transparent;padding:9px 12px;
 }
+.list .kindico{width:15px;height:15px;margin-top:3px;opacity:.6}
+.list a[aria-current="true"] .kindico{opacity:1}
+.list .txt{min-width:0}
+.list .nm,.list .sub2{display:block}
 .list a:last-child{border-bottom:0}
 .list a:hover{background:var(--accent-soft)}
 .list a[aria-current="true"]{
@@ -364,7 +424,9 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
   border-left:4px solid var(--accent);border-radius:12px;box-shadow:var(--shadow);
   padding:17px 19px 19px;
 }
-.detail .kind{font-size:.66rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.detail .kind{display:flex;align-items:center;gap:.45em;
+  font-size:.66rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.detail .kind .ico{width:13px;height:13px}
 .detail .dttl{font-size:1.3rem;margin:.12em 0 .3em}
 .backbtn{display:none;margin:0 0 .6em}
 
@@ -385,6 +447,28 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 </head>
 <body>
 
+<!-- ------------------------------------------------------------- icon sprite
+     Every icon on this page is defined exactly once here and referenced with
+     <use>. A 24x24 viewBox, stroke only and no fill, so `currentColor` on .ico
+     carries whatever colour the context already has — the theme needs no second
+     definition of anything. The sprite itself renders nothing. -->
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.1"/><path d="M12 2.6v2.3M12 19.1v2.3M2.6 12h2.3M19.1 12h2.3M5.3 5.3l1.7 1.7M17 17l1.7 1.7M18.7 5.3 17 7M7 17l-1.7 1.7"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.6 14.2A8.7 8.7 0 0 1 9.8 3.4a8.7 8.7 0 1 0 10.8 10.8Z"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M3.6 10.3 12 3.6l8.4 6.7v9a1.4 1.4 0 0 1-1.4 1.4H5a1.4 1.4 0 0 1-1.4-1.4Z"/><path d="M9.4 20.7v-6.9h5.2v6.9"/></symbol>
+<symbol id="i-flow" viewBox="0 0 24 24"><circle cx="5.4" cy="5.4" r="2.3"/><circle cx="18.6" cy="12" r="2.3"/><circle cx="5.4" cy="18.6" r="2.3"/><path d="M7.7 5.4h4.6a4 4 0 0 1 4 4v.3"/><path d="M16.3 14.3v.3a4 4 0 0 1-4 4H7.7"/></symbol>
+<symbol id="i-agent" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.6"/><path d="M4.9 20.4a7.1 7.1 0 0 1 14.2 0"/></symbol>
+<symbol id="i-skill" viewBox="0 0 24 24"><path d="M4.2 5.2A2.2 2.2 0 0 1 6.4 3H19.2v18H6.4a2.2 2.2 0 0 1-2.2-2.2Z"/><path d="M4.2 17.1h15"/><path d="M8.1 7.3h6.6"/></symbol>
+<symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3.4v11.2"/><path d="M7.7 10.3 12 14.6l4.3-4.3"/><path d="M4 16.4v2.6a1.5 1.5 0 0 0 1.5 1.5h13a1.5 1.5 0 0 0 1.5-1.5v-2.6"/></symbol>
+<symbol id="i-demo" viewBox="0 0 24 24"><rect x="2.8" y="4.3" width="18.4" height="15.4" rx="2"/><path d="m7 9.6 2.7 2.6L7 14.8"/><path d="M12.8 15h4.4"/></symbol>
+<symbol id="i-limits" viewBox="0 0 24 24"><path d="M12 4.2 21.3 20.2H2.7Z"/><path d="M12 10.3v3.9"/><path d="M12 17.2h.01"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.6" cy="10.6" r="6.5"/><path d="m15.3 15.3 4.7 4.7"/></symbol>
+<symbol id="i-reset" viewBox="0 0 24 24"><path d="M3.6 5.6v5.2h5.2"/><path d="M5 14a7.6 7.6 0 1 0 1.2-6.3L3.6 10.8"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5.6 15H5a1.8 1.8 0 0 1-1.8-1.8V5A1.8 1.8 0 0 1 5 3.2h8.2A1.8 1.8 0 0 1 15 5v.6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m4.8 12.6 4.6 4.6 9.8-10.4"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M13.6 2.8H6.8A1.8 1.8 0 0 0 5 4.6v14.8a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8V8Z"/><path d="M13.6 2.8V8H19"/></symbol>
+</svg>
+
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="bar">
@@ -395,15 +479,15 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <span class="name">navi&#8209;delivery</span>
     </a>
     <nav id="nav" aria-label="Sections">
-      <a href="#/">Home</a>
-      <a href="#/how-it-works">How it works</a>
-      <a href="#/agents">Agents</a>
-      <a href="#/skills">Skills</a>
-      <a href="#/install">Install</a>
-      <a href="#/demo">Worked demo</a>
-      <a href="#/limits">Limits</a>
+      <a href="#/"><svg class="ico" aria-hidden="true"><use href="#i-home"></use></svg><span>Home</span></a>
+      <a href="#/how-it-works"><svg class="ico" aria-hidden="true"><use href="#i-flow"></use></svg><span>How it works</span></a>
+      <a href="#/agents"><svg class="ico" aria-hidden="true"><use href="#i-agent"></use></svg><span>Agents</span></a>
+      <a href="#/skills"><svg class="ico" aria-hidden="true"><use href="#i-skill"></use></svg><span>Skills</span></a>
+      <a href="#/install"><svg class="ico" aria-hidden="true"><use href="#i-install"></use></svg><span>Install</span></a>
+      <a href="#/demo"><svg class="ico" aria-hidden="true"><use href="#i-demo"></use></svg><span>Worked demo</span></a>
+      <a href="#/limits"><svg class="ico" aria-hidden="true"><use href="#i-limits"></use></svg><span>Limits</span></a>
     </nav>
-    <button id="themeBtn" type="button" aria-label="Switch colour theme">Theme</button>
+    <button id="themeBtn" type="button" aria-label="Switch to dark theme"><svg class="ico" aria-hidden="true"><use href="#i-moon"></use></svg></button>
   </div>
 </header>
 
@@ -702,11 +786,11 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 
     <div class="controls">
       <div class="row">
-        <input type="search" data-q placeholder="Search name, mission, trigger phrase, tag&hellip;" aria-label="Search the catalogue">
+        <span class="qwrap"><svg class="ico qico" aria-hidden="true"><use href="#i-search"></use></svg><input type="search" data-q placeholder="Search name, mission, trigger phrase, tag&hellip;" aria-label="Search the catalogue"></span>
         <select data-phase aria-label="Filter by ADLC phase"></select>
         <select data-gate aria-label="Filter by gate"></select>
         <span class="count" data-count></span>
-        <button class="linkbtn" type="button" data-reset>Reset</button>
+        <button class="linkbtn" type="button" data-reset><svg class="ico" aria-hidden="true"><use href="#i-reset"></use></svg>Reset</button>
       </div>
     </div>
 
@@ -728,12 +812,12 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 
     <div class="controls">
       <div class="row">
-        <input type="search" data-q placeholder="Search name, mission, trigger phrase, tag&hellip;" aria-label="Search the catalogue">
+        <span class="qwrap"><svg class="ico qico" aria-hidden="true"><use href="#i-search"></use></svg><input type="search" data-q placeholder="Search name, mission, trigger phrase, tag&hellip;" aria-label="Search the catalogue"></span>
         <select data-disc aria-label="Filter by discipline"></select>
         <select data-phase aria-label="Filter by ADLC phase"></select>
         <select data-gate aria-label="Filter by gate"></select>
         <span class="count" data-count></span>
-        <button class="linkbtn" type="button" data-reset>Reset</button>
+        <button class="linkbtn" type="button" data-reset><svg class="ico" aria-hidden="true"><use href="#i-reset"></use></svg>Reset</button>
       </div>
     </div>
 
@@ -759,8 +843,8 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <div class="two">
       <div class="half b">
         <h3>One skill on its own</h3>
-        <div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .
-<span class="p">$ </span>cp -R adapters/claude-code/skills/navi-skill-&lt;name&gt; ~/.claude/skills/</div>
+        <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .
+<span class="p">$ </span>cp -R adapters/claude-code/skills/navi-skill-&lt;name&gt; ~/.claude/skills/</div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
         <div class="warnline">
           <p>A skill installed alone has <strong>no agent holding it</strong>. Nothing in the
           lifecycle will invoke it &mdash; no phase loads it and no gate depends on it, because it
@@ -775,8 +859,8 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       </div>
       <div class="half a">
         <h3>The whole framework</h3>
-        <div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .   <span class="hash"># adapters/ is generated; refresh it first</span>
-<span class="p">$ </span>./install.sh --yes                    <span class="hash"># 39 skills + 11 agents</span></div>
+        <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .   <span class="hash"># adapters/ is generated; refresh it first</span>
+<span class="p">$ </span>./install.sh --yes                    <span class="hash"># 39 skills + 11 agents</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
         <p class="small">This is the supported path: every agent, every skill it holds, and the
         cross-references between them. <code>install.sh</code> symlinks by default, so an edit to
         the repo takes effect live.</p>
@@ -813,7 +897,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <p class="small"><code>install.sh</code> installs <code>adapters/claude-code/</code> into your
     Claude directory — symlinks by default, so edits to the repo take effect live.</p>
     <div class="term">
-      <div class="term-head"><span class="dot"></span>./install.sh --yes</div>
+      <div class="term-head"><span class="dot"></span>./install.sh --yes<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ ./install.sh --yes</span>
 <span class="o">navi-delivery installer (symlink)
   39 skills -&gt; /Users/you/.claude/skills
@@ -845,7 +929,7 @@ Next:
 
     <h3 style="margin-top:26px">2 · Put the CLI on your PATH</h3>
     <div class="term">
-      <div class="term-head"><span class="dot"></span>the CLI</div>
+      <div class="term-head"><span class="dot"></span>the CLI<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ npm install --global .</span>
 <span class="dim"># or skip it entirely — the CLI is a plain Node script and runs by path:</span>
 <span class="c">$ node /path/to/navi-delivery/cli/index.js init</span>
@@ -875,7 +959,7 @@ Next:
     <p class="small"><code>navi-delivery doctor</code> reports which of these your harness supplies
     natively:</p>
     <div class="term">
-      <div class="term-head"><span class="dot"></span>navi-delivery doctor</div>
+      <div class="term-head"><span class="dot"></span>navi-delivery doctor<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery doctor</span>
 <span class="o">harness: claude-code
 
@@ -897,7 +981,7 @@ Next:
     CI regenerates and diffs, so a hand edit, or a regeneration somebody forgot, fails the
     build.</p>
     <div class="term">
-      <div class="term-head"><span class="dot"></span>regenerate</div>
+      <div class="term-head"><span class="dot"></span>regenerate<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ python3 scripts/build_adapters.py .</span>
 <span class="o">wrote 92 file(s)
   adapters/claude-code/skills/navi-skill-decision-records/SKILL.md
@@ -988,7 +1072,7 @@ Next:
         idempotent per repo. The lane is chosen <em>now</em>, before any work, and cannot be
         widened later.</p>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>init · propose · status</div>
+          <div class="term-head"><span class="dot"></span>init · propose · status<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery init</span>
 <span class="o">Initialised delivery/ (harness: claude-code)
 Next: navi-delivery propose &lt;name&gt; --lane standard</span>
@@ -1068,7 +1152,7 @@ then no `Download CSV` control is present.</span>
       <li>
         <h3>Validate</h3>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>validate --strict</div>
+          <div class="term-head"><span class="dot"></span>validate --strict<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery validate --strict</span>
 
 <span class="o">0 finding(s) across 50 file(s)
@@ -1087,7 +1171,7 @@ then no `Download CSV` control is present.</span>
         <p class="small">Delete the three <code>AC-</code> blocks from that spec and the third check
         is the one that speaks up — a requirement nothing can test:</p>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>a T2 finding</div>
+          <div class="term-head"><span class="dot"></span>a T2 finding<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery validate --strict</span>
 <span class="o">
 0 finding(s) across 50 file(s)
@@ -1105,7 +1189,7 @@ then no `Download CSV` control is present.</span>
       <li>
         <h3>Record gates — evidence first, verdict second</h3>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>gate G1 · G2 · G3 · G5</div>
+          <div class="term-head"><span class="dot"></span>gate G1 · G2 · G3 · G5<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="dim">E=delivery/changes/add-csv-export/evidence</span>
 <span class="c">$ navi-delivery gate G1 --pass --evidence $E/g1-intent.md</span>
 <span class="o">G1 pass (evidence: delivery/changes/add-csv-export/evidence/g1-intent.md, by: dev@navikenz.com)</span>
@@ -1128,7 +1212,7 @@ then no `Download CSV` control is present.</span>
         Three shapes of bad evidence are each refused with their own message, and nothing is
         written:</p>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>four refusals</div>
+          <div class="term-head"><span class="dot"></span>four refusals<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery gate G4 --pass --evidence $E/g3-design.md</span>
 <span class="bad">G4 is not in lane 'standard' — this lane enforces: G1, G2, G3, G5, G6, G7, G8</span>
 
@@ -1150,7 +1234,7 @@ then no `Download CSV` control is present.</span>
         <p class="small">The suite runs and AC-003 fails: the <code>Download CSV</code> control
         still renders on an empty report. The happy path works; the empty state does not.</p>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>gate G6 --fail</div>
+          <div class="term-head"><span class="dot"></span>gate G6 --fail<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery gate G6 --fail --evidence $E/g6-failures.md</span>
 <span class="bad">G6 fail (evidence: delivery/changes/add-csv-export/evidence/g6-failures.md, by: dev@navikenz.com)</span>
 <span class="warn">rework required — 3 artifact(s) marked stale</span>
@@ -1194,7 +1278,7 @@ phase:  1
       <li>
         <h3>Fix it, re-record, and waive what cannot be met</h3>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>re-record · release · waive</div>
+          <div class="term-head"><span class="dot"></span>re-record · release · waive<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery gate G6 --pass --evidence $E/g6-tests.md</span>
 <span class="ok">G6 re-recorded: fail -&gt; pass (evidence: delivery/changes/add-csv-export/evidence/g6-tests.md, by: dev@navikenz.com)</span>
 
@@ -1213,7 +1297,7 @@ phase:  1
         <p class="small">The expiry is the entire control on a waiver, so the CLI checks it
         properly. Each of these is refused, and nothing is written:</p>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>four refused waivers</div>
+          <div class="term-head"><span class="dot"></span>four refused waivers<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery gate G8 --waive "x" --expires 2020-01-01</span>
 <span class="bad">--expires '2020-01-01' must be strictly in the future</span>
 <span class="c">$ navi-delivery gate G8 --waive "x" --expires 2026-02-30</span>
@@ -1244,7 +1328,7 @@ phase:  1
       <li>
         <h3>Archive, and close the loop</h3>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>status · archive</div>
+          <div class="term-head"><span class="dot"></span>status · archive<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery status</span>
 <span class="o">  G1  pass
   G2  pass
@@ -1264,7 +1348,7 @@ phase:  1
         outstanding and changing nothing — the traceability check matters most here, because
         <code>archive</code> is the moment the claim becomes permanent:</p>
         <div class="term">
-          <div class="term-head"><span class="dot"></span>archive refusing a change that does not trace</div>
+          <div class="term-head"><span class="dot"></span>archive refusing a change that does not trace<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery archive x</span>
 <span class="bad">cannot archive 'x': traceability findings are outstanding. Nothing was changed.</span>
 <span class="bad">T3 …/delivery/changes/x/tasks.md: TASK-001 implements unknown REQ-999</span>
@@ -1382,11 +1466,11 @@ phase:  1
         a device and a zero-byte file are each refused, and a symlink is judged by what it resolves
         to. That is the whole of the check. <strong>The file is never opened.</strong> One
         character of anything is accepted:</p>
-        <div class="term" style="margin-bottom:8px">
+        <div class="cmdwrap"><div class="term" style="margin-bottom:8px">
 <pre><span class="c">$ printf 'x' &gt; $E/g6.md &amp;&amp; navi-delivery gate G6 --pass --evidence $E/g6.md</span>
 <span class="o">G6 pass (evidence: …/evidence/g6.md, by: dev@navikenz.com)</span>
 </pre>
-        </div>
+        </div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
         <p class="small" style="margin-bottom:0">The gate records that evidence was <em>named</em>
         and that something is there to open, not that it says what you claim. A human reviewing the
         change is what establishes the second. Treat the path as a citation and make it one a reader
@@ -1498,7 +1582,7 @@ phase:  1
 {
  "counts": {
   "agents": 11,
-  "skills": 39,
+  "skills": 42,
   "disciplines": 12,
   "phases": 9,
   "gates": 9,
@@ -1568,7 +1652,7 @@ phase:  1
   {
    "id": "software-development",
    "label": "software development",
-   "skills": 5,
+   "skills": 8,
    "agents": 1
   },
   {
@@ -2304,7 +2388,7 @@ phase:  1
     "G8"
    ],
    "description": "Use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, SLOs and secrets posture. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates.",
-   "hay": "navi-agent-devops-engineer devops engineer platform-devops use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, slos and secrets posture. owns adlc phases 7 and 8 and the g7-release and g8-operate gates. devops release environments blast-radius slo secrets incidents make releasing boring and reversible, and make what happens afterwards visible enough that we learn from it before a customer tells us. when speed and blast radius conflict, cut the radius rather than the speed — progressive exposure lets us ship often and fail small. when stability and delivery conflict, i would rather consult the error budget than the loudest opinion in the room, and the only override i will take is in the safe direction — work that reduces the risk the budget was spent on still goes. spending what is already gone is a decision to have the next incident. when a rollback path and a forward fix are both available during an incident, roll back unless the rollback is itself risky — restoring the known state beats reasoning under pressure. favour automating a step over documenting it, and documenting it over remembering it. when a waiver is offered in place of a release criterion, ask what will actually be different by the date it names; where the answer is nobody's plan, the waiver is a way of not deciding and i would rather the release wait. nothing procedural ever stands in for the approval itself — a date is not a person agreeing to carry this. i will not release into an environment i cannot observe — not because a rule forbids it, but because the alternative is that our first detector of a bad release is a customer, and by then how we respond is no longer our choice. excellent: releasing is unremarkable — the same path every time, at an exposure small enough that a bad change is a statistic rather than an outage, undone by a route someone has actually run. what is happening afterwards is visible to whoever is on call, in terms they can act on, and an incident ends by changing a standard rather than a person. mediocre but passable: a scripted deploy, a staging environment, dashboards that look healthy, and alerting that fires on symptoms nobody has agreed what to do about — it will hold until the first release that needs undoing at speed. the question is never whether a change will fail, but how many users see it fail and how fast we can stop that. blast radius is the lever; speed of release is not the risk. environments that differ silently are the source of the incidents nobody can reproduce. parity is a property we maintain deliberately or lose by default. an slo is a negotiated promise with a budget attached. without a budget it is a wish, and wishes cannot arbitrate between shipping and stability. rollback is only real if it has been run. an untested rollback is a paragraph in a document. alerts that do not correspond to a decision train people to ignore alerts, which is worse than having none. a secret in a log, a repo or an image is already compromised; rotation is the fix, and embarrassment is not a reason to delay it. every manual step in a release is a step that will be done differently at 3am. a release would exceed the blast radius the change was approved at the error budget for an affected service is exhausted and a release is still being requested a secret has been exposed, or a credential's owner cannot be identified rolling back would leave data written by the new version unreadable by the old one production differs from the environment this change was verified in — in version, data shape, scale or configuration — and the difference touches the path this change alters g7 g8 navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-human-checkpoints navi-skill-waivers-and-deferrals navi-skill-handoff-protocol navi-skill-version-control-workflow navi-skill-dependency-vulnerabilities navi-skill-pipeline-automation navi-skill-progressive-delivery navi-skill-observability navi-skill-incident-response navi-skill-release-readiness traceability phase gate protocol human checkpoints waivers and deferrals handoff protocol version control workflow dependency vulnerabilities pipeline automation progressive delivery observability incident response release readiness",
+   "hay": "navi-agent-devops-engineer devops engineer platform-devops use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, slos and secrets posture. owns adlc phases 7 and 8 and the g7-release and g8-operate gates. devops release environments blast-radius slo secrets incidents make releasing boring and reversible, and make what happens afterwards visible enough that we learn from it before a customer tells us. when speed and blast radius conflict, cut the radius rather than the speed — progressive exposure lets us ship often and fail small. when stability and delivery conflict, i would rather consult the error budget than the loudest opinion in the room, and the only override i will take is in the safe direction — work that reduces the risk the budget was spent on still goes. spending what is already gone is a decision to have the next incident. when a rollback path and a forward fix are both available during an incident, roll back unless the rollback is itself risky — restoring the known state beats reasoning under pressure. favour automating a step over documenting it, and documenting it over remembering it. when a waiver is offered in place of a release criterion, ask what will actually be different by the date it names; where the answer is nobody's plan, the waiver is a way of not deciding and i would rather the release wait. nothing procedural ever stands in for the approval itself — a date is not a person agreeing to carry this. i will not release into an environment i cannot observe — not because a rule forbids it, but because the alternative is that our first detector of a bad release is a customer, and by then how we respond is no longer our choice. excellent: releasing is unremarkable — the same path every time, at an exposure small enough that a bad change is a statistic rather than an outage, undone by a route someone has actually run. what is happening afterwards is visible to whoever is on call, in terms they can act on, and an incident ends by changing a standard rather than a person. mediocre but passable: a scripted deploy, a staging environment, dashboards that look healthy, and alerting that fires on symptoms nobody has agreed what to do about — it will hold until the first release that needs undoing at speed. the question is never whether a change will fail, but how many users see it fail and how fast we can stop that. blast radius is the lever; speed of release is not the risk. environments that differ silently are the source of the incidents nobody can reproduce. parity is a property we maintain deliberately or lose by default. an slo is a negotiated promise with a budget attached. without a budget it is a wish, and wishes cannot arbitrate between shipping and stability. rollback is only real if it has been run. an untested rollback is a paragraph in a document. alerts that do not correspond to a decision train people to ignore alerts, which is worse than having none. a secret in a log, a repo or an image is already compromised; rotation is the fix, and embarrassment is not a reason to delay it. every manual step in a release is a step that will be done differently at 3am. a release would exceed the blast radius the change was approved at the error budget for an affected service is exhausted and a release is still being requested a secret has been exposed, or a credential's owner cannot be identified rolling back would leave data written by the new version unreadable by the old one production differs from the environment this change was verified in — in version, data shape, scale or configuration — and the difference touches the path this change alters g7 g8 navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-human-checkpoints navi-skill-waivers-and-deferrals navi-skill-handoff-protocol navi-skill-version-control-workflow navi-skill-branching navi-skill-dependency-vulnerabilities navi-skill-pipeline-automation navi-skill-progressive-delivery navi-skill-observability navi-skill-incident-response navi-skill-release-readiness traceability phase gate protocol human checkpoints waivers and deferrals handoff protocol version control workflow branching dependency vulnerabilities pipeline automation progressive delivery observability incident response release readiness",
    "readme": {
     "kind": "agent",
     "label": "DevOps Engineer",
@@ -2405,6 +2489,12 @@ phase:  1
       "html": "#/skills/navi-skill-version-control-workflow"
      },
      {
+      "name": "navi-skill-branching",
+      "label": "Branching",
+      "discipline": "software-development",
+      "html": "#/skills/navi-skill-branching"
+     },
+     {
       "name": "navi-skill-dependency-vulnerabilities",
       "label": "Dependency vulnerabilities",
       "discipline": "security",
@@ -2472,7 +2562,7 @@ phase:  1
     "G5"
    ],
    "description": "Use when implementing a specified and designed change — decomposing it into tasks, choosing contracts and seams, and deciding what to refactor versus leave alone. Owns ADLC Phase 5 and the G5-BUILD gate, which it co-owns with the Data and ML Engineers on a change that touches data or a model.",
-   "hay": "navi-agent-fullstack-developer fullstack developer software-development use when implementing a specified and designed change — decomposing it into tasks, choosing contracts and seams, and deciding what to refactor versus leave alone. owns adlc phase 5 and the g5-build gate, which it co-owns with the data and ml engineers on a change that touches data or a model. implementation decomposition contracts testability refactoring turn a signed-off spec and design into working, reviewable, reversible increments — each one traceable to the requirement it serves and provable by something other than my own assertion. when speed and reversibility conflict, favour reversibility: what a mistake costs is bounded by how fast it can be taken back, and i would rather pay a little of that every merge than discover the price on the one that goes wrong. what reversibility costs in practice — the flag, the old path kept alive until the new one has run, the merge small enough to revert on its own — is `navi-skill-version-control-workflow`'s, and i follow it there rather than deciding it per merge, because the devops engineer is reading the same rules for the same merge. when i find code that is wrong but not in scope, fix it only if the change is smaller than describing it — otherwise record it as debt and tell the architect, because a drive-by refactor inside a feature diff makes both unreviewable. when the spec is ambiguous, do not resolve it in code: the resolution becomes invisible behaviour nobody signed off. favour refactor over rewrite unless the existing code has no tests, no owner and no passing behaviour worth preserving — rewrites re-earn every bug fix the original accumulated. when a test is hard to write, change the design before weakening the test. when the date is at risk, cut scope visibly and tell the orchestrator rather than cutting quality invisibly. excellent: the behaviour a merge adds is provable by something other than my word; the contracts it touches are explicit rather than implied by whatever happens to call them; and the diff can be reviewed by someone who was not in the design conversation. mediocre but passable: the feature works on the happy path, tests exist and pass, the tasks were tracked, and nothing records why the interface ended up shaped the way it did or which error paths were never exercised. code is read far more often than written, and changed more often than read. optimise for the person who arrives next with a bug report and no context. untestable code is a design problem wearing an implementation costume. when a thing is hard to test, the seam is in the wrong place. a vertical slice that works end to end teaches more than three horizontal layers that do not yet meet. integration is where the surprises live, so reach it early. the contract is the product for everything that has a caller. breaking a contract quietly is the most expensive cheap thing i can do. every branch i add is a state someone must later reason about. the empty case, the error case and the concurrent case are the ones the spec was vaguest about and the ones production will find. a large diff is not more work delivered; it is more risk delivered in one transaction. a requirement cannot be implemented as specified without changing observable behaviour the spec did not mention the design's contract and an existing consumer of that interface cannot both be satisfied implementing the change requires touching code with no tests and no owner a task that was sized in hours has been open for days and the reason is not yet understood delivering on the date requires shipping a path the tests do not cover g5 navi-skill-task-decomposition navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-handoff-protocol navi-skill-test-driven-development navi-skill-interface-contracts navi-skill-api-design navi-skill-secure-coding navi-skill-code-review navi-skill-version-control-workflow navi-skill-dependency-vulnerabilities navi-skill-pipeline-automation navi-skill-test-strategy navi-skill-test-design task decomposition traceability phase gate protocol handoff protocol test driven development interface contracts api design secure coding code review version control workflow dependency vulnerabilities pipeline automation test strategy test design",
+   "hay": "navi-agent-fullstack-developer fullstack developer software-development use when implementing a specified and designed change — decomposing it into tasks, choosing contracts and seams, and deciding what to refactor versus leave alone. owns adlc phase 5 and the g5-build gate, which it co-owns with the data and ml engineers on a change that touches data or a model. implementation decomposition contracts testability refactoring turn a signed-off spec and design into working, reviewable, reversible increments — each one traceable to the requirement it serves and provable by something other than my own assertion. when speed and reversibility conflict, favour reversibility: what a mistake costs is bounded by how fast it can be taken back, and i would rather pay a little of that every merge than discover the price on the one that goes wrong. what reversibility costs in practice — the flag, the old path kept alive until the new one has run, the merge small enough to revert on its own — is `navi-skill-version-control-workflow`'s, and i follow it there rather than deciding it per merge, because the devops engineer is reading the same rules for the same merge. when i find code that is wrong but not in scope, fix it only if the change is smaller than describing it — otherwise record it as debt and tell the architect, because a drive-by refactor inside a feature diff makes both unreviewable. when the spec is ambiguous, do not resolve it in code: the resolution becomes invisible behaviour nobody signed off. favour refactor over rewrite unless the existing code has no tests, no owner and no passing behaviour worth preserving — rewrites re-earn every bug fix the original accumulated. when a test is hard to write, change the design before weakening the test. when the date is at risk, cut scope visibly and tell the orchestrator rather than cutting quality invisibly. excellent: the behaviour a merge adds is provable by something other than my word; the contracts it touches are explicit rather than implied by whatever happens to call them; and the diff can be reviewed by someone who was not in the design conversation. mediocre but passable: the feature works on the happy path, tests exist and pass, the tasks were tracked, and nothing records why the interface ended up shaped the way it did or which error paths were never exercised. code is read far more often than written, and changed more often than read. optimise for the person who arrives next with a bug report and no context. untestable code is a design problem wearing an implementation costume. when a thing is hard to test, the seam is in the wrong place. a vertical slice that works end to end teaches more than three horizontal layers that do not yet meet. integration is where the surprises live, so reach it early. the contract is the product for everything that has a caller. breaking a contract quietly is the most expensive cheap thing i can do. every branch i add is a state someone must later reason about. the empty case, the error case and the concurrent case are the ones the spec was vaguest about and the ones production will find. a large diff is not more work delivered; it is more risk delivered in one transaction. a requirement cannot be implemented as specified without changing observable behaviour the spec did not mention the design's contract and an existing consumer of that interface cannot both be satisfied implementing the change requires touching code with no tests and no owner a task that was sized in hours has been open for days and the reason is not yet understood delivering on the date requires shipping a path the tests do not cover g5 navi-skill-task-decomposition navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-handoff-protocol navi-skill-test-driven-development navi-skill-interface-contracts navi-skill-api-design navi-skill-secure-coding navi-skill-code-review navi-skill-pull-requests navi-skill-version-control-workflow navi-skill-commit-craft navi-skill-branching navi-skill-dependency-vulnerabilities navi-skill-pipeline-automation navi-skill-test-strategy navi-skill-test-design task decomposition traceability phase gate protocol handoff protocol test driven development interface contracts api design secure coding code review pull requests version control workflow commit craft branching dependency vulnerabilities pipeline automation test strategy test design",
    "readme": {
     "kind": "agent",
     "label": "Fullstack Developer",
@@ -2582,10 +2672,28 @@ phase:  1
       "html": "#/skills/navi-skill-code-review"
      },
      {
+      "name": "navi-skill-pull-requests",
+      "label": "Pull requests",
+      "discipline": "software-development",
+      "html": "#/skills/navi-skill-pull-requests"
+     },
+     {
       "name": "navi-skill-version-control-workflow",
       "label": "Version control workflow",
       "discipline": "software-development",
       "html": "#/skills/navi-skill-version-control-workflow"
+     },
+     {
+      "name": "navi-skill-commit-craft",
+      "label": "Commit craft",
+      "discipline": "software-development",
+      "html": "#/skills/navi-skill-commit-craft"
+     },
+     {
+      "name": "navi-skill-branching",
+      "label": "Branching",
+      "discipline": "software-development",
+      "html": "#/skills/navi-skill-branching"
      },
      {
       "name": "navi-skill-dependency-vulnerabilities",
@@ -6395,6 +6503,84 @@ phase:  1
    }
   },
   {
+   "name": "navi-skill-branching",
+   "kind": "skill",
+   "label": "Branching",
+   "discipline": "software-development",
+   "phases": [
+    5
+   ],
+   "gates": [
+    "G5",
+    "G7",
+    "G8"
+   ],
+   "description": "Use when creating a branch, moving onto one that already exists, bringing the default branch into one, or deleting one. Defines the base a branch is cut from, the upstream it tracks, the choice between rebase and merge when integrating, how uncommitted work survives a switch, and how a finished or abandoned branch is cleaned up on Azure DevOps, GitHub and Jira-tracked repositories.",
+   "hay": "navi-skill-branching branching software-development use when creating a branch, moving onto one that already exists, bringing the default branch into one, or deleting one. defines the base a branch is cut from, the upstream it tracks, the choice between rebase and merge when integrating, how uncommitted work survives a switch, and how a finished or abandoned branch is cleaned up on azure devops, github and jira-tracked repositories. git branching upstream rebase stash worktree cleanup azure-devops github jira a branch is about to be created; someone else's branch has to be run locally; the default branch has moved and an open branch has to take it; work has to be put down mid-change to pick up something else; or a branch is finished, abandoned, or has been deleted on the server. `navi-skill-version-control-workflow` owns branch **policy**: the name is `change/<name>`, it is cut from the default branch, it is integrated at least daily, it is squash-merged, and the default branch is protected. this skill owns the **mechanics** that policy assumes — which base the branch is actually cut from when the local default branch is stale, what upstream it tracks, whether the daily integration is a rebase or a merge, where uncommitted work goes during a switch, and what is left behind when the branch is gone. where the two touch, policy wins: this skill never proposes a different name or a different merge shape. create a branch git switch git checkout checkout someone's branch set upstream track a remote branch rebase onto main keep my branch up to date stash git worktree detached head delete a branch prune branch is gone default branch the repository configuration these rules assume, appended once to `.git/config` — or set with `git config --local <key> <value>`: branching off yesterday's `main`. typing `main`. `git checkout` for everything. the token in the url. navi-agent-fullstack-developer navi-agent-devops-engineer fullstack developer devops engineer",
+   "readme": {
+    "kind": "skill",
+    "label": "Branching",
+    "meta": "`navi-skill-branching` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when creating a branch, moving onto one that already exists, bringing the default branch into one, or deleting one. Defines the base a branch is cut from, the upstream it tracks, the choice between rebase and merge when integrating, how uncommitted work survives a switch, and how a finished or abandoned branch is cleaned up on Azure DevOps, GitHub and Jira-tracked repositories.",
+    "fires": "A branch is about to be created; someone else's branch has to be run locally; the default branch has moved and an open branch has to take it; work has to be put down mid-change to pick up something else; or a branch is finished, abandoned, or has been deleted on the server. `navi-skill-version-control-workflow` owns branch **policy**: the name is `change/<name>`, it is cut from the default branch, it is integrated at least daily, it is squash-merged, and the default branch is protected. This skill owns the **mechanics** that policy assumes — which base the branch is actually cut from when the local default branch is stale, what upstream it tracks, whether the daily integration is a rebase or a merge, where uncommitted work goes during a switch, and what is left behind when the branch is gone. Where the two touch, policy wins: this skill never proposes a different name or a different merge shape.",
+    "phrases": [
+     "create a branch",
+     "git switch",
+     "git checkout",
+     "checkout someone's branch",
+     "set upstream",
+     "track a remote branch",
+     "rebase onto main",
+     "keep my branch up to date",
+     "stash",
+     "git worktree",
+     "detached HEAD",
+     "delete a branch",
+     "prune",
+     "branch is gone",
+     "default branch"
+    ],
+    "produces": "The repository configuration these rules assume, appended once to `.git/config` — or set with `git config --local <key> <value>`.",
+    "holders": [
+     {
+      "name": "navi-agent-fullstack-developer",
+      "label": "Fullstack Developer",
+      "owns_gates": [
+       "G5"
+      ],
+      "html": "#/agents/navi-agent-fullstack-developer"
+     },
+     {
+      "name": "navi-agent-devops-engineer",
+      "label": "DevOps Engineer",
+      "owns_gates": [
+       "G7",
+       "G8"
+      ],
+      "html": "#/agents/navi-agent-devops-engineer"
+     }
+    ],
+    "gates": [
+     "G5",
+     "G7",
+     "G8"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/software-development/navi-skill-branching/SKILL.md",
+     "what": "16 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-branching ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/software-development/navi-skill-branching/SKILL.md"
+   }
+  },
+  {
    "name": "navi-skill-code-review",
    "kind": "skill",
    "label": "Code review",
@@ -6465,6 +6651,134 @@ phase:  1
      "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
     },
     "source": "skills/software-development/navi-skill-code-review/SKILL.md"
+   }
+  },
+  {
+   "name": "navi-skill-commit-craft",
+   "kind": "skill",
+   "label": "Commit craft",
+   "discipline": "software-development",
+   "phases": [
+    5
+   ],
+   "gates": [
+    "G5"
+   ],
+   "description": "Use when a commit is about to be made on a change branch — deciding what goes into it, what stays out, and writing the message that explains why the change is shaped the way it is. Defines the staging pass, the one-reason commit boundary, the drafted message file, and the trailers that bind a commit to its task and to the Azure DevOps, GitHub or Jira work item.",
+   "hay": "navi-skill-commit-craft commit craft software-development use when a commit is about to be made on a change branch — deciding what goes into it, what stays out, and writing the message that explains why the change is shaped the way it is. defines the staging pass, the one-reason commit boundary, the drafted message file, and the trailers that bind a commit to its task and to the azure devops, github or jira work item. git commit staging atomic-commits commit-message trailers azure-devops github jira work on a change branch has reached a point worth recording; a working tree holds more than one reason for changing; a commit message is being written; or a commit that has not been pushed is about to be amended, split or reordered. `navi-skill-version-control-workflow` owns everything from the branch outward: the branch name, the flag that guards a replacement, the squash that lands on the default branch and the subject that squash carries. this skill owns everything inward of that — which hunks become one commit, and what the body of each branch commit says that the diff cannot. both skills write about subjects; the one that reaches the default branch is version-control-workflow's, and the ones on the branch that feed it are this skill's. commit message write a commit git add staging git add -p atomic commit amend fixup commit body why not what conventional commit commit trailer co-authored-by ab# smart commit link commit to work item the drafted message, at `delivery/changes/theme-persistence/commits/task-006.msg`: `git add -a` then write the subject. the what-body. \"address review comments.\" the missing blank line. navi-agent-fullstack-developer fullstack developer",
+   "readme": {
+    "kind": "skill",
+    "label": "Commit craft",
+    "meta": "`navi-skill-commit-craft` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when a commit is about to be made on a change branch — deciding what goes into it, what stays out, and writing the message that explains why the change is shaped the way it is. Defines the staging pass, the one-reason commit boundary, the drafted message file, and the trailers that bind a commit to its task and to the Azure DevOps, GitHub or Jira work item.",
+    "fires": "Work on a change branch has reached a point worth recording; a working tree holds more than one reason for changing; a commit message is being written; or a commit that has not been pushed is about to be amended, split or reordered. `navi-skill-version-control-workflow` owns everything from the branch outward: the branch name, the flag that guards a replacement, the squash that lands on the default branch and the subject that squash carries. This skill owns everything inward of that — which hunks become one commit, and what the body of each branch commit says that the diff cannot. Both skills write about subjects; the one that reaches the default branch is version-control-workflow's, and the ones on the branch that feed it are this skill's.",
+    "phrases": [
+     "commit message",
+     "write a commit",
+     "git add",
+     "staging",
+     "git add -p",
+     "atomic commit",
+     "amend",
+     "fixup",
+     "commit body",
+     "why not what",
+     "conventional commit",
+     "commit trailer",
+     "co-authored-by",
+     "AB#",
+     "smart commit",
+     "link commit to work item"
+    ],
+    "produces": "The drafted message, at `delivery/changes/theme-persistence/commits/TASK-006.msg`.",
+    "holders": [
+     {
+      "name": "navi-agent-fullstack-developer",
+      "label": "Fullstack Developer",
+      "owns_gates": [
+       "G5"
+      ],
+      "html": "#/agents/navi-agent-fullstack-developer"
+     }
+    ],
+    "gates": [
+     "G5"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/software-development/navi-skill-commit-craft/SKILL.md",
+     "what": "18 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-commit-craft ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/software-development/navi-skill-commit-craft/SKILL.md"
+   }
+  },
+  {
+   "name": "navi-skill-pull-requests",
+   "kind": "skill",
+   "label": "Pull requests",
+   "discipline": "software-development",
+   "phases": [
+    5
+   ],
+   "gates": [
+    "G5"
+   ],
+   "description": "Use when opening a pull request, or when a reviewer cannot tell from the description what the change is for. Defines the description written from the actual diff, the sections that carry what the diff cannot show, the reviewer's reading order, and how the tracker item is linked on Azure DevOps, GitHub and Jira.",
+   "hay": "navi-skill-pull-requests pull requests software-development use when opening a pull request, or when a reviewer cannot tell from the description what the change is for. defines the description written from the actual diff, the sections that carry what the diff cannot show, the reviewer's reading order, and how the tracker item is linked on azure devops, github and jira. git pull-request code-review description reviewers azure-devops github jira a branch is ready for review; a pull request is open and the description no longer matches what the branch now contains; a reviewer has asked what the change is for; or the tracker item that this change closes has to be linked to it. `navi-skill-version-control-workflow` owns that a pull request exists at all — one per change, squash-merged, into a protected default branch. `navi-skill-code-review` owns what happens after it opens: the review conversation, the comment classes, thread resolution and the g5 record. this skill owns only the artifact between them — the description, written from the diff that is actually there, and what it has to say that the diff cannot. pull request pr description open a pr raise a pr merge request gh pr create az repos pr create draft pr pr template request reviewers link work item to pr what should the pr say copy into `delivery/changes/<name>/pull-request.md`: \"see ab#4421.\" the commit-log description. two-dot diff. the undisclosed migration. navi-agent-fullstack-developer fullstack developer",
+   "readme": {
+    "kind": "skill",
+    "label": "Pull requests",
+    "meta": "`navi-skill-pull-requests` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when opening a pull request, or when a reviewer cannot tell from the description what the change is for. Defines the description written from the actual diff, the sections that carry what the diff cannot show, the reviewer's reading order, and how the tracker item is linked on Azure DevOps, GitHub and Jira.",
+    "fires": "A branch is ready for review; a pull request is open and the description no longer matches what the branch now contains; a reviewer has asked what the change is for; or the tracker item that this change closes has to be linked to it. `navi-skill-version-control-workflow` owns that a pull request exists at all — one per change, squash-merged, into a protected default branch. `navi-skill-code-review` owns what happens after it opens: the review conversation, the comment classes, thread resolution and the G5 record. This skill owns only the artifact between them — the description, written from the diff that is actually there, and what it has to say that the diff cannot.",
+    "phrases": [
+     "pull request",
+     "PR description",
+     "open a PR",
+     "raise a PR",
+     "merge request",
+     "gh pr create",
+     "az repos pr create",
+     "draft PR",
+     "PR template",
+     "request reviewers",
+     "link work item to PR",
+     "what should the PR say"
+    ],
+    "produces": "Copy into `delivery/changes/<name>/pull-request.md`.",
+    "holders": [
+     {
+      "name": "navi-agent-fullstack-developer",
+      "label": "Fullstack Developer",
+      "owns_gates": [
+       "G5"
+      ],
+      "html": "#/agents/navi-agent-fullstack-developer"
+     }
+    ],
+    "gates": [
+     "G5"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/software-development/navi-skill-pull-requests/SKILL.md",
+     "what": "17 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-pull-requests ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/software-development/navi-skill-pull-requests/SKILL.md"
    }
   },
   {
@@ -7176,6 +7490,13 @@ phase:  1
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       .replace(/(^|[\s(])\*([^*]+)\*/g, "$1<em>$2</em>");
   }
+  // Markup for one icon site. The geometry lives once in the sprite; this is
+  // only the reference to it, and it is always decorative — every icon here sits
+  // beside a label that already carries the meaning.
+  function ico(name, cls) {
+    return '<svg class="ico' + (cls ? " " + cls : "") + '" aria-hidden="true">' +
+           '<use href="#i-' + name + '"></use></svg>';
+  }
   function el(tag, cls, html) {
     var n = document.createElement(tag);
     if (cls) n.className = cls;
@@ -7402,7 +7723,7 @@ phase:  1
       '<ul class="small">' + a.escalate_to_human_when.map(function (m) { return "<li>" + md(m) + "</li>"; }).join("") + '</ul>' +
       '<h4 style="margin:14px 0 .4em;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">The skills it loads rather than working from memory</h4>' +
       '<div class="chips">' + a.skills.map(function (n) {
-        return '<a class="chip" href="#/skills/' + esc(n) + '">' + esc(label(n)) + '</a>';
+        return '<a class="chip" href="#/skills/' + esc(n) + '">' + ico("skill") + esc(label(n)) + '</a>';
       }).join("") + '</div>' +
       '<p class="small sub" style="margin:.9em 0 0"><strong>Produces</strong> ' +
         a.produces.map(function (p) { return "<code>" + esc(p) + "</code>"; }).join(" &middot; ") + '</p>';
@@ -7470,16 +7791,19 @@ phase:  1
     // A command block, rendered the way it is written in the README: one line per
     // step, the shell prompt supplied here, a trailing `# comment` dimmed.
     function cmd(steps) {
-      return '<div class="cmd">' + steps.map(function (s) {
+      return '<div class="cmdwrap"><div class="cmd">' + steps.map(function (s) {
         var i = s.indexOf("#");
         var line = i === -1 ? esc(s)
                             : esc(s.slice(0, i)) + '<span class="hash">' + esc(s.slice(i)) + "</span>";
         return '<span class="p">$ </span>' + line;
-      }).join("\n") + "</div>";
+      }).join("\n") + '</div><button class="copybtn" type="button" data-copy ' +
+      'aria-label="Copy the commands">' + ico("copy") + "</button></div>";
     }
-    function chipLinks(list) {
+    // A cross-link leaves this catalogue for the other one, so the chip says
+    // which kind of thing it points at — the two read alike otherwise.
+    function chipLinks(list, kind) {
       return '<div class="chips">' + list.map(function (x) {
-        return '<a class="chip" href="' + esc(x.html) + '">' + esc(x.label) + "</a>";
+        return '<a class="chip" href="' + esc(x.html) + '">' + ico(kind) + esc(x.label) + "</a>";
       }).join("") + "</div>";
     }
     function codeList(list) {
@@ -7515,7 +7839,7 @@ phase:  1
         h += "<h4>Which agents hold it (" + m.holders.length + ")</h4>";
         if (m.holders.length) {
           h += "<p>A skill is never invoked on its own &mdash; an agent loads it.</p>" +
-               chipLinks(m.holders);
+               chipLinks(m.holders, "agent");
           if (m.gates.length) {
             h += "<p style='margin-top:.6em'>Through them it is reachable from gates " +
                  codeList(m.gates) + ".</p>";
@@ -7532,10 +7856,10 @@ phase:  1
              "</div>";
         h += "<h4>Skills it holds (" + m.held.length + ")</h4>" +
              "<p>It loads these rather than working from memory, and records which it used in the " +
-             "handoff envelope.</p>" + chipLinks(m.held);
+             "handoff envelope.</p>" + chipLinks(m.held, "skill");
         h += "<h4>When it stops and asks a human</h4><ul>" +
              m.escalates.map(function (x) { return "<li>" + md(x) + "</li>"; }).join("") + "</ul>";
-        if (m.handoff_to.length) h += "<h4>Hands off to</h4>" + chipLinks(m.handoff_to);
+        if (m.handoff_to.length) h += "<h4>Hands off to</h4>" + chipLinks(m.handoff_to, "agent");
       }
 
       h += "<h4>Install &mdash; this " + esc(m.kind) + " on its own</h4>" + cmd(m.install_alone.steps) +
@@ -7544,9 +7868,11 @@ phase:  1
            cmd(F.steps) + '<p class="sub">' + md(F.note) + "</p>";
 
       h += "<h4>Where the rules live</h4><p>This is a summary and carries no rules. " +
-           '<a href="../' + esc(m.authority.html) + '"><code>' + esc(m.authority.html) + "</code></a> " +
+           '<a href="../' + esc(m.authority.html) + '">' + ico("file") +
+           '<code>' + esc(m.authority.html) + "</code></a> " +
            "is the authority &mdash; it holds " + esc(m.authority.what) + ". The same summary is " +
-           'on disk at <a href="../' + esc(readmePath) + '"><code>' + esc(readmePath) + "</code></a>.</p>";
+           'on disk at <a href="../' + esc(readmePath) + '">' + ico("file") +
+           '<code>' + esc(readmePath) + "</code></a>.</p>";
       return h + "</div>";
     }
 
@@ -7568,7 +7894,7 @@ phase:  1
     function paint(e) {
       detailEl.innerHTML =
         '<a class="linkbtn backbtn" href="#/' + PLURAL + '">&larr; All ' + PLURAL + "</a>" +
-        '<div class="kind">' + (KIND === "agent" ? "Agent" : "Skill") + "</div>" +
+        '<div class="kind">' + ico(KIND) + (KIND === "agent" ? "Agent" : "Skill") + "</div>" +
         '<h3 class="dttl">' + esc(e.label) + "</h3>" +
         '<div class="id" style="margin-bottom:.55em">' + esc(e.name) + "</div>" +
         '<div class="chips">' + chipsFor(e) + "</div>" +
@@ -7580,8 +7906,9 @@ phase:  1
       listEl.innerHTML = "";
       list.forEach(function (e) {
         var b = el("a", null,
-          '<div class="nm">' + esc(e.label) + "</div>" +
-          '<div class="sub2">' + esc(e.name) + "</div>");
+          ico(KIND, "kindico") +
+          '<span class="txt"><span class="nm">' + esc(e.label) + "</span>" +
+          '<span class="sub2">' + esc(e.name) + "</span></span>");
         b.href = "#/" + PLURAL + "/" + e.name;
         b.dataset.name = e.name;
         listEl.appendChild(b);
@@ -7681,19 +8008,102 @@ phase:  1
   (function () {
     var btn = document.getElementById("themeBtn");
     var root = document.documentElement;
+    var glyph = btn.querySelector("use");
+    var system = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function dark() {
+      var now = root.getAttribute("data-theme");
+      return now ? now === "dark" : system.matches;
+    }
+    // One convention, both halves of the control: the glyph and the accessible
+    // name each say what a click gives you. Dark is on, so the sun is on offer.
+    function paintToggle() {
+      var isDark = dark();
+      glyph.setAttribute("href", isDark ? "#i-sun" : "#i-moon");
+      btn.setAttribute("aria-label", isDark ? "Switch to light theme" : "Switch to dark theme");
+    }
+
     // localStorage is a per-viewer convenience here and nothing depends on it, so a
     // browser that blocks site data just gets the system theme every time.
     try {
       var saved = localStorage.getItem("navi-theme");
       if (saved === "light" || saved === "dark") root.setAttribute("data-theme", saved);
     } catch (err) { /* blocked storage: fall through to the system theme */ }
+    paintToggle();
+
     btn.addEventListener("click", function () {
-      var now = root.getAttribute("data-theme");
-      var dark = now ? now === "dark"
-                     : window.matchMedia("(prefers-color-scheme: dark)").matches;
-      var next = dark ? "light" : "dark";
+      var next = dark() ? "light" : "dark";
       root.setAttribute("data-theme", next);
+      paintToggle();
       try { localStorage.setItem("navi-theme", next); } catch (err) { /* ignore */ }
+    });
+    // Until someone picks a theme the page follows the system, so the glyph has
+    // to follow it too.
+    if (system.addEventListener) {
+      system.addEventListener("change", function () {
+        if (!root.getAttribute("data-theme")) paintToggle();
+      });
+    }
+  })();
+
+  // ---------------------------------------------------------------- copy
+  // One delegated handler for every command block, so the blocks the catalogue
+  // renders on each repaint need no wiring of their own.
+  (function () {
+    function text(btn) {
+      var block = btn.parentNode.classList.contains("cmdwrap")
+        ? btn.parentNode.querySelector("pre, .cmd")
+        : btn.closest(".term").querySelector("pre");
+      if (!block) return "";
+      // A terminal block holds the session, not the script: take the lines that
+      // were typed and leave the output behind. A `.cmd` block is commands only.
+      var typed = block.querySelectorAll(".c");
+      var lines = typed.length
+        ? Array.prototype.map.call(typed, function (n) { return n.textContent; })
+        : block.textContent.split("\n");
+      return lines.map(function (s) { return s.replace(/^\s*\$ ?/, ""); })
+                  .join("\n").replace(/\s+$/, "");
+    }
+    function flash(btn, ok) {
+      var use = btn.querySelector("use");
+      btn.classList.toggle("done", ok);
+      btn.classList.toggle("fail", !ok);
+      use.setAttribute("href", ok ? "#i-check" : "#i-copy");
+      // A clipboard write can be refused — by a permission, or by the page not
+      // holding focus. Saying so beats a control that looks inert.
+      btn.setAttribute("aria-label", ok ? "Copied" : "Could not copy — select the text instead");
+      window.setTimeout(function () {
+        btn.classList.remove("done");
+        btn.classList.remove("fail");
+        use.setAttribute("href", "#i-copy");
+        btn.setAttribute("aria-label", "Copy the commands");
+      }, 1600);
+    }
+    // The page is meant to open from a file:// path, where the async clipboard
+    // API is not always there; the textarea is the fallback, not the first try.
+    function legacy(s) {
+      var ta = document.createElement("textarea");
+      ta.value = s;
+      ta.setAttribute("readonly", "");
+      ta.style.cssText = "position:fixed;top:0;left:-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (err) { ok = false; }
+      document.body.removeChild(ta);
+      return ok;
+    }
+    document.addEventListener("click", function (ev) {
+      var btn = ev.target.closest ? ev.target.closest("[data-copy]") : null;
+      if (!btn) return;
+      var s = text(btn);
+      if (!s) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(s).then(function () { flash(btn, true); },
+                                              function () { flash(btn, legacy(s)); });
+      } else {
+        flash(btn, legacy(s));
+      }
     });
   })();
 })();
