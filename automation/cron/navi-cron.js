@@ -233,7 +233,12 @@ function processItem(item, cfg, ctx) {
     // retried, and the retry's commit has a different timestamp and so a
     // different sha. The lease is what keeps that from overwriting a human who
     // has since pushed work onto the branch — it refuses instead.
-    git(["push", "--force-with-lease", "-u", cfg.repo.remote, branch], worktree);
+    //
+    // Pushed from the repository root, not the worktree: a remote configured as
+    // a relative path (`../origin.git`) resolves against the directory git runs
+    // in, and the worktree is somewhere under the system temp directory. The
+    // branch ref lives in the common repository either way.
+    git(["push", "--force-with-lease", "-u", cfg.repo.remote, branch], repoRoot);
     if (cfg.pr && cfg.pr.command) {
       const res = shell(cfg.pr.command, {
         cwd: worktree,

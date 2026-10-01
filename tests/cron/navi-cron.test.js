@@ -184,6 +184,19 @@ test("a run without --push records nothing, so the first real run still opens it
   assert.match(git(["branch", "--list", "navi/proj-14-trial-week"], origin), /proj-14/);
 });
 
+test("a remote configured as a relative path still pushes", () => {
+  // The push used to run inside the worktree, which lives under the system temp
+  // directory, so `../origin.git` resolved against the wrong place and every
+  // push failed with "does not appear to be a git repository".
+  const { work, origin } = fixture();
+  git(["remote", "set-url", "origin", path.relative(work, origin)], work);
+  items(work, [{ id: "PROJ-17", title: "Relative remote" }]);
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+  const result = cron.run(config(work), ctx(work));
+  assert.strictEqual(result.failed.length, 0, JSON.stringify(result.failed));
+  assert.match(git(["branch", "--list", "navi/proj-17-relative-remote"], origin), /proj-17/);
+});
+
 test("a branch left behind by an interrupted run does not wedge the next one", () => {
   const { work, origin } = fixture();
   items(work, [{ id: "PROJ-15", title: "Interrupted" }]);
