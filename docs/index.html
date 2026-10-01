@@ -1188,7 +1188,12 @@ Next:
       model, so the lane is <code>standard</code>. Every block below was run against the committed
       tree at <code>f8707d3</code>, in a scratch directory, and its output copied verbatim —
       including the part where G6 fails and the change goes back for rework, which is the part
-      worth reading twice. The narrative version with the reasoning behind each artefact is
+      worth reading twice.
+      <br><span class="small">These transcripts were captured by hand at that commit and are not
+      regenerated, so treat the exact wording as of that date. The behaviour behind them is not
+      left to drift: <code>scripts/golden_path.py</code> runs the same propose &rarr; gate &rarr;
+      rework &rarr; archive path across all four lanes in CI on every commit, so a change that
+      broke what is shown here would fail the build.</span> The narrative version with the reasoning behind each artefact is
       <code>docs/WALKTHROUGH.md</code>; this is the same change, condensed to what you type and
       what comes back.
     </p>
@@ -1616,7 +1621,9 @@ lane:   standard
     <h2>What v1 does not do</h2>
     <p class="lede small">
       These are real, recorded, and worth knowing before you meet them. All verified against the
-      committed tree at <code>f8707d3</code>.
+      committed tree at <code>f8707d3</code>; the ones that are still true are still true, and the
+      reasoning behind every ruling made during the v1 build is in
+      <code>docs/DECISIONS.md</code>.
     </p>
 
     <div class="grid2">

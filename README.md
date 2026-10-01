@@ -16,6 +16,10 @@ nine gates.
 | [`docs/CONCEPTS.md`](docs/CONCEPTS.md) | Why agents and skills are separate, and what that buys |
 | [`docs/CLI.md`](docs/CLI.md) | Every verb, every validator rule, every known limitation |
 | [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Adding a skill or an agent, and the gates it must clear |
+| [`docs/TELEMETRY.md`](docs/TELEMETRY.md) | Exporting the gate ledger to AgentObs, Opik or LangSmith |
+| [`config/mcp/README.md`](config/mcp/README.md) | MCP connections for Jira, Azure DevOps, Confluence and GitHub |
+| [`automation/cron/README.md`](automation/cron/README.md) | The optional runner from tracker item to proposed branch |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every ruling made while building v1, and what each one cost |
 
 ---
 
