@@ -12,7 +12,7 @@ const gate = require("../../cli/commands/gate");
 const telemetry = require("../../cli/commands/telemetry");
 const { fold, traceIdFor } = require("../../cli/lib/telemetry/spans");
 const { toPayload, truncate } = require("../../cli/lib/telemetry/payload");
-const { resolve, parseHeaders } = require("../../cli/lib/telemetry/backends");
+const { resolve, parseHeaders, redactUrl } = require("../../cli/lib/telemetry/backends");
 const { post } = require("../../cli/lib/telemetry/exporter");
 
 const EVENTS = [
@@ -117,6 +117,16 @@ test("service.name is a resource attribute, so spans group under it", () => {
   const names = p.resourceSpans[0].resource.attributes.map((a) => a.key);
   assert.ok(names.includes("service.name"));
   assert.ok(names.includes("navi.change"));
+
+  // The fold stamps one service name on every span, so the assertion above can
+  // only ever see one group — it would pass with the grouping deleted. This is
+  // the half that exercises the grouping itself.
+  const mixed = [{ ...spans[0], serviceName: "a" }, { ...spans[1], serviceName: "b" }];
+  const grouped = toPayload(traceId, mixed, {});
+  assert.strictEqual(grouped.resourceSpans.length, 2);
+  assert.deepStrictEqual(
+    grouped.resourceSpans.map((r) => r.resource.attributes.find((a) => a.key === "service.name").value.stringValue),
+    ["a", "b"]);
 });
 
 test("truncation is never silent", () => {
@@ -317,16 +327,104 @@ test("--all exports every change the event log knows, not only the one in flight
 test("naming a change with nothing recorded says so rather than sending an empty trace", async () => {
   const { lines, emit } = capture();
   const env = { NAVI_AGENTOBS_ENDPOINT: "http://127.0.0.1:1/x", NAVI_AGENTOBS_INGEST_KEY: "k" };
+  // Non-zero: the caller asked for one specific change and got nothing, which
+  // is a typo'd slug or a change that has not reached a gate. This test used to
+  // assert 0 and so enshrined the defect — a CI step gated on the exit code
+  // passed while nothing was transmitted.
   const code = await telemetry.run(["export", "--backend", "agentobs", "--change", "ghost"], repo(), emit, env);
-  assert.strictEqual(code, 0);
+  assert.strictEqual(code, 1);
   assert.match(lines.join("\n"), /ghost: no gate decisions recorded/);
 });
 
-test("preview with a backend named builds that backend's payload, and rejects an unknown one", () => {
+test("what preview writes is byte-for-byte what export sends", async () => {
+  const root = repo();
+  const out = path.join(root, "payload.json");
+  const env = { NAVI_AGENTOBS_ENDPOINT: "", NAVI_OTLP_TRACE_NAMESPACE: "ns" };
+
+  let received = null;
+  const { s, url } = await server((req, res) => {
+    let body = "";
+    req.on("data", (c) => { body += c; });
+    req.on("end", () => { received = JSON.parse(body); res.writeHead(200); res.end("{}"); });
+  });
+  const live = { ...env, NAVI_AGENTOBS_ENDPOINT: url, NAVI_AGENTOBS_INGEST_KEY: "k" };
+
+  assert.strictEqual(telemetry.run(["preview", "--backend", "agentobs", "--out", out], root, () => {}, live), 0);
+  assert.strictEqual(await telemetry.run(["export", "--backend", "agentobs"], root, () => {}, live), 0);
+  s.close();
+
+  // The promise preview makes. Asserting only its exit code left the --backend
+  // path unobservable — the test passed with the whole block deleted.
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(out, "utf8"))[0], received);
+});
+
+test("preview rejects a backend name export would reject", () => {
+  const bad = capture();
+  assert.strictEqual(telemetry.run(["preview", "--backend", "datadog"], repo(), bad.emit, {}), 1);
+  assert.match(bad.lines.join("\n"), /one of agentobs, opik, langsmith, otlp/);
+});
+
+
+// --------------------------------------------- regressions found in review
+
+test("a malformed NAVI_OTLP_HEADERS entry never echoes the value", () => {
+  const secret = "sk-live-TOPSECRET-9f3a";
+  assert.throws(() => parseHeaders(`a=1, Authorization: Bearer ${secret}`), (e) => {
+    assert.ok(!e.message.includes(secret), `the error printed the credential: ${e.message}`);
+    assert.match(e.message, /entry 2 \(starting "Authorization"\)/);
+    return true;
+  });
+});
+
+test("export reports a malformed header variable without printing it", async () => {
+  const secret = "sk-live-TOPSECRET-9f3a";
+  const { lines, emit } = capture();
+  const env = { NAVI_OTLP_ENDPOINT: "https://c/v1/traces", NAVI_OTLP_HEADERS: `Authorization: Bearer ${secret}` };
+  assert.strictEqual(await telemetry.run(["export", "--backend", "otlp"], repo(), emit, env), 1);
+  assert.ok(!lines.join("\n").includes(secret), "the credential reached stdout");
+});
+
+test("doctor survives a variable it cannot parse, and still lists the rest", () => {
+  const secret = "sk-live-TOPSECRET";
+  const { lines, emit } = capture();
+  assert.strictEqual(telemetry.run(["doctor"], repo(), emit, { NAVI_OTLP_HEADERS: `Authorization: Bearer ${secret}` }), 0);
+  const text = lines.join("\n");
+  assert.ok(!text.includes(secret), "the credential reached stdout");
+  assert.match(text, /otlp +no +\(not resolvable\)/);
+  assert.match(text, /^langsmith/m, "one bad variable aborted the whole listing");
+});
+
+test("a credential carrying CR is reported by variable name, not by header name", () => {
+  const r = resolve("agentobs", { NAVI_AGENTOBS_ENDPOINT: "https://h/x", NAVI_AGENTOBS_INGEST_KEY: "abc\r" });
+  assert.strictEqual(r.ready, false);
+  assert.match(r.problems[0], /^NAVI_AGENTOBS_INGEST_KEY contains a newline or carriage return/);
+});
+
+test("the exporter returns an error value rather than throwing on an invalid header", async () => {
+  const r = await post("https://h/x", { "X-K": "abc\r" }, {}, { retries: 0 });
+  assert.strictEqual(r.ok, false);
+  assert.match(r.error, /request could not be built/);
+});
+
+test("a named change holding nothing exits non-zero; a quiet --all does not", async () => {
+  const root = repo();
+  const env = { NAVI_AGENTOBS_ENDPOINT: "http://127.0.0.1:1/x", NAVI_AGENTOBS_INGEST_KEY: "k" };
+  // A typo'd slug used to exit 0, so a CI step gated on it passed having sent nothing.
+  assert.strictEqual(await telemetry.run(["export", "--backend", "agentobs", "--change", "ghost"], root, () => {}, env), 1);
+  assert.strictEqual(telemetry.run(["preview", "--change", "ghost"], root, () => {}, env), 1);
+});
+
+test("an endpoint carrying a credential is redacted everywhere it is written", async () => {
   const root = repo();
   const { lines, emit } = capture();
-  assert.strictEqual(telemetry.run(["preview", "--backend", "langsmith"], root, emit, {}), 0);
-  const bad = capture();
-  assert.strictEqual(telemetry.run(["preview", "--backend", "datadog"], root, bad.emit, {}), 1);
-  assert.match(bad.lines.join("\n"), /one of agentobs, opik, langsmith, otlp/);
+  const env = { NAVI_OTLP_ENDPOINT: "https://user:S3cr3tP4ss@h/v1/traces?api-key=alsosecret",
+                NAVI_OTLP_TRACE_NAMESPACE: "ns" };
+  await telemetry.run(["export", "--backend", "otlp", "--dry-run"], root, emit, env);
+  const text = lines.join("\n");
+  assert.ok(!text.includes("S3cr3tP4ss"), "userinfo reached stdout");
+  assert.ok(!text.includes("alsosecret"), "a query-string key reached stdout");
+  assert.match(text, /<redacted>/);
+
+  assert.strictEqual(redactUrl("https://h/v1/traces"), "https://h/v1/traces");
+  assert.strictEqual(redactUrl("not a url"), "not a url");
 });

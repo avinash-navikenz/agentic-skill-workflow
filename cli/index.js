@@ -16,7 +16,10 @@ const COMMANDS = {
 };
 
 function main(argv) {
-  if (argv.includes("--version")) {
+  // Only as the first word. Matching it anywhere meant
+  // `gate G2 --pass --evidence x --version` printed the version and exited 0
+  // with the gate unrecorded — a command that looked like it had succeeded.
+  if (argv[0] === "--version") {
     process.stdout.write(pkg.version + "\n");
     return 0;
   }

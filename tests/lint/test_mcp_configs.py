@@ -89,6 +89,48 @@ class TestMcpConfigs(unittest.TestCase):
                                    "env": {"GITHUB_TOOLSETS": "repos,issues"}}}}
         self.assertEqual(self.run_check(files={"a.mcp.json": ok}), [])
 
+    def test_C4_catches_the_token_formats_actually_in_use(self):
+        """Every one of these was planted in `args` and reported NO findings.
+
+        The key-name rule could not fire on an array element, and the sk- pattern
+        could not cross a hyphen — so it matched only the retired OpenAI form.
+        """
+        for label, secret in [
+            ("current OpenAI", "sk-proj-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789"),
+            ("Anthropic", "sk-ant-api03-AbCdEfGhIjKlMnOpQrStUvWxYz01234"),
+            ("Azure DevOps PAT", "abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrst"),
+            ("legacy OpenAI", "sk-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ab"),
+        ]:
+            bad = {"mcpServers": {"x": {"command": "docker", "args": ["run", secret]}}}
+            with self.subTest(label):
+                self.assertIn("C4", rules(self.run_check(files={"a.mcp.json": bad})))
+
+    def test_C4_catches_a_credential_in_a_url(self):
+        bad = {"mcpServers": {"x": {"type": "http", "url": "https://user:S3cr3tP4ssw0rd@h/mcp"}}}
+        self.assertIn("C4", rules(self.run_check(files={"a.mcp.json": bad})))
+
+    def test_C4_catches_a_literal_after_a_credential_flag(self):
+        # A bespoke credential matches no public pattern; the flag before it is
+        # what names it.
+        bad = {"mcpServers": {"x": {"command": "docker", "args": ["run", "--token", "hunter2-internal"]}}}
+        self.assertIn("C4", rules(self.run_check(files={"a.mcp.json": bad})))
+
+    def test_C4_leaves_ordinary_arguments_alone(self):
+        ok = {"mcpServers": {"x": {"command": "npx",
+                                   "args": ["-y", "@azure-devops/mcp", "${ADO_ORGANIZATION}",
+                                            "--token", "${GITHUB_PERSONAL_ACCESS_TOKEN}"]}}}
+        self.assertEqual(self.run_check(files={"a.mcp.json": ok},
+                                        env="ADO_ORGANIZATION=\nGITHUB_PERSONAL_ACCESS_TOKEN=\n"), [])
+
+    def test_C3_rejects_shapes_that_would_hide_a_credential_from_C4(self):
+        for label, server in [
+            ("non-object env", {"command": "x", "env": ["JIRA_API_TOKEN=secret"]}),
+            ("non-string command", {"command": ["docker", "run"]}),
+            ("non-object headers", {"type": "http", "url": "https://h/x", "headers": "a: b"}),
+        ]:
+            with self.subTest(label):
+                self.assertIn("C3", rules(self.run_check(files={"a.mcp.json": {"mcpServers": {"x": server}}})))
+
     def test_C5_undocumented_variable(self):
         bad = {"mcpServers": {"x": {"command": "npx", "args": ["${NOT_DOCUMENTED}"]}}}
         self.assertIn("C5", rules(self.run_check(files={"a.mcp.json": bad})))

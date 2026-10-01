@@ -14,7 +14,7 @@ const { readState } = require("../lib/state");
 const { adlcDir } = require("../lib/paths");
 const { fold } = require("../lib/telemetry/spans");
 const { toPayload } = require("../lib/telemetry/payload");
-const { BACKENDS, resolve } = require("../lib/telemetry/backends");
+const { BACKENDS, resolve, redactUrl } = require("../lib/telemetry/backends");
 const { post } = require("../lib/telemetry/exporter");
 const { flagValue } = require("../lib/args");
 
@@ -106,9 +106,20 @@ function recordSidecar(cwd, entries) {
 function doctor(cwd, env, emit) {
   emit("backend     ready  endpoint");
   for (const name of Object.keys(BACKENDS)) {
-    const r = resolve(name, env);
-    emit(`${name.padEnd(11)} ${(r.ready ? "yes" : "no ").padEnd(6)} ${r.url || "(unset)"}`);
-    if (!r.ready) emit(`            missing: ${r.missing.join(", ")}`);
+    let r;
+    try {
+      r = resolve(name, env);
+    } catch (e) {
+      // One malformed variable used to abort the whole listing, so the operator
+      // asking "why is this backend not configured" got a crash instead of the
+      // answer — and lost the rows below it too.
+      emit(`${name.padEnd(11)} no     (not resolvable)`);
+      emit(`            ${e.message}`);
+      continue;
+    }
+    emit(`${name.padEnd(11)} ${(r.ready ? "yes" : "no ").padEnd(6)} ${redactUrl(r.url) || "(unset)"}`);
+    if (r.missing.length) emit(`            missing: ${r.missing.join(", ")}`);
+    for (const problem of r.problems) emit(`            ${problem}`);
     // Header names, never header values. The value is the credential.
     const sent = Object.keys(r.headers).filter((h) => h !== "Content-Type");
     if (sent.length) emit(`            headers: ${sent.join(", ")}`);
@@ -144,8 +155,14 @@ function preview(argv, cwd, env, emit) {
   }
 
   const payloads = [];
+  const namedPreview = flagValue(argv, "--change").present;
+  let empties = 0;
   for (const { change, folded } of built) {
-    if (!folded) { emit(`${change}: no gate decisions recorded — nothing to export`); continue; }
+    if (!folded) {
+      emit(`${change}: no gate decisions recorded — nothing to export`);
+      empties += 1;
+      continue;
+    }
     payloads.push({
       change, traceId: folded.traceId, spans: folded.spans.length,
       payload: toPayload(folded.traceId, folded.spans,
@@ -153,7 +170,7 @@ function preview(argv, cwd, env, emit) {
     });
     emit(`${change}: trace ${folded.traceId}, ${folded.spans.length} span(s)`);
   }
-  if (!payloads.length) return 1;
+  if (!payloads.length) return namedPreview || empties === 0 ? 1 : 0;
 
   if (out.present) {
     if (!out.value) { emit("--out needs a file path"); return 1; }
@@ -172,7 +189,10 @@ async function exportSpans(argv, cwd, env, emit) {
     target = resolve(backendFlag.value, env);
   } catch (e) { emit(e.message); return 1; }
   if (!target.ready) {
-    emit(`${target.name} is not configured — missing: ${target.missing.join(", ")}`);
+    if (target.missing.length) {
+      emit(`${target.name} is not configured — missing: ${target.missing.join(", ")}`);
+    }
+    for (const problem of target.problems) emit(`${target.name}: ${problem}`);
     return 1;
   }
 
@@ -185,18 +205,29 @@ async function exportSpans(argv, cwd, env, emit) {
 
   const entries = [];
   let failures = 0;
+  // A change NAMED on the command line that holds nothing is a typo or a change
+  // that has not reached a gate — the caller asked for something specific and
+  // got nothing, so the exit code says so. A default or --all run finding
+  // nothing is an ordinary empty state and stays 0.
+  const named = flagValue(argv, "--change").present;
   for (const { change, folded } of built) {
-    if (!folded) { emit(`${change}: no gate decisions recorded — nothing to export`); continue; }
+    if (!folded) {
+      emit(`${change}: no gate decisions recorded — nothing to export`);
+      if (named) failures += 1;
+      continue;
+    }
     const payload = toPayload(folded.traceId, folded.spans,
                               { "navi.change": change, "navi.framework": "navi-delivery" },
                               { kindAttribute: target.kindAttribute });
     if (dryRun) {
-      emit(`${change}: would send ${folded.spans.length} span(s) to ${target.url} (trace ${folded.traceId})`);
+      emit(`${change}: would send ${folded.spans.length} span(s) to ${redactUrl(target.url)} (trace ${folded.traceId})`);
       continue;
     }
     const result = await post(target.url, target.headers, payload);
     entries.push({
-      change, backend: target.name, url: target.url, trace_id: folded.traceId,
+      // Redacted: delivery/.adlc/ is part of the committed tree, and an OTLP
+      // endpoint may legitimately carry userinfo or a query-string key.
+      change, backend: target.name, url: redactUrl(target.url), trace_id: folded.traceId,
       spans: folded.spans.length, ok: result.ok, status: result.status,
       attempts: result.attempts, bytes: result.bytes, error: result.error,
       at: new Date().toISOString(),

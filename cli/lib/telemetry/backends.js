@@ -6,6 +6,8 @@
 // what is missing by VARIABLE NAME, which is the one thing worth saying out loud
 // about a credential.
 
+const { URL } = require("node:url");
+
 const NO_NETWORK_HINT = "set it and run `navi-delivery telemetry doctor` again";
 
 const BACKENDS = {
@@ -56,17 +58,36 @@ const BACKENDS = {
 
 // `a=1,b=2` — the shape OTEL_EXPORTER_OTLP_HEADERS uses, so anyone who has
 // configured an OTel exporter already knows this format.
+//
+// The error NEVER echoes the entry. What gets pasted into this variable is an
+// HTTP header, so the most likely malformation is `Authorization: Bearer <key>`
+// written with a colon — and the half after the delimiter is the credential.
+// Reporting the entry verbatim printed live keys to stdout.
 function parseHeaders(raw) {
   const out = {};
-  for (const pair of String(raw || "").split(",")) {
-    const trimmed = pair.trim();
+  const entries = String(raw || "").split(",");
+  for (let i = 0; i < entries.length; i += 1) {
+    const trimmed = entries[i].trim();
     if (!trimmed) continue;
     const eq = trimmed.indexOf("=");
-    if (eq <= 0) throw new Error(`header ${JSON.stringify(trimmed)} is not key=value`);
+    if (eq <= 0) {
+      // The leading token up to the first delimiter is a header name, not a
+      // value, so it is safe to show and is the only thing that identifies
+      // which entry to fix.
+      const name = trimmed.split(/[:=\s]/, 1)[0] || "(empty)";
+      throw new Error(`NAVI_OTLP_HEADERS entry ${i + 1} (starting "${name}") is not key=value — ` +
+                      "write it as Name=value, with no colon. The value is not shown here.");
+    }
     out[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
   }
   return out;
 }
+
+// A header value carrying CR or LF is rejected by Node's HTTP client with a
+// message naming the internal header, which tells nobody which variable to fix
+// — and it throws, which the exporter promises never to do. A .env saved with
+// CRLF line endings produces exactly this.
+const CONTROL = /[\r\n\u0000]/;
 
 function resolve(name, env) {
   const spec = BACKENDS[name];
@@ -78,12 +99,24 @@ function resolve(name, env) {
   if (!endpoint) missing.push(spec.endpointVar);
 
   const headers = { "Content-Type": "application/json" };
+  const problems = [];
+  const put = (header, variable) => {
+    const value = env[variable];
+    if (CONTROL.test(value)) {
+      // Named by VARIABLE, which is the only thing about a credential worth
+      // saying out loud and the only thing that tells the reader what to fix.
+      problems.push(`${variable} contains a newline or carriage return — ` +
+                    "check for a .env saved with CRLF endings, or a trailing newline on a paste");
+      return;
+    }
+    headers[header] = value;
+  };
   for (const [header, variable] of Object.entries(spec.secrets)) {
-    if (env[variable]) headers[header] = env[variable];
+    if (env[variable]) put(header, variable);
     else missing.push(variable);
   }
   for (const [header, variable] of Object.entries(spec.optional)) {
-    if (env[variable]) headers[header] = env[variable];
+    if (env[variable]) put(header, variable);
   }
   if (spec.headersVar && env[spec.headersVar]) Object.assign(headers, parseHeaders(env[spec.headersVar]));
 
@@ -92,11 +125,36 @@ function resolve(name, env) {
     url: endpoint ? `${endpoint.replace(/\/+$/, "")}${spec.suffix}` : null,
     headers,
     missing,
+    problems,
     kindAttribute: spec.kindAttribute,
     note: spec.note,
-    ready: missing.length === 0,
+    ready: missing.length === 0 && problems.length === 0,
     hint: missing.length ? NO_NETWORK_HINT : null,
   };
 }
 
-module.exports = { BACKENDS, resolve, parseHeaders };
+// An OTLP endpoint is ordinarily not a secret, but two ordinary forms carry one:
+// userinfo (`https://user:token@host/...`) and a query-string key. The sidecar is
+// a file in the repository and `delivery/.adlc/` is committed, so the url is
+// redacted before it is recorded or printed.
+function redactUrl(url) {
+  if (typeof url !== "string" || !url) return url;
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return url;
+  }
+  let out = url;
+  if (parsed.username || parsed.password) {
+    parsed.username = "";
+    parsed.password = "";
+    out = parsed.toString().replace("://", "://<redacted>@");
+  }
+  // Built by hand rather than through `parsed.search`, which percent-encodes the
+  // marker into `%3Credacted%3E` and makes the redaction look like a value.
+  const q = out.indexOf("?");
+  return q === -1 ? out : `${out.slice(0, q)}?<redacted>`;
+}
+
+module.exports = { BACKENDS, resolve, parseHeaders, redactUrl };

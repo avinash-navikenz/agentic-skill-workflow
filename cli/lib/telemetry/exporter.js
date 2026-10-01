@@ -23,20 +23,35 @@ function once(url, headers, body, timeoutMs) {
       return;
     }
     const lib = target.protocol === "http:" ? http : https;
-    const req = lib.request(target, {
-      method: "POST",
-      headers: { ...headers, "Content-Length": Buffer.byteLength(body) },
-      timeout: timeoutMs,
-    }, (res) => {
-      let chunks = "";
-      res.setEncoding("utf8");
-      res.on("data", (c) => { if (chunks.length < 4096) chunks += c; });
-      res.on("end", () => resolve({ status: res.statusCode, body: chunks, error: null }));
-    });
+    // `lib.request` validates headers synchronously and THROWS on an invalid
+    // value — a key with a trailing CR does it. Without this catch the promise
+    // rejects, the sidecar is never written, and under --all every remaining
+    // change is abandoned mid-loop. "This module never throws" has to be true
+    // on the synchronous path too, not only the callback ones.
+    let req;
+    try {
+      req = lib.request(target, {
+        method: "POST",
+        headers: { ...headers, "Content-Length": Buffer.byteLength(body) },
+        timeout: timeoutMs,
+      }, (res) => {
+        let chunks = "";
+        res.setEncoding("utf8");
+        res.on("data", (c) => { if (chunks.length < 4096) chunks += c; });
+        res.on("end", () => resolve({ status: res.statusCode, body: chunks, error: null }));
+      });
+    } catch (e) {
+      resolve({ status: 0, body: "", error: `request could not be built: ${e.message}` });
+      return;
+    }
     req.on("timeout", () => { req.destroy(new Error(`no response in ${timeoutMs}ms`)); });
     req.on("error", (e) => resolve({ status: 0, body: "", error: e.message }));
-    req.write(body);
-    req.end();
+    try {
+      req.write(body);
+      req.end();
+    } catch (e) {
+      resolve({ status: 0, body: "", error: `request could not be sent: ${e.message}` });
+    }
   });
 }
 

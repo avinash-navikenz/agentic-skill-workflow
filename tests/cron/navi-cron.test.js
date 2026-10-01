@@ -55,8 +55,20 @@ function items(work, list) {
 
 test("slugFor reduces a tracker id and title to a proposable slug", () => {
   assert.strictEqual(cron.slugFor({ id: "PROJ-12", title: "Add CSV export" }), "proj-12-add-csv-export");
-  assert.strictEqual(cron.slugFor({ id: "AB#4411", title: "Fix / the thing!" }), "ab-4411-fix-the-thing");
   assert.ok(!cron.slugFor({ id: "X-1", title: "a".repeat(200) }).endsWith("-"));
+  assert.ok(cron.slugFor({ id: "AB#4411", title: "Fix / the thing!" }).startsWith("ab-4411-fix-the-thing"));
+});
+
+test("two ids that reduce to the same text get different slugs", () => {
+  // Reduction is lossy, and a collision is not cosmetic: the second item's
+  // branch creation fails and keeps failing on every run.
+  assert.notStrictEqual(cron.slugFor({ id: "AB#4411", title: "Fix login" }),
+                        cron.slugFor({ id: "AB-4411", title: "Fix login" }));
+  const long = "a".repeat(80);
+  assert.notStrictEqual(cron.slugFor({ id: "P-1", title: long }),
+                        cron.slugFor({ id: "P-2", title: long }));
+  // An id that survives reduction intact keeps a clean, readable slug.
+  assert.strictEqual(cron.slugFor({ id: "proj-7", title: "Short" }), "proj-7-short");
 });
 
 test("slugFor refuses an id that yields nothing usable", () => {
@@ -109,12 +121,13 @@ test("tracker text never reaches a shell as code", () => {
   assert.strictEqual(fs.readFileSync(path.join(work, "pr.txt"), "utf8"), `x"; touch ${canary}; echo "`);
 });
 
-test("without --push nothing reaches the remote", () => {
+test("without --push nothing reaches the remote and nothing stays local", () => {
   const { work, origin } = fixture();
   items(work, [{ id: "PROJ-9", title: "Local only" }]);
   const result = cron.run(config(work), ctx(work, { push: false }));
   assert.strictEqual(result.proposed[0].pushed, false);
   assert.strictEqual(git(["branch", "--list", "navi/proj-9-local-only"], origin), "");
+  assert.strictEqual(git(["branch", "--list", "navi/proj-9-local-only"], work), "");
 });
 
 test("an item already processed is not proposed twice", () => {
@@ -126,14 +139,77 @@ test("an item already processed is not proposed twice", () => {
   assert.strictEqual(cron.run(cfg, ctx(work)).proposed.length, 0);
 });
 
-test("a failed item is not recorded, so the next run retries it", () => {
+test("a failed item is not recorded, and the NEXT run fails the same way, not worse", () => {
   const { work } = fixture();
   items(work, [{ id: "PROJ-11", title: "Breaks" }]);
   const cfg = config(work, { pr: { command: "exit 3" } });
-  const result = cron.run(cfg, ctx(work));
-  assert.strictEqual(result.failed.length, 1);
-  assert.match(result.failed[0].message, /pull-request command failed \(3\)/);
+
+  const first = cron.run(cfg, ctx(work));
+  assert.strictEqual(first.failed.length, 1);
+  assert.match(first.failed[0].message, /pull-request command failed \(3\)/);
   assert.strictEqual(cron.readProcessed(work, cfg).has("PROJ-11"), false);
+
+  // The whole point of not recording it. A leftover branch used to make every
+  // later run die at `checkout -b ... already exists`, reporting a git error
+  // instead of the real one, for the life of that branch.
+  const second = cron.run(cfg, ctx(work));
+  assert.strictEqual(second.failed.length, 1);
+  assert.match(second.failed[0].message, /pull-request command failed \(3\)/,
+               "the retry reported a different failure — the first run left something behind");
+});
+
+test("a failed item leaves no branch behind in the checkout", () => {
+  const { work } = fixture();
+  items(work, [{ id: "PROJ-13", title: "Breaks" }]);
+  cron.run(config(work, { pr: { command: "exit 3" } }), ctx(work));
+  assert.strictEqual(git(["branch", "--list", "navi/proj-13-breaks"], work), "");
+});
+
+test("a run without --push records nothing, so the first real run still opens it", () => {
+  const { work, origin } = fixture();
+  items(work, [{ id: "PROJ-14", title: "Trial week" }]);
+  const cfg = config(work);
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+
+  // The documented onboarding: run it without --push for a week first.
+  for (let i = 0; i < 3; i += 1) assert.strictEqual(cron.run(cfg, ctx(work, { push: false })).proposed.length, 1);
+  assert.strictEqual(cron.readProcessed(work, cfg).size, 0, "a dry run recorded the item");
+  assert.strictEqual(git(["branch", "--list", "navi/proj-14-trial-week"], work), "",
+                     "a dry run left a branch in the checkout");
+
+  // Then the real one.
+  const real = cron.run(cfg, ctx(work));
+  assert.strictEqual(real.proposed.length, 1);
+  assert.strictEqual(real.proposed[0].pushed, true);
+  assert.match(git(["branch", "--list", "navi/proj-14-trial-week"], origin), /proj-14/);
+});
+
+test("a branch left behind by an interrupted run does not wedge the next one", () => {
+  const { work, origin } = fixture();
+  items(work, [{ id: "PROJ-15", title: "Interrupted" }]);
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+  git(["branch", "navi/proj-15-interrupted"], work);        // the leftover
+  const result = cron.run(config(work), ctx(work));
+  assert.strictEqual(result.failed.length, 0, JSON.stringify(result.failed));
+  assert.match(git(["branch", "--list", "navi/proj-15-interrupted"], origin), /proj-15/);
+});
+
+test("a corrupt state file stops the run rather than re-proposing everything", () => {
+  const { work } = fixture();
+  const cfg = config(work);
+  fs.writeFileSync(path.join(work, cfg.stateFile), "{truncated");
+  assert.throws(() => cron.run(cfg, ctx(work)), /not valid JSON[\s\S]*Refusing to run/);
+  fs.writeFileSync(path.join(work, cfg.stateFile), JSON.stringify({ done: [] }));
+  assert.throws(() => cron.run(cfg, ctx(work)), /no 'processed' array/);
+});
+
+test("a stateFile pointing outside the repository is refused", () => {
+  const { work } = fixture();
+  items(work, [{ id: "PROJ-16", title: "Escape" }]);
+  assert.throws(() => cron.run(config(work, { stateFile: "../escaped.json" }), ctx(work)),
+                /resolves outside the repository/);
+  assert.throws(() => cron.run(config(work, { stateFile: "/tmp/escaped.json" }), ctx(work)),
+                /resolves outside the repository/);
 });
 
 test("the checkout cron runs in is left on its own branch, clean", () => {
@@ -146,6 +222,11 @@ test("the checkout cron runs in is left on its own branch, clean", () => {
     .split("\n").filter((l) => l && !/items\.json|pr\.txt|navi-cron-state/.test(l));
   assert.deepStrictEqual(dirty, [], `checkout was modified: ${dirty.join("; ")}`);
   assert.strictEqual(git(["worktree", "list"], work).split("\n").length, 1);
+  // "Never touches your checkout" includes its branch list. A branch per item
+  // accumulating here is touching it, and the earlier version of this test
+  // checked HEAD, status and worktrees but not this.
+  assert.strictEqual(git(["branch", "--list", "navi/*"], work), "",
+                     "a navi/ branch was left in the checkout");
 });
 
 test("maxPerRun bounds how many items one run opens", () => {

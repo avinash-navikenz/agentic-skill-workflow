@@ -411,11 +411,12 @@ navi-delivery telemetry export --backend <agentobs|opik|langsmith|otlp>
 
 | Exit | When |
 |---|---|
-| 0 | everything selected was sent, or there was nothing recorded to send |
-| 1 | a backend is unconfigured, a flag is missing, or a send was refused |
+| 0 | everything selected was sent, or a default/`--all` run found nothing recorded |
+| 1 | a backend is unconfigured, a flag is missing, a send was refused, or a **named** `--change` holds no decisions |
 
-`doctor` prints header **names** and never header values — the value is the credential.
-A real export writes `delivery/.adlc/telemetry.json` with the outcome and no credential,
+`doctor` prints header **names** and never header values — the value is the credential —
+and a variable it cannot parse costs that one row, not the whole listing. A real export
+writes `delivery/.adlc/telemetry.json` with the outcome, a redacted url and no credential,
 which is the local answer to "did it arrive?". A refused export changes nothing about
 the delivery record.
 

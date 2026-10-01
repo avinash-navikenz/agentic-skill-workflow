@@ -22,6 +22,7 @@
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const { spawnSync } = require("node:child_process");
 
 const USAGE = `usage: navi-cron --config <file> [--push] [--max <n>] [--quiet]
@@ -70,17 +71,28 @@ function loadConfig(file) {
 
 // A tracker id is not a path segment. `PROJ-12`, `AB#4411` and `feat/x` all
 // arrive from real trackers; all three become directory names here, so they
-// are reduced to the same slug grammar `navi-delivery propose` enforces. The
-// id leads so two items with similar titles never collide.
+// are reduced to the same slug grammar `navi-delivery propose` enforces.
+//
+// Reducing loses information, and two items can reduce to one slug: `AB#4411`
+// and `AB-4411` both give `ab-4411`, and two 80-character titles truncate to
+// the same 60. A collision is not cosmetic — the second item's branch creation
+// fails, and it then fails identically on every run forever. So when (and only
+// when) the reduction actually lost something, a short digest of the exact id
+// is appended. An id that survives reduction intact keeps a clean slug.
 function slugFor(item) {
-  const base = `${item.id} ${item.title || ""}`
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60)
-    .replace(/-+$/g, "");
-  if (!SLUG_RE.test(base)) throw new Error(`item ${JSON.stringify(item.id)} yields no usable slug`);
-  return base;
+  const clean = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const id = clean(item.id);
+  const title = clean(item.title || "");
+  const full = [id, title].filter(Boolean).join("-");
+  const base = full.slice(0, 60).replace(/-+$/g, "");
+
+  const lossy = id !== item.id.toLowerCase() || base !== full;
+  const slug = lossy
+    ? `${base.slice(0, 53).replace(/-+$/g, "")}-${crypto.createHash("sha256").update(item.id).digest("hex").slice(0, 6)}`
+    : base;
+
+  if (!SLUG_RE.test(slug)) throw new Error(`item ${JSON.stringify(item.id)} yields no usable slug`);
+  return slug;
 }
 
 function validateItems(parsed) {
@@ -125,18 +137,45 @@ function itemEnv(item, extra = {}) {
 
 // ----------------------------------------------------------------- state
 
-function readProcessed(repoRoot, cfg) {
-  const p = path.resolve(repoRoot, cfg.stateFile);
-  try {
-    const seen = JSON.parse(fs.readFileSync(p, "utf8")).processed;
-    return new Set(Array.isArray(seen) ? seen : []);
-  } catch {
-    return new Set();
+// The state file must stay beside the checkout. An absolute or `../` path in a
+// config would otherwise have the runner writing wherever it pointed.
+function stateFileFor(repoRoot, cfg) {
+  const resolved = path.resolve(repoRoot, cfg.stateFile);
+  const root = path.resolve(repoRoot);
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+    throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} resolves outside the repository ` +
+                    `(${resolved}) — it must sit beside the checkout`);
   }
+  return resolved;
+}
+
+function readProcessed(repoRoot, cfg) {
+  const p = stateFileFor(repoRoot, cfg);
+  let raw;
+  try {
+    raw = fs.readFileSync(p, "utf8");
+  } catch {
+    return new Set();          // no file yet is the ordinary first run
+  }
+  // A truncated or hand-edited file used to be indistinguishable from "nothing
+  // processed yet", and the next run re-opened duplicate branches and pull
+  // requests for every item it had already handled. Losing the record is worth
+  // stopping for; it is one line to fix and unbounded duplicate work not to.
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (e) {
+    throw new Error(`${p} is not valid JSON (${e.message}). Refusing to run: treating it as ` +
+                    "empty would re-propose every item it records. Fix or delete the file.");
+  }
+  if (!parsed || !Array.isArray(parsed.processed)) {
+    throw new Error(`${p} has no 'processed' array. Refusing to run — see above.`);
+  }
+  return new Set(parsed.processed);
 }
 
 function writeProcessed(repoRoot, cfg, seen) {
-  const p = path.resolve(repoRoot, cfg.stateFile);
+  const p = stateFileFor(repoRoot, cfg);
   fs.writeFileSync(p, JSON.stringify({ processed: [...seen].sort() }, null, 2) + "\n");
 }
 
@@ -164,7 +203,10 @@ function processItem(item, cfg, ctx) {
 
   try {
     git(["worktree", "add", "--detach", worktree, `${cfg.repo.remote}/${cfg.repo.base}`], repoRoot);
-    git(["checkout", "-b", branch], worktree);
+    // -B, not -b: a branch left behind by an earlier interrupted run is reset
+    // rather than fatal. The content is regenerated scaffold, so there is
+    // nothing in it worth preserving over a fresh attempt.
+    git(["checkout", "-B", branch], worktree);
 
     const lane = item.lane || cfg.lane;
     const r = spawnSync(process.execPath, [cliPath, "propose", slug, "--lane", lane],
@@ -186,7 +228,12 @@ function processItem(item, cfg, ctx) {
       return { slug, branch, pushed: false };
     }
 
-    git(["push", "-u", cfg.repo.remote, branch], worktree);
+    // --force-with-lease, because a previous run may have pushed this branch and
+    // then failed at the pull-request step: the item was not recorded, so it is
+    // retried, and the retry's commit has a different timestamp and so a
+    // different sha. The lease is what keeps that from overwriting a human who
+    // has since pushed work onto the branch — it refuses instead.
+    git(["push", "--force-with-lease", "-u", cfg.repo.remote, branch], worktree);
     if (cfg.pr && cfg.pr.command) {
       const res = shell(cfg.pr.command, {
         cwd: worktree,
@@ -202,8 +249,15 @@ function processItem(item, cfg, ctx) {
     log(`  pushed ${branch}`);
     return { slug, branch, pushed: true };
   } finally {
-    try { git(["worktree", "remove", "--force", worktree], repoRoot); } catch { /* reported below */ }
+    try { git(["worktree", "remove", "--force", worktree], repoRoot); } catch { /* best effort */ }
     fs.rmSync(worktree, { recursive: true, force: true });
+    // The local branch always goes, whatever happened. On success it lives on
+    // the remote and the local ref serves nothing; on failure it must not be
+    // there, or the next run dies at branch creation and reports a git error
+    // instead of the real one, for the life of that branch. Either way, "it
+    // never touches the checkout it runs in" includes the checkout's branch
+    // list — one ref per work item, accumulating forever, is touching it.
+    try { git(["branch", "-D", branch], repoRoot); } catch { /* may never have been created */ }
   }
 }
 
@@ -229,11 +283,17 @@ function run(cfg, ctx) {
   for (const item of todo) {
     log(`${item.id}: ${item.title}`);
     try {
-      done.push(processItem(item, cfg, ctx));
-      // Recorded only on success. A failure must be retried next run, not
-      // silently dropped because the id was written before the work.
-      seen.add(item.id);
-      writeProcessed(repoRoot, cfg, seen);
+      const outcome = processItem(item, cfg, ctx);
+      done.push(outcome);
+      // Recorded only when the branch reached the remote. A failure must be
+      // retried next run, and so must a run without --push: the documented way
+      // to try this tool is a week of push-less runs, and recording those ids
+      // would mean the first real run found every item already seen and opened
+      // nothing, forever.
+      if (outcome.pushed) {
+        seen.add(item.id);
+        writeProcessed(repoRoot, cfg, seen);
+      }
     } catch (e) {
       failed.push({ id: item.id, message: e.message });
       log(`  FAILED: ${e.message}`);
@@ -269,11 +329,17 @@ function main(argv) {
   }
 
   const maxFlag = value("--max");
+  if (maxFlag !== null && !/^[0-9]+$/.test(maxFlag)) {
+    // Number("abc") is NaN, slice(0, NaN) is empty, and the run reported a
+    // clean zero-item pass. A typo must not look like "nothing to do".
+    process.stderr.write(`navi-cron: --max must be a whole number, got ${JSON.stringify(maxFlag)}\n`);
+    return 2;
+  }
   let result;
   try {
     result = run(cfg, {
       repoRoot, log, push: flag("--push"),
-      max: maxFlag ? Number(maxFlag) : undefined,
+      max: maxFlag !== null ? Number(maxFlag) : undefined,
       cliPath: path.resolve(__dirname, "..", "..", "cli", "index.js"),
     });
   } catch (e) {

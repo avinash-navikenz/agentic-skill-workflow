@@ -35,10 +35,19 @@ By default the change in `state.json` is exported. `--change <slug>` names anoth
 `--all` exports every change the event log knows about — which is how you backfill a
 repository that has been running since before telemetry existed.
 
+A change you **name** that holds no gate decisions exits non-zero: you asked for something
+specific and got nothing, which is a typo'd slug or a change that has not reached a gate.
+A default or `--all` run that finds nothing exits zero — an empty event log is a state, not
+an error.
+
 ## Configuring a backend
 
 Every credential comes from the environment. Nothing is read from a file in the
-repository, nothing is printed, and nothing reaches the sidecar.
+repository, nothing is printed, and nothing reaches the sidecar. A malformed
+`NAVI_OTLP_HEADERS` entry is reported by its position and its leading header name — never
+by echoing the entry, because the half after the delimiter is the credential. A value
+carrying a stray carriage return (a `.env` saved with CRLF endings) is refused by the name
+of the variable that holds it, rather than by the internal header name Node would name.
 
 | Backend | Endpoint variable | Credential | Also honoured |
 | --- | --- | --- | --- |
@@ -106,8 +115,11 @@ Every real export writes `delivery/.adlc/telemetry.json`:
                       "bytes": 4821, "error": null, "at": "2026-10-01T..." } }
 ```
 
-It holds the outcome and never a credential. A `401` here is a stale key, and it is
-visible where you would look rather than only in a vendor's UI you have not opened.
+It holds the outcome and never a credential. The url is redacted before it is written:
+`delivery/.adlc/` is part of the committed tree, and two ordinary OTLP endpoint forms carry
+a secret — userinfo (`https://user:token@host/...`) and a query-string key — so both become
+`<redacted>`. A `401` here is a stale key, and it is visible where you would look rather
+than only in a vendor's UI you have not opened.
 
 A failed export exits non-zero and reports why, but changes nothing about the delivery
 record: a gate that was recorded stays recorded whether or not a trace reached a vendor.

@@ -73,14 +73,23 @@ EOF
 fi
 
 CURRENT="$(crontab -l 2>/dev/null || true)"
-if printf '%s\n' "$CURRENT" | grep -Fq "$MARK"; then
-  # Replacing rather than appending: running --apply twice must leave one job,
-  # not two jobs opening duplicate pull requests for the same work item.
-  printf '%s\n' "$CURRENT" | grep -v -F -e "$MARK" -e "$RUNNER" > /tmp/navi-cron.$$
-else
-  printf '%s\n' "$CURRENT" > /tmp/navi-cron.$$
-fi
-{ printf '%s\n%s\n' "$MARK" "$LINE"; } >> /tmp/navi-cron.$$
-crontab /tmp/navi-cron.$$
-rm -f /tmp/navi-cron.$$
+
+# mktemp, not /tmp/navi-cron.$$ — a predictable path fed straight to `crontab`
+# lets a local user pre-create it as a symlink and clobber a file the operator
+# owns, or win the race and choose the operator's crontab.
+TMP="$(mktemp "${TMPDIR:-/tmp}/navi-cron.XXXXXX")"
+trap 'rm -f "$TMP"' EXIT
+
+# Replacing rather than appending: running --apply twice must leave one job,
+# not two jobs opening duplicate pull requests for the same work item.
+#
+# `|| true` because grep exits 1 when it filters everything out — which is
+# exactly what happens when navi-cron is the only job in the crontab. Under
+# `set -euo pipefail` that aborted the script here, silently, leaving the old
+# line installed: re-running --apply with --push after the trial week appeared
+# to work and changed nothing.
+printf '%s\n' "$CURRENT" | grep -v -F -e "$MARK" -e "$RUNNER" > "$TMP" || true
+
+printf '%s\n%s\n' "$MARK" "$LINE" >> "$TMP"
+crontab "$TMP"
 echo "installed. Review it with: crontab -l"

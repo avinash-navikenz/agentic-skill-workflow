@@ -15,8 +15,10 @@ the thinking.
 ## Three properties worth knowing before you schedule it
 
 **It never touches the checkout it runs in.** Every change happens in a git worktree it
-creates and removes. A cron job that left your working tree on another branch overnight
-would cost more than it saves, so it cannot.
+creates and removes, and the local branch goes with it — on success it lives on the remote,
+and on failure it must not be left behind. A cron job that left your working tree on another
+branch overnight, or accumulated one dangling ref per work item, would cost more than it
+saves.
 
 **Tracker text never reaches a shell as code.** In most organisations anyone can file a
 ticket, so a summary of `"; rm -rf ~; #` is a thing that can arrive. Configured commands
@@ -26,7 +28,9 @@ quote them themselves. `tests/cron/navi-cron.test.js` asserts a hostile title st
 title.
 
 **It does nothing irreversible without `--push`.** The default stops at the local commit
-and reports what it would have pushed. Run it that way for a week first.
+and reports what it would have pushed. Run it that way for a week first — a run without
+`--push` records nothing, so the first real run still opens every item the trial week
+reported.
 
 ## Configure
 
@@ -73,9 +77,16 @@ cron does not read your shell profile, so the scheduled line sources
 ## What it remembers
 
 `.navi-cron-state.json` beside the checkout, holding the ids it has proposed. An item is
-recorded only after its branch is pushed and its pull request opened — a failure halfway
-is retried on the next run rather than silently dropped. Delete a line from that file to
-make it propose an item again. Both the state file and `.navi-cron.log` are gitignored.
+recorded only after its branch reaches the remote — a failure halfway, or a run without
+`--push`, is retried on the next run rather than silently dropped. The branch a failed
+attempt created is deleted with it, so the retry reports the real failure again rather
+than `a branch named ... already exists` for the rest of the branch's life.
+
+Delete a line from that file to make it propose an item again. If the file is unreadable
+or malformed the run **stops** rather than treating it as empty: treating a corrupt record
+as "nothing processed yet" would re-open a duplicate branch and pull request for every item
+it had already handled. It must also sit inside the repository; a path escaping it is
+refused. Both the state file and `.navi-cron.log` are gitignored.
 
 ## When it fails
 
@@ -86,3 +97,5 @@ make it propose an item again. Both the state file and `.navi-cron.log` are giti
 | `propose failed` | the base branch has a change already in flight; `delivery/` allows one |
 | `pull-request command failed` | `gh`/`az` is not on cron's PATH, or not logged in as anyone |
 | nothing happens, no error | every candidate id is already in `.navi-cron-state.json` |
+| `--force-with-lease` rejected the push | somebody pushed to that `navi/` branch by hand; the runner refuses to overwrite them |
+| the state file is refused as malformed | fix or delete it — see **What it remembers** |
