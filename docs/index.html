@@ -468,6 +468,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 <symbol id="i-reset" viewBox="0 0 24 24"><path d="M3.6 5.6v5.2h5.2"/><path d="M5 14a7.6 7.6 0 1 0 1.2-6.3L3.6 10.8"/></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5.6 15H5a1.8 1.8 0 0 1-1.8-1.8V5A1.8 1.8 0 0 1 5 3.2h8.2A1.8 1.8 0 0 1 15 5v.6"/></symbol>
 <symbol id="i-check" viewBox="0 0 24 24"><path d="m4.8 12.6 4.6 4.6 9.8-10.4"/></symbol>
+<symbol id="i-link" viewBox="0 0 24 24"><path d="M10.1 13.9a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.6 1.6"/><path d="M13.9 10.1a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.6-1.6"/></symbol>
 <symbol id="i-file" viewBox="0 0 24 24"><path d="M13.6 2.8H6.8A1.8 1.8 0 0 0 5 4.6v14.8a1.8 1.8 0 0 0 1.8 1.8h10.4a1.8 1.8 0 0 0 1.8-1.8V8Z"/><path d="M13.6 2.8V8H19"/></symbol>
 </svg>
 
@@ -487,6 +488,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <a href="#/skills"><svg class="ico" aria-hidden="true"><use href="#i-skill"></use></svg><span>Skills</span></a>
       <a href="#/install"><svg class="ico" aria-hidden="true"><use href="#i-install"></use></svg><span>Install</span></a>
       <a href="#/demo"><svg class="ico" aria-hidden="true"><use href="#i-demo"></use></svg><span>Worked demo</span></a>
+      <a href="#/connect"><svg class="ico" aria-hidden="true"><use href="#i-link"></use></svg><span>Connect</span></a>
       <a href="#/limits"><svg class="ico" aria-hidden="true"><use href="#i-limits"></use></svg><span>Limits</span></a>
     </nav>
     <button id="themeBtn" type="button" aria-label="Switch to dark theme"><svg class="ico" aria-hidden="true"><use href="#i-moon"></use></svg></button>
@@ -526,7 +528,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 <section id="map">
   <div class="wrap">
     <p class="kicker">Where things are</p>
-    <h2>Six more sections</h2>
+    <h2>Seven more sections</h2>
     <div class="map">
       <a href="#/how-it-works">
         <div class="n">The design</div>
@@ -557,6 +559,12 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
         <div class="t">Worked demo</div>
         <p>One change carried end to end, including a gate that fails. Every command was run;
         every block of output is verbatim.</p>
+      </a>
+      <a href="#/connect">
+        <div class="n">Outside the repo</div>
+        <div class="t">Connect &amp; observe</div>
+        <p>MCP connection files for Jira, Azure DevOps and Confluence; exporting the gate ledger
+        to AgentObs, Opik or LangSmith; and the optional cron runner.</p>
       </a>
       <a href="#/limits">
         <div class="n">Honesty</div>
@@ -1029,6 +1037,143 @@ Next:
 <span class="o">docs/index.html catalogue is up to date</span>
 </pre>
     </div>
+  </div>
+</section>
+</div>
+
+<div class="page" id="p-connect" data-route="connect">
+<section id="connect-intro">
+  <div class="wrap">
+    <p class="kicker">Outside the repository</p>
+    <h2>Connect &amp; observe</h2>
+    <p class="lede small">
+      Three things that reach past the repository: the <strong>MCP connection files</strong> two
+      skills use instead of a token in the shell, <strong>telemetry</strong> that exports the gate
+      ledger to AgentObs, Opik or LangSmith, and an optional <strong>cron runner</strong> that
+      turns tracker items into proposed branches. All three are off until you configure them, and
+      none is required to use the framework.
+    </p>
+  </div>
+</section>
+
+<section id="connect-mcp">
+  <div class="wrap">
+    <p class="kicker">MCP</p>
+    <h2>Connection files, with no credential in any of them</h2>
+    <p class="small"><code>navi-skill-work-item-sync</code> reads and writes work items and
+    <code>navi-skill-knowledge-publishing</code> publishes pages. Both prefer an MCP server when
+    the session has one connected, because the server holds the credential &mdash; no token
+    reaches the shell, the transcript, or a file in the repository.</p>
+
+    <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>cp config/mcp/github.mcp.json .mcp.json
+<span class="p">$ </span>claude mcp add --transport http atlassian https://mcp.atlassian.com/v2/mcp</div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
+
+    <div class="tablewrap"><table>
+      <thead><tr><th>File</th><th>Route</th><th>Authenticates with</th></tr></thead>
+      <tbody>
+        <tr><td><code>atlassian-cloud.mcp.json</code></td><td>Atlassian's hosted server</td><td>OAuth in the browser, as you</td></tr>
+        <tr><td><code>atlassian-cloud-token.mcp.json</code></td><td><code>mcp-atlassian</code> under <code>uvx</code></td><td>an Atlassian Cloud API token</td></tr>
+        <tr><td><code>azure-devops.mcp.json</code></td><td><code>@azure-devops/mcp</code> under <code>npx</code></td><td>your <code>az login</code> session</td></tr>
+        <tr><td><code>github.mcp.json</code></td><td>GitHub's hosted server</td><td>OAuth in the browser, as you</td></tr>
+        <tr><td><code>github-local.mcp.json</code></td><td><code>github-mcp-server</code> in Docker</td><td>a personal access token</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="warnline">
+      <p>Every secret in those files is a <code>${NAME}</code> the harness expands at launch.
+      <code>scripts/validate_mcp_configs.py</code> runs in CI and fails on a value shaped like a
+      known token <em>anywhere</em> in the document, and on any literal under a credential-shaped
+      key &mdash; which is what catches an internal credential matching no public pattern. It also
+      fails on a <code>${NAME}</code> that <code>.env.example</code> does not document, so the
+      variable list cannot drift away from the files that use it.</p>
+    </div>
+    <p class="small" style="margin-bottom:0">Prefer a hosted route: it carries no secret for you
+    to leak and acts as you, so the server can do nothing your own account cannot.</p>
+  </div>
+</section>
+
+<section id="connect-telemetry">
+  <div class="wrap">
+    <p class="kicker">Telemetry</p>
+    <h2>One trace per change, one span per gate</h2>
+
+    <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>navi-delivery telemetry doctor
+<span class="p">$ </span>navi-delivery telemetry preview --out payload.json   <span class="hash"># sends nothing</span>
+<span class="p">$ </span>navi-delivery telemetry export --backend langsmith</div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
+
+    <div class="two">
+      <div class="half a">
+        <h3>What it exports</h3>
+        <p class="small">The <strong>ledger</strong>: who recorded which gate, when, with what
+        evidence, how long the change waited between decisions, how many times a gate was
+        re-recorded. That is what this framework knows and nothing else does.</p>
+        <p class="small" style="margin-bottom:0">A gate decision is an instant, so its span has
+        no duration. The number a delivery dashboard actually wants is on the span as
+        <code>navi.since_previous_ms</code> &mdash; recorded as what it is, rather than dressed
+        up as a measured duration.</p>
+      </div>
+      <div class="half b">
+        <h3>What it does not</h3>
+        <p class="small">The agents' own model calls &mdash; prompts, completions, tokens, cost.
+        The CLI makes none, so it has none to report, and claiming otherwise would be exactly the
+        promise its own skills exist to stop people making.</p>
+        <p class="small" style="margin-bottom:0">Instrumenting the agents and the product is a
+        different job, and a different skill.</p>
+      </div>
+    </div>
+
+    <div class="tablewrap"><table>
+      <thead><tr><th>Backend</th><th>Endpoint variable</th><th>Credential &rarr; header</th></tr></thead>
+      <tbody>
+        <tr><td><code>agentobs</code></td><td><code>NAVI_AGENTOBS_ENDPOINT</code> (full traces URL)</td><td><code>NAVI_AGENTOBS_INGEST_KEY</code> &rarr; <code>X-Ingest-Key</code></td></tr>
+        <tr><td><code>opik</code></td><td><code>NAVI_OPIK_ENDPOINT</code> (Opik Cloud by default)</td><td><code>NAVI_OPIK_API_KEY</code> &rarr; <code>Authorization</code></td></tr>
+        <tr><td><code>langsmith</code></td><td><code>NAVI_LANGSMITH_ENDPOINT</code> (LangSmith Cloud by default)</td><td><code>NAVI_LANGSMITH_API_KEY</code> &rarr; <code>x-api-key</code></td></tr>
+        <tr><td><code>otlp</code></td><td><code>NAVI_OTLP_ENDPOINT</code></td><td><code>NAVI_OTLP_HEADERS</code>, verbatim</td></tr>
+      </tbody>
+    </table></div>
+
+    <div class="note warn">
+      <p style="margin-bottom:0"><strong>The one way this can silently do nothing.</strong>
+      <code>llm.span.kind</code> is AgentObs's own convention with no OpenTelemetry meaning.
+      AgentObs renders only the kinds it recognises; one it does not know is accepted, stored,
+      and shown on no screen, with no error on either side &mdash; a failure that looks exactly
+      like success. Probe with <code>NAVI_OTLP_SPAN_KIND</code> (<code>agent</code>,
+      <code>workflow</code>, <code>chain</code>, <code>task</code>) before trusting a dashboard.
+      Opik and LangSmith ignore the attribute.</p>
+    </div>
+
+    <p class="small" style="margin-bottom:0">Credentials come from the environment only, are never
+    printed &mdash; <code>doctor</code> shows header names, not values &mdash; and never reach
+    <code>delivery/.adlc/telemetry.json</code>, the local record of what was sent and whether it
+    arrived. A refused export exits non-zero and changes nothing about the delivery record: a gate
+    that was recorded stays recorded whether or not a trace reached a vendor.</p>
+  </div>
+</section>
+
+<section id="connect-cron">
+  <div class="wrap">
+    <p class="kicker">Optional</p>
+    <h2>Tracker item to proposed branch, on a schedule</h2>
+    <p class="small">For each tagged work item it has not seen, the runner branches off the base,
+    runs <code>propose</code>, seeds the proposal from the item, commits, pushes and opens a pull
+    request. What it opens is a scaffolded branch, not a proposal &mdash; a person still writes
+    the why.</p>
+
+    <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>node automation/cron/navi-cron.js --config automation/cron/navi-cron.jira.example.json
+<span class="p">$ </span>./automation/cron/install-cron.sh --config /abs/path/config.json   <span class="hash"># prints the line</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
+
+    <div class="warnline">
+      <p><strong>Three properties, each with a test.</strong> It never touches the checkout it runs
+      in &mdash; every change happens in a worktree it creates and removes. It does nothing
+      irreversible without <code>--push</code>. And tracker text never reaches a shell as code:
+      anyone can file a ticket, so configured commands take their values from the environment and
+      quote them themselves, which a test proves by filing an item whose title tries to touch a
+      canary file.</p>
+    </div>
+    <p class="small" style="margin-bottom:0">Any tracker that can be queried from a shell works:
+    the integration surface is one command printing a JSON array of
+    <code>{id, title, url}</code>. The shipped examples reshape Jira and Azure Boards output into
+    it with <code>jq</code>.</p>
   </div>
 </section>
 </div>
