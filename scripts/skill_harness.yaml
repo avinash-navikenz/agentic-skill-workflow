@@ -439,6 +439,9 @@ stage:
   - { skill: navi-skill-azure-pipelines, fence: 0, path: ".azure/azure-pipelines.yml" }
   - { skill: navi-skill-azure-pipelines, fence: 1, path: ".azure/templates/deploy-stage.yml" }
   - { skill: navi-skill-azure-pipelines, fence: 2, path: "delivery/ops/azure/pipeline-bindings.md" }
+  - { skill: navi-skill-azure-landing-zone, fence: 0, path: "delivery/ops/azure/landing-zone.md" }
+  - { skill: navi-skill-azure-landing-zone, fence: 1, path: "infra/azure/platform/main.bicep" }
+  - { skill: navi-skill-azure-landing-zone, fence: 2, path: "infra/azure/policy/assignments.json" }
   - { skill: navi-skill-backlog-prioritisation, fence: 0, path: "delivery/backlog.md" }
   - { skill: navi-skill-incident-response, fence: 0, path: "delivery/ops/postmortems/{change}.md" }
   - { skill: navi-skill-outcome-and-kpi-definition, fence: 1, path: "delivery/ops/postmortems/{change}.md", mode: append }
@@ -498,6 +501,47 @@ skills:
         file: openapi.yaml
         delete_line: "additionalProperties: false"
         expects: "forbid unlisted ones"
+
+  navi-skill-azure-landing-zone:
+    mutations:
+      - name: a policy is assigned on a subscription, which the next subscription does not inherit
+        file: "infra/azure/policy/assignments.json"
+        replace:
+          - "policySetDefinitions/navikenz-deny-public-data\",\n      \"scope\": \"/providers/Microsoft.Management/managementGroups/mg-navikenz-workloads\","
+          - "policySetDefinitions/navikenz-deny-public-data\",\n      \"scope\": \"/subscriptions/0f2a4c6e-8b1d-4f3a-9c7e-5d2b6a8f1c40\","
+        expects: "POL-003 is assigned at subscription scope"
+      - name: an assignment is left in audit mode with no recorded exemption
+        file: "infra/azure/policy/assignments.json"
+        replace:
+          - "\"enforcementMode\": \"Default\",\n      \"identity\": \"SystemAssigned\","
+          - "\"enforcementMode\": \"DoNotEnforce\",\n      \"identity\": \"SystemAssigned\","
+        expects: "POL-005 is DoNotEnforce with no unexpired exemption"
+      - name: a resource group is named outside its own convention
+        file: "infra/azure/platform/main.bicep"
+        replace: ["    name: 'rg-webshell-prd-weu'", "    name: 'rg-WebShell-Prod'"]
+        expects: "names a resource group 'rg-WebShell-Prod', which does not match"
+      - name: a required tag stops being applied by the template
+        file: "infra/azure/platform/main.bicep"
+        replace: ["  costCentre: costCentre\n", ""]
+        expects: "required tag 'costCentre' is in '## Required tags' and is not applied"
+      - name: an assignment that runs loses its row in the register
+        file: "delivery/ops/azure/landing-zone.md"
+        delete_line: "| POL-002 | Allowed regions |"
+        expects: "POL-002 is in infra/azure/policy/assignments.json and has no row"
+      - name: a parameter's legal values live only in a reviewer's memory
+        file: "infra/azure/platform/main.bicep"
+        replace:
+          - "@description('Finance cost centre every group in this deployment is billed to.')\nparam costCentre string"
+          - "param costCentre string"
+        expects: "param 'costCentre' has no @description"
+      - name: a subscription is placed in a management group the tree does not declare
+        file: "delivery/ops/azure/landing-zone.md"
+        replace: ["| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-prod |", "| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-sandbox |"]
+        expects: "management group 'mg-navikenz-sandbox' is not declared"
+      - name: a tenant-specific GUID is baked into a template
+        file: "infra/azure/platform/main.bicep"
+        append: "\nparam legacySubscriptionId string = '00000000-1111-2222-3333-444444444444'\n"
+        expects: "hardcoded GUID in a template"
 
   navi-skill-azure-pipelines:
     mutations:
