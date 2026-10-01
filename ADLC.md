@@ -160,8 +160,14 @@ A failed gate does not simply block. It propagates.
    `gate:<G#>` entries in `state.stale`.
 3. `navi-delivery validate` fails while any stale entry remains. Rework cannot be silently
    skipped past.
-4. A rework record is written to `changes/<name>/handoffs.md` naming the phase to re-enter,
-   the gate, the artifacts implicated, and the reason.
+4. The agent returning the work **writes** a rework record into
+   `changes/<name>/handoffs.md` naming the phase to re-enter, the gate, the artifacts
+   implicated, and the reason. This is an obligation on the agent, not an action of the
+   CLI: `propose` scaffolds `handoffs.md` as an empty template and no later command
+   touches it. The record's form is `kind: rework` in
+   [`navi-skill-handoff-protocol`](skills/lifecycle-method/navi-skill-handoff-protocol/SKILL.md),
+   and [`navi-skill-phase-gate-protocol`](skills/lifecycle-method/navi-skill-phase-gate-protocol/SKILL.md)
+   carries it as a checklist item on every failed gate.
 5. Each stale gate is cleared by **re-recording that gate individually** as `pass` or
    `waived`. Recording a gate clears its own stale entry and no other — a passing G6 does
    not vouch for G7.
