@@ -1,6 +1,9 @@
 "use strict";
 const { test } = require("node:test");
 const assert = require("node:assert");
+const { execFileSync } = require("node:child_process");
+const path = require("node:path");
+const fs = require("node:fs");
 const os = require("node:os");
 const { resolveActor, actorWarning, ENV_VAR } = require("../../cli/lib/actor");
 
@@ -40,11 +43,32 @@ test("the environment variable is used when no flag is given", () => {
 });
 
 test("a git identity is preferred over the login name", () => {
-  // Runs in this repository, which has a configured user.email.
+  // Builds its own repository with a known identity rather than borrowing this
+  // one's. The earlier version resolved against __dirname and so depended on
+  // the machine having a configured user.email — true on a developer's laptop,
+  // false on a CI runner, where actions/checkout configures none. It passed
+  // locally and failed on both platforms the moment it ran in CI.
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "nd-actor-"));
+  execFileSync("git", ["init", "--quiet"], { cwd: repo });
+  execFileSync("git", ["config", "user.email", "dana@example.com"], { cwd: repo });
+
   withEnv({ [ENV_VAR]: undefined }, () => {
-    const r = resolveActor([], __dirname);
-    assert.strictEqual(r.source, "git");
-    assert.ok(r.actor.length > 0);
+    assert.deepStrictEqual(resolveActor([], repo), { actor: "dana@example.com", source: "git" });
+  });
+});
+
+test("a repository with no configured identity falls back to the login name", () => {
+  // The other half of the same behaviour, and the one a CI runner actually
+  // meets. Without it, nothing covers the fall-through.
+  const repo = fs.mkdtempSync(path.join(os.tmpdir(), "nd-actor-"));
+  execFileSync("git", ["init", "--quiet"], { cwd: repo });
+  // Nothing to unset: a fresh repository has no local user.email, and
+  // `--unset-all` on an absent key exits non-zero. What has to be neutralised
+  // is the GLOBAL config, which is where a developer's identity lives and why
+  // this passed locally while the runner saw none.
+
+  withEnv({ [ENV_VAR]: undefined, GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null" }, () => {
+    assert.strictEqual(resolveActor([], repo).source, "login");
   });
 });
 
