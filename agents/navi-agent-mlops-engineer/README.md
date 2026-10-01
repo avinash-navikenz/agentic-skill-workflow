@@ -19,7 +19,7 @@ Reads `model and evaluation artifacts`, `design.md`, `ops/slo.md`, `changes/<nam
 - ADLC phases: 7, 8
 - Gates: `G7`, `G8`
 
-## Skills it holds (13)
+## Skills it holds (14)
 
 It loads these rather than working from memory, and records which it used in the handoff envelope:
 
@@ -35,6 +35,7 @@ It loads these rather than working from memory, and records which it used in the
 - [Data quality](../../skills/data-engineering/navi-skill-data-quality/README.md) — `data-engineering`
 - [Progressive delivery](../../skills/platform-devops/navi-skill-progressive-delivery/README.md) — `platform-devops`
 - [Observability](../../skills/platform-devops/navi-skill-observability/README.md) — `platform-devops`
+- [Agent observability](../../skills/platform-devops/navi-skill-agent-observability/README.md) — `platform-devops`
 - [Incident response](../../skills/platform-devops/navi-skill-incident-response/README.md) — `platform-devops`
 
 ## When it stops and asks a human
@@ -66,7 +67,7 @@ Installed on its own, this agent arrives **without the skills it holds**. It is 
 
 ```sh
 python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first
-./install.sh --yes                    # symlinks 49 skills + 11 agents into ~/.claude
+./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude
 ```
 
 `--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else.

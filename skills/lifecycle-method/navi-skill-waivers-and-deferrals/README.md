@@ -44,7 +44,7 @@ Installed on its own, this skill has **no agent holding it**. Nothing in the lif
 
 ```sh
 python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first
-./install.sh --yes                    # symlinks 49 skills + 11 agents into ~/.claude
+./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude
 ```
 
 `--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else.

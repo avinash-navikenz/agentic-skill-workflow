@@ -28,6 +28,7 @@ skills:
   - navi-skill-data-quality
   - navi-skill-progressive-delivery
   - navi-skill-observability
+  - navi-skill-agent-observability
   - navi-skill-incident-response
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [model and evaluation artifacts, design.md, ops/slo.md, changes/<name>/specs/<capability>/spec.md]

@@ -1,24 +1,23 @@
-# Observability
+# Agent observability
 
-`navi-skill-observability` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
+`navi-skill-agent-observability` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when a shipped capability has nothing watching it, when G8 asks for an SLI with an objective, an error budget and an alert that fires before the budget burns, or when an alert is firing and nobody has agreed what to do about it. Defines delivery/ops/slo.md, the SLI-### entry, the ALERT-### entry, the user-side measurement rule, the burn-rate alert, the runbook every paging alert needs, and the proof that telemetry is arriving rather than configured.
+Use when an LLM agent is about to run in front of users and nothing would let anybody reconstruct a run afterwards, when a trace is present but answers no question, or when a dashboard is empty and nobody can say whether the spans never left or never rendered. Defines delivery/ops/agent-telemetry.md, the SPAN-### register, the derived ids that keep a retry on one trace, the attributes that make cost and latency attributable, the content capture decision, how an evaluation result attaches, and the dated proof that spans arrived and rendered.
 
 ## When it fires
 
-A capability is about to go live with nothing watching it; G8 is about to be recorded; an alert is firing and the runbook does not exist; an alert has been muted; or an error budget is being cited in an argument about whether to ship.
+An agent is about to serve users and no span register exists; a trace is being read and the question it was opened for cannot be answered from it; a cost pivot shows thousands of one-off identities; a dashboard is empty and the argument is whether the exporter ran; a retried run has turned into two unrelated traces; or prompts are being captured because the SDK captures them by default and nobody has been asked whether that is allowed. `navi-skill-observability` owns what the product promises — the SLI, the objective, the error budget, the alert and the runbook. This skill owns what the agents emit, so that a run that has already happened can be taken apart. `navi-delivery telemetry` exports the delivery ledger and nothing else: it makes no model calls, so the agents' own spans are this file's job and no command in this repository will produce them.
 
-It is written to trigger on: `observability`, `SLI`, `SLO`, `error budget`, `burn rate`, `alerting`, `monitoring`, `dashboards`, `telemetry`, `instrumentation`, `golden signals`, `p99 latency`, `availability target`, `alert fatigue`, `runbook`, `on-call`, `G8 operate`.
+It is written to trigger on: `agent observability`, `LLM tracing`, `trace an agent run`, `span`, `OpenTelemetry`, `OTLP`, `GenAI semantic conventions`, `gen_ai attributes`, `token usage`, `LLM cost attribution`, `prompt capture`, `tool call span`, `llm.span.kind`, `service.name`, `AgentObs`, `Opik`, `LangSmith`, `trace id`, `span id`, `eval attached to a span`, `empty dashboard`.
 
 ## What it produces
 
-`navi-delivery init` scaffolds `delivery/ops/slo.md`. Fill it; do not create a second copy.
+The register, at `delivery/ops/agent-telemetry.md`.
 
-## Which agents hold it (2)
+## Which agents hold it (1)
 
 A skill is never invoked on its own — an agent loads it. These hold it:
 
-- [DevOps Engineer](../../../agents/navi-agent-devops-engineer/README.md) — owns G7, G8
 - [MLOps Engineer](../../../agents/navi-agent-mlops-engineer/README.md) — owns G7, G8
 
 Through them it is reachable from gates `G7`, `G8`.
@@ -29,7 +28,7 @@ Through them it is reachable from gates `G7`, `G8`.
 
 ```sh
 python3 scripts/build_adapters.py .
-cp -R adapters/claude-code/skills/navi-skill-observability ~/.claude/skills/
+cp -R adapters/claude-code/skills/navi-skill-agent-observability ~/.claude/skills/
 ```
 
 Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run.

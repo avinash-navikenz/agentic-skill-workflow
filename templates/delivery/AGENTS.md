@@ -69,7 +69,7 @@ Use when a change proposes to solve something with a learned model — deciding 
 Use when a model has to be promoted, served, watched and eventually retired — reproducible builds, promotion criteria, drift and decay detection, rollback, and inference cost. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates for model-bearing changes.
 
 - Owns gates: G7, G8
-- Skills: navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-model-registry-and-promotion, navi-skill-drift-monitoring, navi-skill-model-cards, navi-skill-evaluation-design, navi-skill-data-quality, navi-skill-progressive-delivery, navi-skill-observability, navi-skill-incident-response
+- Skills: navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-model-registry-and-promotion, navi-skill-drift-monitoring, navi-skill-model-cards, navi-skill-evaluation-design, navi-skill-data-quality, navi-skill-progressive-delivery, navi-skill-observability, navi-skill-agent-observability, navi-skill-incident-response
 
 ### navi-agent-orchestrator (lifecycle-method)
 
