@@ -619,44 +619,44 @@ if not stages:
     print(f"{PIPE} declares no stages")
 
 for index, stage in enumerate(stages):
-    name = stage.get("stage")
-    if not name:
+    stage_name = stage.get("stage")
+    if not stage_name:
         print(f"stage #{index + 1} has no `stage:` id — ADO autonames it and every "
               f"dependsOn that points at it breaks silently")
         continue
     if not stage.get("displayName"):
-        print(f"{name}: no displayName")
+        print(f"{stage_name}: no displayName")
     if index and "dependsOn" not in stage:
-        print(f"{name}: no dependsOn — ADO runs a stage with no dependsOn in parallel "
+        print(f"{stage_name}: no dependsOn — ADO runs a stage with no dependsOn in parallel "
               f"with the one before it, not after it")
-    if name not in bound:
-        print(f"{name}: ADO stage with no row in '## Stage bindings' of pipeline-bindings.md")
+    if stage_name not in bound:
+        print(f"{stage_name}: ADO stage with no row in '## Stage bindings' of pipeline-bindings.md")
 
     jobs = stage.get("jobs") or []
     environments = set()
     if any("deployment" in j for j in jobs) and stage.get("lockBehavior") != "sequential":
-        print(f"{name}: carries a deployment job and no `lockBehavior: sequential` — two "
+        print(f"{stage_name}: carries a deployment job and no `lockBehavior: sequential` — two "
               f"queued runs deploy the same environment concurrently by default")
     for job in jobs:
         if "deployment" in job:
             env = job.get("environment")
             if not env:
-                print(f"{name}/{job['deployment']}: deployment job that names no environment "
+                print(f"{stage_name}/{job['deployment']}: deployment job that names no environment "
                       f"— approvals, locks and history live on the environment object")
             else:
                 environments.add(env if isinstance(env, str) else env.get("name", ""))
     for conn in sorted(strings(stage, CONN_KEYS)):
         if conn not in conn_role:
-            print(f"{name}: service connection '{conn}' has no row in "
+            print(f"{stage_name}: service connection '{conn}' has no row in "
                   f"'## Service connections' of pipeline-bindings.md")
             continue
         if conn_role[conn] == "deploy" and not environments:
-            print(f"{name}: uses deploy-role connection '{conn}' outside any deployment job "
+            print(f"{stage_name}: uses deploy-role connection '{conn}' outside any deployment job "
                   f"with an environment — nothing approves this step")
     for env in sorted(e for e in environments if e):
         row = env_row.get(env)
         if not row:
-            print(f"{name}: environment '{env}' has no row in '## Environments'")
+            print(f"{stage_name}: environment '{env}' has no row in '## Environments'")
             continue
         approvers = row[1] if len(row) > 1 else ""
         checks = row[2] if len(row) > 2 else ""
