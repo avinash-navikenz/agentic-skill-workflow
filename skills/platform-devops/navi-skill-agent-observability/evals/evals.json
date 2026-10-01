@@ -1,0 +1,87 @@
+{
+  "skill": "navi-skill-agent-observability",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The theme-advisor agent goes live next week and nothing would let us reconstruct a run afterwards. Say what it has to emit.",
+      "expect": [
+        "delivery/ops/agent-telemetry.md",
+        "SPAN-",
+        "root",
+        "service.name",
+        "gen_ai.response.model",
+        "gen_ai.tool.call.id",
+        "llm.span.kind",
+        "Arrival"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Our AgentObs dashboard has been empty for two weeks. The exporter returns 202 every time. Where do we look?",
+      "expect": [
+        "llm.span.kind",
+        "rendered",
+        "no error",
+        "probe",
+        "sent",
+        "service.name",
+        "arriving"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "theme-persistence is live and nothing is watching it. Define the availability SLI, its error budget, and the alert that pages before the budget burns.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "The ranker's input distribution has shifted since version 6 was promoted. Set up the drift monitors and their thresholds.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Each agent instance sets service.name to its own instance id so we can tell the runs apart, and every retry gets a fresh trace id so the attempts do not overwrite each other.",
+      "expect": [
+        "stable role",
+        "Discovered Agents",
+        "cost pivot",
+        "derive",
+        "sha256",
+        "run_attempt",
+        "second trace"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The nightly judge writes its scores back with eval.type=offline, and the SDK is capturing prompts and tool results for us by default, so we are covered.",
+      "expect": [
+        "discard",
+        "eval.score",
+        "content",
+        "basis",
+        "redact",
+        "8192",
+        "batch"
+      ]
+    },
+    {
+      "id": "edge-3",
+      "type": "edge",
+      "prompt": "Some of our spans end before they start, and the tool calls show up underneath the LLM span that asked for them but hanging off the end of it.",
+      "expect": [
+        "nanosecond",
+        "string",
+        "MAX_SAFE_INTEGER",
+        "parent",
+        "agent span",
+        "gen_ai.tool.call.id"
+      ]
+    }
+  ]
+}

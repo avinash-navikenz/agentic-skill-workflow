@@ -427,6 +427,11 @@ stage:
   - { skill: navi-skill-observability, fence: 0, path: "delivery/ops/slo.md" }
   - { skill: navi-skill-drift-monitoring, fence: 1, path: "delivery/ops/slo.md", mode: append }
   - { skill: navi-skill-observability, fence: 1, path: "delivery/ops/runbooks/alert-001.md" }
+  # navi-skill-agent-observability ships two artefacts the repository carries: the span
+  # register and the emitter it names. Nothing here reaches a backend — the block reads
+  # the register, the emitter, and the SLIs in delivery/ops/slo.md.
+  - { skill: navi-skill-agent-observability, fence: 0, path: "delivery/ops/agent-telemetry.md" }
+  - { skill: navi-skill-agent-observability, fence: 1, path: "src/agent/telemetry.ts" }
   - { skill: navi-skill-drift-monitoring, fence: 0, path: "delivery/ops/models/{model}/monitors.md" }
   - { skill: navi-skill-pipeline-automation, fence: 0, path: "delivery/ops/delivery-pipeline.md" }
   - { skill: navi-skill-pipeline-automation, fence: 1, path: "delivery/changes/{change}/evidence/g7-release.md" }
@@ -894,6 +899,41 @@ skills:
         file: "delivery/changes/{change}/specs/theme-preference/spec.md"
         replace: ["| Capacity and growth |", "| Capacity |"]
         expects: "category 'Capacity and growth' is not in the non-functional pass"
+
+  navi-skill-agent-observability:
+    mutations:
+      - name: a span is given a kind the backend was never seen to render
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| SPAN-002 | llm:plan | SPAN-001 | llm |", "| SPAN-002 | llm:plan | SPAN-001 | generation |"]
+        expects: "SPAN-002 has kind 'generation'"
+      - name: a tool span is parented to the llm span that asked for the call
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| SPAN-003 | tool:read_preference | SPAN-001 |", "| SPAN-003 | tool:read_preference | SPAN-002 |"]
+        expects: "SPAN-003 is parented to SPAN-002, an llm span"
+      - name: an llm span loses the model its cost is computed from
+        file: delivery/ops/agent-telemetry.md
+        replace: ["gen_ai.request.model, gen_ai.response.model, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, navi.recommendation_id", "gen_ai.request.model, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, navi.recommendation_id"]
+        expects: "SPAN-005 is an llm span without gen_ai.response.model"
+      - name: service.name becomes the per-run agent id
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| theme-advisor | the agent that answers", "| agent-run-7f3a91c4e85b | the agent that answers"]
+        expects: "is run-scoped"
+      - name: a failure is recorded by not emitting the span
+        file: delivery/ops/agent-telemetry.md
+        replace: ["navi.tool_outcome=timeout or error; emitted for every attempt", "the span is not emitted and the run returns early"]
+        expects: "SPAN-003 records a failure by omitting the span"
+      - name: the arrival record loses the count that matters
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| 2026-09-29 | agentobs | 9d3f05a1c8b74e2069af31d5e7c04b68 | 5 | 5 |", "| 2026-09-29 | agentobs | 9d3f05a1c8b74e2069af31d5e7c04b68 | 5 | 0 |"]
+        expects: "sent 5 span(s) and rendered none"
+      - name: an SLI is bound to telemetry that slo.md does not define
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| SLI-004 | SPAN-005 |", "| SLI-909 | SPAN-005 |"]
+        expects: "SLI-909 is bound to agent telemetry here but is not defined"
+      - name: the emitter sends nanosecond times as JSON numbers
+        file: src/agent/telemetry.ts
+        replace: ["const nanos = (ms: number) => String(BigInt(Math.trunc(ms)) * 1000000n);", "const nanos = (ms: number) => Number(BigInt(Math.trunc(ms)) * 1000000n);"]
+        expects: "emits startTimeUnixNano as a JSON number"
 
   navi-skill-observability:
     mutations:
