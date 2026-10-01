@@ -20,6 +20,7 @@ nine gates.
 | [`config/mcp/README.md`](config/mcp/README.md) | MCP connections for Jira, Azure DevOps, Confluence and GitHub |
 | [`automation/cron/README.md`](automation/cron/README.md) | The optional runner from tracker item to proposed branch |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every ruling made while building v1, and what each one cost |
+| [`docs/deck/README.md`](docs/deck/README.md) | The 19-slide overview deck, and how to rebuild it |
 
 ---
 
