@@ -16,7 +16,7 @@ function repo() {
 }
 
 // A delivery/specs/**/spec.md defining REQ-001 (with AC-001, implemented by
-// the change's own TASK-001) and REQ-002 (with AC-002, implemented by
+// the task writeTask() lands below) and REQ-002 (with AC-002, implemented by
 // nothing). Plain `validate` has nothing to flag T1-T3 on; only --strict's
 // T4 rule flags REQ-002 as orphaned, which is what lets the two tests below
 // prove --strict actually changes traceability's behaviour on one fixture.
@@ -33,6 +33,17 @@ function writeWellFormedSpec(root) {
   );
 }
 
+// The change's own tasks.md. templates/change/tasks.md ships its example with
+// `TASK-###` / `REQ-###` placeholders that no validator rule matches, so a
+// freshly proposed change carries no live task at all — see the note in that
+// template. A fixture that wants one writes it.
+function writeTask(root, change) {
+  fs.writeFileSync(
+    path.join(root, "delivery", "changes", change, "tasks.md"),
+    "# Tasks\n\n- [ ] **TASK-001** Add the toggle\n  - Implements: REQ-001\n",
+  );
+}
+
 test("validate fails while stale artifacts remain", () => {
   const root = repo();
   propose.run(["c", "--lane", "standard"], root, () => {});
@@ -46,9 +57,9 @@ test("validate succeeds on a well-formed tree with no stale artifacts", () => {
   const root = repo();
   propose.run(["c", "--lane", "standard"], root, () => {});
   writeWellFormedSpec(root);
-  // The propose template's tasks.md already ships TASK-001 implementing
-  // REQ-001 (see templates/change/tasks.md), so no T1/T2/T3 findings arise,
-  // and REQ-002 is only orphaned under --strict, not under plain validate.
+  writeTask(root, "c");
+  // TASK-001 implements REQ-001, so no T1/T2/T3 findings arise, and REQ-002 is
+  // only orphaned under --strict, not under plain validate.
   const lines = [];
   const code = validate.run([], root, (x) => lines.push(x));
   assert.strictEqual(code, 0, lines.join("\n"));
@@ -59,6 +70,7 @@ test("--strict propagates into traceability while plain validate does not, on th
   const root = repo();
   propose.run(["c", "--lane", "standard"], root, () => {});
   writeWellFormedSpec(root);
+  writeTask(root, "c");
 
   const plainLines = [];
   const plainCode = validate.run([], root, (x) => plainLines.push(x));
@@ -70,6 +82,8 @@ test("--strict propagates into traceability while plain validate does not, on th
   assert.strictEqual(strictCode, 1, strictLines.join("\n"));
   assert.match(strictLines.join("\n"), /\bT4\b/);
   assert.match(strictLines.join("\n"), /REQ-002/);
+  // REQ-001 is implemented by TASK-001, so --strict must not flag it.
+  assert.doesNotMatch(strictLines.join("\n"), /REQ-001/);
 });
 
 // spawnSync inherits process.env by default (validate.js passes no `env`
