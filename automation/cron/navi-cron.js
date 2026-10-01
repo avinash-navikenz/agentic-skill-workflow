@@ -177,35 +177,64 @@ function itemEnv(item, extra = {}) {
 // ----------------------------------------------------------------- state
 
 // The state file must stay beside the checkout. An absolute or `../` path in a
-// config would otherwise have the runner writing wherever it pointed.
+// config, or a symlink, would otherwise have the runner reading and writing
+// wherever it pointed.
+
+// The deepest existing ancestor, fully resolved, with the non-existent tail put
+// back on. A state file that does not exist yet still has to be checked, and
+// every directory above it can be a symlink.
+function realDirOf(target) {
+  const tail = [];
+  let current = path.resolve(target);
+  for (;;) {
+    try {
+      return path.join(fs.realpathSync(current), ...tail);
+    } catch (e) {
+      if (e.code !== "ENOENT") throw e;
+      const parent = path.dirname(current);
+      if (parent === current) return path.join(current, ...tail);
+      tail.unshift(path.basename(current));
+      current = parent;
+    }
+  }
+}
+
 function stateFileFor(repoRoot, cfg) {
   const resolved = path.resolve(repoRoot, cfg.stateFile);
   const root = fs.realpathSync(repoRoot);
-  // realpath, because path.resolve is pure string arithmetic: a symlink inside
-  // the checkout pointing out of it passed the check and then read and wrote
-  // outside the repository. The file itself may not exist yet, so its directory
-  // is what gets resolved.
-  let real;
-  try {
-    real = path.join(fs.realpathSync(path.dirname(resolved)), path.basename(resolved));
-    // The whole chain, not one hop. readlinkSync resolves a single link, so a
-    // first link landing inside the repository passed the check while the write
-    // followed the chain the rest of the way out. lstat rather than existsSync,
-    // because a link whose target does not exist yet reports false from
-    // existsSync and so was never followed at all.
-    for (let hop = 0; hop < 20; hop += 1) {
-      const stat = fs.lstatSync(real, { throwIfNoEntry: false });
-      if (!stat || !stat.isSymbolicLink()) break;
-      real = path.resolve(path.dirname(real), fs.readlinkSync(real));
-    }
-  } catch {
-    real = resolved;           // an absent parent cannot be a symlink out
+
+  // A state file has no business being a symlink, and refusing one removes the
+  // whole class rather than racing it: resolving a chain and then writing to it
+  // is two operations, and a link planted between them wins.
+  const stat = fs.lstatSync(resolved, { throwIfNoEntry: false });
+  if (stat && stat.isSymbolicLink()) {
+    throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} is a symbolic link. Point it at a ` +
+                    "real file inside the repository.");
   }
+
+  // Resolving only the final component left two ways through: a symlinked
+  // DIRECTORY in the path (the parent was never re-resolved), and a chain
+  // longer than the hop budget, which was treated as success while the kernel
+  // followed the rest. Both were verified writing outside the repository.
+  const real = realDirOf(resolved);
   if (real !== root && !real.startsWith(root + path.sep)) {
     throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} resolves outside the repository ` +
                     `(${real}) — it must sit beside the checkout`);
   }
-  return resolved;
+  return real;
+}
+
+// What the BASE branch's state.json says is in flight, or null. Read from the
+// remote ref rather than the working tree: the working tree is the operator's
+// and may be on anything.
+function activeChangeOnBase(cfg, repoRoot) {
+  try {
+    const raw = git(["show", `${cfg.repo.remote}/${cfg.repo.base}:delivery/.adlc/state.json`], repoRoot);
+    const change = JSON.parse(raw).change;
+    return change || null;
+  } catch {
+    return null;            // no state file on the base yet, or nothing readable
+  }
 }
 
 function readProcessed(repoRoot, cfg) {
@@ -364,6 +393,17 @@ function run(cfg, ctx) {
     items = validateItems(JSON.parse(fetched.stdout));
   } catch (e) {
     throw new Error(`source.fetch output unusable: ${e.message}`);
+  }
+
+  // `delivery/` takes one change at a time, so a merged cron branch leaves the
+  // base saying a change is active and every later item fails at `propose`. For
+  // an unattended hourly job that is a log full of identical git errors; say it
+  // once, name the change, and name the command that clears it.
+  const active = activeChangeOnBase(cfg, repoRoot);
+  if (active) {
+    log(`${cfg.repo.base} has change '${active}' in flight, and delivery/ takes one at a time — ` +
+        `nothing can be proposed until it is closed out (navi-delivery archive ${active}).`);
+    return { considered: items.length, proposed: [], failed: [] };
   }
 
   const todo = items.filter((it) => !seen.has(it.id)).slice(0, ctx.max ?? cfg.maxPerRun);

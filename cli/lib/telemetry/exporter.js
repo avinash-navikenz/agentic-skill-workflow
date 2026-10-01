@@ -62,6 +62,14 @@ function once(url, headers, body, timeoutMs) {
 async function post(url, headers, payload, opts = {}) {
   const { retries = 2, timeoutMs = 10000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = opts;
   const body = JSON.stringify(payload);
+  // The values this request carries as credentials. Every message that leaves
+  // here is scrubbed of them by value — a vendor that echoes `X-Ingest-Key=…`
+  // back in a 400 body matches no pattern, and that body is both printed and
+  // written into a committed file.
+  const sent = Object.entries(headers || {})
+    .filter(([name]) => name.toLowerCase() !== "content-type" && name.toLowerCase() !== "content-length")
+    .map(([, value]) => value);
+  const scrub = (text) => redactText(text, sent);
   let attempt = 0;
   let last = { status: 0, body: "", error: "never attempted" };
 
@@ -82,7 +90,7 @@ async function post(url, headers, payload, opts = {}) {
     bytes: body.length,
     // The response body is the only place a vendor says WHY it refused, so it
     // is carried through rather than reduced to the status code.
-    error: redactText(last.error || `HTTP ${last.status}${last.body ? `: ${last.body.slice(0, 400)}` : ""}`),
+    error: scrub(last.error || `HTTP ${last.status}${last.body ? `: ${last.body.slice(0, 400)}` : ""}`),
   };
 }
 

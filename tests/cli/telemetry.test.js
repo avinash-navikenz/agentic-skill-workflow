@@ -478,3 +478,38 @@ test("preview and export agree on an --all run that finds nothing", () => {
   assert.strictEqual(telemetry.run(["preview", "--all"], root, emit, {}), 0);
   assert.match(lines.join("\n"), /nothing recorded yet/);
 });
+
+test("a credential the vendor echoes back never reaches stdout or the sidecar", async () => {
+  // A gateway returning the request in its 400 body matches no query-parameter
+  // pattern, so the key went into a committed file. The exporter knows what it
+  // sent and now removes those values by value.
+  const root = repo();
+  const { s, url } = await server((req, res) => {
+    res.writeHead(400);
+    res.end(`no such route: ${url}${req.url} (header X-Ingest-Key=${req.headers["x-ingest-key"]})`);
+  });
+  const { lines, emit } = capture();
+  await telemetry.run(["export", "--backend", "agentobs"], root, emit, {
+    NAVI_AGENTOBS_ENDPOINT: `${url}?auth=TOPSECRET`,
+    NAVI_AGENTOBS_INGEST_KEY: "HEADERSECRETVALUE",
+  });
+  s.close();
+
+  const sidecar = fs.readFileSync(telemetry.sidecarPath(root), "utf8");
+  for (const where of [sidecar, lines.join("\n")]) {
+    assert.ok(!where.includes("HEADERSECRETVALUE"), `the ingest key leaked: ${where}`);
+    assert.ok(!where.includes("TOPSECRET"), `the query key leaked: ${where}`);
+  }
+  assert.match(sidecar, /<redacted>/);
+});
+
+test("a credential outside a query string is redacted too", () => {
+  // Only `?`-prefixed parameters were covered, so three ordinary endpoint
+  // shapes carried a key into the sidecar verbatim.
+  assert.strictEqual(redactUrl("https://h/v1/ingest/TOPSECRETTOKENVALUE123/traces"),
+                     "https://h/v1/ingest/<redacted>/traces");
+  assert.strictEqual(redactUrl("https://h/v1/traces;token=TOPSECRET"), "https://h/v1/traces;<redacted>");
+  assert.strictEqual(redactUrl("https://h/v1/traces#key=TOPSECRET"), "https://h/v1/traces#<redacted>");
+  // An ordinary endpoint is left alone.
+  assert.strictEqual(redactUrl("https://host/v1/otlp/traces"), "https://host/v1/otlp/traces");
+});

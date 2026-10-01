@@ -49,6 +49,11 @@ function ctx(work, over = {}) {
   return Object.assign({ repoRoot: work, log: () => {}, push: true, cliPath: CLI }, over);
 }
 
+function capture() {
+  const lines = [];
+  return { lines, emit: (m) => lines.push(String(m)) };
+}
+
 function items(work, list) {
   fs.writeFileSync(path.join(work, "items.json"), JSON.stringify(list));
 }
@@ -321,21 +326,31 @@ test("a stateFile pointing outside the repository is refused", () => {
   assert.throws(() => cron.run(config(work, { stateFile: "/tmp/escaped.json" }), ctx(work)),
                 /resolves outside the repository/);
 
-  // A symlink inside the checkout pointing out of it: path arithmetic alone
-  // said this was contained, and the run then read and wrote outside the repo.
   const outside = path.join(path.dirname(work), "outside.json");
-  fs.symlinkSync(outside, path.join(work, "state-link.json"));
-  assert.throws(() => cron.run(config(work, { stateFile: "state-link.json" }), ctx(work)),
-                /resolves outside the repository/);
-  assert.strictEqual(fs.existsSync(outside), false, "the run wrote outside the repository");
 
-  // Two hops: resolving only the first one landed inside the repository and
-  // passed, while the write followed the chain the rest of the way out.
-  fs.symlinkSync("hop2.json", path.join(work, "hop1.json"));
-  fs.symlinkSync(path.join("..", "outside.json"), path.join(work, "hop2.json"));
-  assert.throws(() => cron.run(config(work, { stateFile: "hop1.json" }), ctx(work)),
-                /resolves outside the repository/);
-  assert.strictEqual(fs.existsSync(outside), false, "a two-hop link wrote outside the repository");
+  // A state file is never a symlink. Resolving a chain and then writing to it
+  // is two operations, and these three each got through a version of that:
+  // one hop out, a symlinked DIRECTORY in the path (the parent was never
+  // re-resolved), and a chain longer than the hop budget, which was treated as
+  // success while the kernel followed the rest.
+  fs.symlinkSync(outside, path.join(work, "one-hop.json"));
+  fs.symlinkSync("one-hop.json", path.join(work, "two-hop.json"));
+  fs.mkdirSync(path.join(path.dirname(work), "elsewhere"), { recursive: true });
+  fs.symlinkSync(path.join("..", "elsewhere"), path.join(work, "dirlink"));
+  fs.symlinkSync(path.join("dirlink", "state.json"), path.join(work, "via-dir.json"));
+  let chain = path.join(work, "h25.json");
+  fs.symlinkSync(outside, chain);
+  for (let i = 24; i >= 1; i -= 1) {
+    fs.symlinkSync(`h${i + 1}.json`, path.join(work, `h${i}.json`));
+  }
+
+  for (const link of ["one-hop.json", "two-hop.json", "via-dir.json", "h1.json"]) {
+    assert.throws(() => cron.run(config(work, { stateFile: link }), ctx(work)),
+                  /is a symbolic link/, `${link} was followed`);
+  }
+  assert.strictEqual(fs.existsSync(outside), false, "a link wrote outside the repository");
+  assert.strictEqual(fs.existsSync(path.join(path.dirname(work), "elsewhere", "state.json")), false,
+                     "a symlinked directory wrote outside the repository");
 });
 
 test("the checkout cron runs in is left on its own branch, clean", () => {
@@ -418,4 +433,28 @@ test("main() runs end to end — the entry point every cron line actually calls"
   assert.match(git(["branch", "--list", "navi/proj-40-end-to-end"], origin), /proj-40/);
   assert.strictEqual(JSON.parse(fs.readFileSync(path.join(work, ".navi-cron-state.json"), "utf8")).processed[0],
                      "PROJ-40");
+});
+
+test("a base that already has a change in flight is reported once, not per item", () => {
+  // One merged cron branch leaves delivery/.adlc/state.json on the base saying a
+  // change is active, and `propose` takes one at a time — so every later item
+  // died with the same git-level message and an unattended job just logged
+  // failures forever.
+  const { work } = fixture();
+  items(work, [{ id: "PROJ-60", title: "One" }, { id: "PROJ-61", title: "Two" }]);
+  const state = path.join(work, "delivery", ".adlc", "state.json");
+  const parsed = JSON.parse(fs.readFileSync(state, "utf8"));
+  parsed.change = "already-in-flight";
+  parsed.lane = "express";
+  fs.writeFileSync(state, JSON.stringify(parsed, null, 2));
+  git(["add", "-A"], work);
+  git(["commit", "-q", "-m", "a cron branch was merged"], work);
+  git(["push", "-q", "origin", "main"], work);
+
+  const { lines, emit } = capture();
+  const result = cron.run(config(work), ctx(work, { log: emit }));
+  assert.strictEqual(result.proposed.length, 0);
+  assert.strictEqual(result.failed.length, 0, "it should stop, not fail each item in turn");
+  assert.match(lines.join("\n"), /already-in-flight/);
+  assert.match(lines.join("\n"), /navi-delivery archive/);
 });

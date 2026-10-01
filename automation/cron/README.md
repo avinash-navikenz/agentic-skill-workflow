@@ -100,8 +100,20 @@ Delete a line from the state file to make it propose an item again. If the file 
 read or parsed the run **stops** rather than treating it as empty: a missing file means
 "nothing yet", but an unreadable one means the record is unavailable, and treating that as
 empty re-opens a duplicate branch and pull request for every item it holds. It must also sit
-inside the repository — a path escaping it, including through a symlink, is refused. Both
-the state file and `.navi-cron.log` are gitignored.
+inside the repository, and it may not be a symlink at all: resolving a chain and then
+writing to it are two operations, and a link planted between them wins — refusing links
+removes the question. Both the state file and `.navi-cron.log` are gitignored.
+
+## One change at a time
+
+`delivery/` holds one change in flight, by design — `state.json` carries one change's gate
+verdicts. So when a cron branch is merged, the base's `state.json` says that change is still
+active, and nothing else can be proposed until somebody closes it out.
+
+The runner checks this before it does anything and says so once, naming the change and the
+command that clears it, rather than failing every item in turn with the same git error. For
+an unattended job that is the difference between one readable line an hour and a log nobody
+reads.
 
 ## When it fails
 
@@ -114,3 +126,4 @@ the state file and `.navi-cron.log` are gitignored.
 | nothing happens, no error | every candidate id is already in `.navi-cron-state.json` |
 | `already exists on <remote> with different content` | somebody pushed to that `navi/` branch, or it holds an older proposal; the runner will not overwrite it |
 | the state file is refused as malformed | fix or delete it — see **What it remembers** |
+| `<base> has change '<name>' in flight` | a cron branch was merged and its change was never closed out; run `navi-delivery archive <name>` on the base |

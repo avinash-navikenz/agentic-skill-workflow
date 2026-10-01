@@ -116,10 +116,18 @@ Every real export writes `delivery/.adlc/telemetry.json`:
                       "bytes": 4821, "error": null, "at": "2026-10-01T..." } }
 ```
 
-It holds the outcome and never a credential. The url is redacted before it is written:
-`delivery/.adlc/` is part of the committed tree, and two ordinary OTLP endpoint forms carry
-a secret — userinfo (`https://user:token@host/...`) and a query-string key — so both become
-`<redacted>`. A `401` here is a stale key, and it is visible where you would look rather
+It holds the outcome and never a credential. `delivery/.adlc/` is part of the committed
+tree, so everything written there is redacted first — four ordinary endpoint forms carry a
+secret, and all four become `<redacted>`: userinfo (`https://user:token@host/…`), a
+query-string key, a `;`-parameter, and a key embedded in the path.
+
+The `error` field gets the same treatment, by a stronger rule: the exporter knows which
+values it sent as credentials and removes those by value. A gateway that echoes your ingest
+key back inside a `400` body matches no pattern, and that body is both printed and stored.
+
+A path segment of 20 or more characters is redacted on the assumption it is a token, which
+will occasionally blank a long route id. A less precise sidecar is the right trade against a
+key in a committed file. A `401` here is a stale key, and it is visible where you would look rather
 than only in a vendor's UI you have not opened.
 
 A failed export exits non-zero and reports why, but changes nothing about the delivery
