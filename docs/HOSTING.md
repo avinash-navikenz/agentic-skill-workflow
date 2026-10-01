@@ -38,6 +38,16 @@ To turn it on:
 2. **Settings → Pages → Build and deployment → Source: GitHub Actions.** Not "Deploy from
    a branch": this workflow uploads an artifact, and the branch option ignores it.
 3. Set the repository variable **`PUBLISH_PAGES`** to `true`.
+4. **Allow `dev` to deploy.** Enabling Pages creates a `github-pages` environment whose
+   branch policy permits the default branch only, so a push to `dev` builds and then fails
+   at the deploy step with no explanation worth reading. Add it:
+
+   ```bash
+   gh api -X POST /repos/<owner>/<repo>/environments/github-pages/deployment-branch-policies \
+     -f name=dev
+   ```
+
+   Or Settings → Environments → github-pages → Deployment branches → Add `dev`.
 
 Then:
 
