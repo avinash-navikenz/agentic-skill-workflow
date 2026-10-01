@@ -10,7 +10,9 @@ and lanes is derived here from the files that are themselves the source of truth
   ADLC.md                               the phase table and the gate table
 
 Nothing is hand-transcribed into the page, so regenerating after a change to any of
-those files keeps the page true.
+those files keeps the page true. That includes the totals the page's own prose names
+("45 skills across 13 disciplines"): they are injected from the same `counts` the
+payload carries, so the copy and the payload cannot disagree. See COUNT_SPAN below.
 
 The same extraction feeds three outputs: the per-page JSON each docs page renders,
 one README.md beside every SKILL.md and *.agent.md, and (through build_adapters.py)
@@ -370,6 +372,18 @@ def catalogue_items(root: Path) -> dict:
     return {"agents": agents, "skills": skills}
 
 
+def item_counts(data: dict) -> dict:
+    """The counts that follow from the agent/skill tree alone.
+
+    Split out of build() so readme_models() can reach them from a
+    catalogue_items() result — build_adapters.py has one of those and no
+    ADLC.md-derived framework constants.
+    """
+    agents, skills = data["agents"], data["skills"]
+    disciplines = {s["discipline"] for s in skills} | {a["discipline"] for a in agents}
+    return {"agents": len(agents), "skills": len(skills), "disciplines": len(disciplines)}
+
+
 def build(root: Path) -> dict:
     items = catalogue_items(root)
     agents, skills = items["agents"], items["skills"]
@@ -384,6 +398,7 @@ def build(root: Path) -> dict:
 
     phases, gates = _phases_and_gates(root)
     chain, findings = _chain_and_findings(root)
+    lanes = _lanes(root)
 
     return {
         "agents": agents,
@@ -391,16 +406,14 @@ def build(root: Path) -> dict:
         "disciplines": discipline_rows,
         "phases": phases,
         "gates": gates,
-        "lanes": _lanes(root),
+        "lanes": lanes,
         "chain": chain,
         "findings": findings,
         "counts": {
-            "agents": len(agents),
-            "skills": len(skills),
-            "disciplines": len(discipline_rows),
+            **item_counts(items),
             "phases": len(phases),
             "gates": len(gates),
-            "lanes": 4,
+            "lanes": len(lanes),
         },
     }
 
@@ -428,26 +441,34 @@ README_STAMP = (
     "inside the NOTES block, which regeneration preserves."
 )
 
-INSTALL_FRAMEWORK = {
-    "intro": (
-        "`adapters/claude-code/` is the installable artefact: generated output in the "
-        "flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) "
-        "with its own `.claude-plugin/plugin.json`, so the directory is a complete "
-        "plugin on its own. The repository root also carries a plugin manifest, but its "
-        "skills are nested a level deeper and that layout has not been verified to load "
-        "in any harness — do not install the repo root."
-    ),
-    "steps": [
-        "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
-        "./install.sh --yes                    # symlinks 39 skills + 11 agents into ~/.claude",
-    ],
-    "note": (
-        "`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it "
-        "installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations "
-        "(which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites "
-        "are Node 20 or newer and Python 3, and nothing else."
-    ),
-}
+def install_framework(counts: dict) -> dict:
+    """The whole-framework install block every README and the page carry.
+
+    It names how many skills and agents `install.sh` lands, so it takes `counts`
+    rather than hard-coding them: a figure typed here would be wrong the next
+    time a skill is added, in 50-odd files at once.
+    """
+    return {
+        "intro": (
+            "`adapters/claude-code/` is the installable artefact: generated output in the "
+            "flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) "
+            "with its own `.claude-plugin/plugin.json`, so the directory is a complete "
+            "plugin on its own. The repository root also carries a plugin manifest, but its "
+            "skills are nested a level deeper and that layout has not been verified to load "
+            "in any harness — do not install the repo root."
+        ),
+        "steps": [
+            "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
+            "./install.sh --yes                    "
+            f"# symlinks {counts['skills']} skills + {counts['agents']} agents into ~/.claude",
+        ],
+        "note": (
+            "`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it "
+            "installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations "
+            "(which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites "
+            "are Node 20 or newer and Python 3, and nothing else."
+        ),
+    }
 
 ALONE_NOTE_SKILL = (
     "Installed on its own, this skill has **no agent holding it**. Nothing in the "
@@ -599,11 +620,17 @@ def readme_models(data: dict) -> dict[str, dict]:
     """{entry name: readme model} for every agent and skill in a built catalogue."""
     agents_by_name = {a["name"]: a for a in data["agents"]}
     skills_by_name = {s["name"]: s for s in data["skills"]}
+    # The whole-framework install block names the tree's own totals, so it is built
+    # once here from the counts and carried on each model rather than read from a
+    # module constant — a caller cannot then render a README with stale figures.
+    framework = install_framework(data.get("counts") or item_counts(data))
     models: dict[str, dict] = {}
     for a in data["agents"]:
         models[a["name"]] = _agent_readme(a, skills_by_name, agents_by_name)
     for s in data["skills"]:
         models[s["name"]] = _skill_readme(s, agents_by_name)
+    for m in models.values():
+        m["install_framework"] = framework
     return models
 
 
@@ -671,10 +698,11 @@ def readme_markdown(m: dict, *, flat: bool = False) -> str:
             out += ["## Hands off to", "",
                     ", ".join(h["label"] for h in m["handoff_to"]) + ".", ""]
 
+    framework = m["install_framework"]
     out += ["## Install", "", "### This " + m["kind"] + " on its own", "",
             _fence(m["install_alone"]["steps"]), "", m["install_alone"]["note"], "",
-            "### The whole framework", "", INSTALL_FRAMEWORK["intro"], "",
-            _fence(INSTALL_FRAMEWORK["steps"]), "", INSTALL_FRAMEWORK["note"], ""]
+            "### The whole framework", "", framework["intro"], "",
+            _fence(framework["steps"]), "", framework["note"], ""]
 
     out += ["## Where the rules live", "",
             f"This README is a summary and carries no rules. "
@@ -728,8 +756,9 @@ def write_readmes(root: Path, data: dict) -> list[Path]:
 # a time — but there is nothing to fetch, so it works from disk and degrades to
 # one long scrolling document if scripting is off.
 #
-# Everything the page knows is in one injected block. Adding a skill or an agent
-# to the tree and re-running `--inject` is the whole of the update: no card, no
+# Everything the page knows is in one injected block, bar the totals its prose
+# names, which are injected in place (COUNT_SPAN). Adding a skill or an agent to
+# the tree and re-running `--inject` is the whole of the update: no card, no
 # count, no filter list and no cross-link is written by hand anywhere on it.
 
 PAGE = "index.html"
@@ -758,6 +787,7 @@ def _for_page(model: dict) -> dict:
     relation is the relative path from one README.md to another; the page links
     by route instead, and carrying both would put ~20 KB of dead paths on it."""
     out = dict(model)
+    out.pop("install_framework", None)  # carried once, at payload top level
     for key in ("holders", "held", "handoff_to"):
         if key in out:
             out[key] = [{k: v for k, v in rel.items() if k != "md"} for rel in out[key]]
@@ -800,7 +830,7 @@ def page_payload(data: dict) -> dict:
         "agents": _cards(data, "agent", models),
         "skills": _cards(data, "skill", models),
         "spotlight": spotlight,
-        "install_framework": INSTALL_FRAMEWORK,
+        "install_framework": install_framework(data["counts"]),
     }
 
 
@@ -808,6 +838,64 @@ def page_payload(data: dict) -> dict:
 
 BEGIN = "<!-- BEGIN GENERATED CATALOGUE -->"
 END = "<!-- END GENERATED CATALOGUE -->"
+
+# The page's hand-written copy names the same totals the payload carries — "45 skills
+# across 13 disciplines", "Browse the 11 agents". A number typed into prose is wrong the
+# next time a skill lands, and the page then contradicts the filter count rendered an
+# inch away from it. So prose counts are injected from `counts` too:
+#
+#     <span data-total="skills">45</span> skills across <span data-total="disciplines">13</span>
+#
+# The rendered number stays in the file, so the sentence is correct with scripting off and
+# to anything reading the HTML directly, and `--check` — which compares the whole file —
+# fails on a stale prose count exactly as it does on a stale catalogue.
+#
+# `data-total`, not `data-count`: the catalogue sections already carry a
+# `<span class="count" data-count>` that the filter writes its live match count into, and
+# the page finds it with `root.querySelector("[data-count]")` — a second `data-count` inside
+# the same section would be picked up first and the filter count would land in the heading.
+#
+# Spelled-out numbers ("Thirty-nine") cannot be injected without a number-to-words
+# renderer whose only user would be this page, so the copy was reworded to read naturally
+# with a numeral instead.
+COUNT_SPAN = re.compile(r'(<span data-total="([a-z]+)">)[^<]*(</span>)')
+
+# `<meta name="description">` carries the same totals in an attribute, where a span cannot
+# go, so the whole tag is generated between its own markers.
+SUMMARY_BEGIN = "<!-- BEGIN GENERATED SUMMARY -->"
+SUMMARY_END = "<!-- END GENERATED SUMMARY -->"
+
+
+def _summary_tag(counts: dict) -> str:
+    return (
+        '<meta name="description" content="An agentic SDLC framework, plan to monitor: '
+        f'{counts["agents"]} persona agents over {counts["skills"]} best-practice skills '
+        f'across {counts["disciplines"]} disciplines, {counts["gates"]} gates, '
+        f'{counts["lanes"]} lanes. Browse the catalogue, follow one change end to end, '
+        'and install it.">'
+    )
+
+
+def _apply_counts(html: str, counts: dict) -> str:
+    """Rewrite every `<span data-total="...">` in a fragment of the page."""
+    def one(match: re.Match) -> str:
+        key = match.group(2)
+        if key not in counts:
+            raise CatalogueError(
+                f"docs/{PAGE}: <span data-total=\"{key}\"> names no count; "
+                f"the catalogue knows {', '.join(sorted(counts))}"
+            )
+        return match.group(1) + str(counts[key]) + match.group(3)
+    return COUNT_SPAN.sub(one, html)
+
+
+def _replace_region(html: str, begin: str, end: str, body: str) -> str:
+    start, stop = html.find(begin), html.find(end)
+    if start == -1 or stop == -1 or stop < start:
+        raise CatalogueError(
+            f"docs/{PAGE} has no `{begin}` / `{end}` pair — the page must carry both markers"
+        )
+    return html[:start] + f"{begin}\n{body}\n{end}" + html[stop + len(end):]
 
 
 def _render_block(data: dict) -> str:
@@ -831,7 +919,15 @@ def inject(root: Path, data: dict, *, check_only: bool = False) -> bool:
             f"{page} has no `{BEGIN}` / `{END}` pair — the page must carry both markers"
         )
 
-    updated = html[:start] + _render_block(page_payload(data)) + html[stop + len(END):]
+    # Counts are applied to the hand-written halves of the page only. The generated
+    # block between them is JSON built from the same `counts`, and running a regex for
+    # `<span …>` over a skill's quoted prose is a way to corrupt it for no gain.
+    counts = data["counts"]
+    head = _replace_region(
+        _apply_counts(html[:start], counts), SUMMARY_BEGIN, SUMMARY_END, _summary_tag(counts)
+    )
+    tail = _apply_counts(html[stop + len(END):], counts)
+    updated = head + _render_block(page_payload(data)) + tail
     if updated == html:
         return False
     if not check_only:

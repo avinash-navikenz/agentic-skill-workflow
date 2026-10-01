@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>navi-delivery — field guide</title>
-<meta name="description" content="An agentic SDLC framework, plan to monitor: eleven persona agents over thirty-nine best-practice skills, nine gates, four lanes. Browse the catalogue, follow one change end to end, and install it.">
+<!-- BEGIN GENERATED SUMMARY -->
+<meta name="description" content="An agentic SDLC framework, plan to monitor: 11 persona agents over 45 best-practice skills across 13 disciplines, 9 gates, 4 lanes. Browse the catalogue, follow one change end to end, and install it.">
+<!-- END GENERATED SUMMARY -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,300..900;1,300..900&display=swap">
@@ -500,8 +502,9 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <h1>An agentic SDLC framework, Plan to Monitor</h1>
     <p class="tag">Agents hold the judgment. Skills hold the rules.</p>
     <p class="lede">
-      Eleven persona agents carry each discipline's judgment. Thirty-nine skills across twelve
-      disciplines carry each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
+      The framework ships <span data-total="agents">11</span> persona agents carrying each discipline's
+      judgment, and <span data-total="skills">45</span> skills across <span data-total="disciplines">13</span>
+      disciplines carrying each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
       your repo and records what actually happened at each of nine gates &mdash; so a phase that
       emitted no telemetry did not happen, and a gate whose verdict was never recorded was
       never passed.
@@ -534,13 +537,13 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <a href="#/agents">
         <div class="n">Catalogue</div>
         <div class="t">Agents</div>
-        <p>All eleven personas. Pick one and it opens in full beside the list: the gates it owns,
+        <p>All <span data-total="agents">11</span> personas. Pick one and it opens in full beside the list: the gates it owns,
         the skills it holds, when it stops and asks a human, and how to install it.</p>
       </a>
       <a href="#/skills">
         <div class="n">Catalogue</div>
         <div class="t">Skills</div>
-        <p>All thirty-nine, searchable and filterable by discipline, phase and gate. Pick one for
+        <p>All <span data-total="skills">45</span>, searchable and filterable by discipline, phase and gate. Pick one for
         its README and both install paths.</p>
       </a>
       <a href="#/install">
@@ -585,7 +588,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
           <dt>Voice</dt><dd>first person, persona</dd>
           <dt>File</dt><dd><code>agents/navi-agent-&lt;persona&gt;/*.agent.md</code></dd>
         </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="#/agents">Browse the eleven agents &rarr;</a></p>
+        <p class="small" style="margin:.9em 0 0"><a href="#/agents">Browse the <span data-total="agents">11</span> agents &rarr;</a></p>
       </div>
       <div class="half b">
         <h3>Skills &mdash; the rules</h3>
@@ -595,7 +598,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
           <dt>Voice</dt><dd>impersonal, imperative</dd>
           <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
         </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="#/skills">Browse the thirty-nine skills &rarr;</a></p>
+        <p class="small" style="margin:.9em 0 0"><a href="#/skills">Browse the <span data-total="skills">45</span> skills &rarr;</a></p>
       </div>
     </div>
     <div class="note">
@@ -781,7 +784,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 <section id="cat-agent" data-cat="agent">
   <div class="wrap">
     <p class="kicker">Catalogue · agents</p>
-    <h2>Eleven personas, from the source tree</h2>
+    <h2>All <span data-total="agents">11</span> personas, from the source tree</h2>
     <p class="lede small">Search by name, mission, the gates it owns or the skills it holds; filter by ADLC phase or gate. Pick one from the list and it opens in full beside it &mdash; what it is for, when it fires, what it produces, the skills it loads, when it stops and asks a human, and both ways to install it. Every skill chip jumps straight to that skill.</p>
 
     <div class="controls">
@@ -807,7 +810,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 <section id="cat-skill" data-cat="skill">
   <div class="wrap">
     <p class="kicker">Catalogue · skills</p>
-    <h2>Thirty-nine skills across twelve disciplines</h2>
+    <h2><span data-total="skills">45</span> skills across <span data-total="disciplines">13</span> disciplines</h2>
     <p class="lede small">Search by name, trigger phrase, discipline or tag; filter by discipline, ADLC phase or gate. A skill is reachable from a gate through the agents that hold it, which is how someone hunting &ldquo;what do I need for G6&rdquo; looks. Pick one from the list and its README opens beside it, with both ways to install it.</p>
 
     <div class="controls">
@@ -860,15 +863,15 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <div class="half a">
         <h3>The whole framework</h3>
         <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>python3 scripts/build_adapters.py .   <span class="hash"># adapters/ is generated; refresh it first</span>
-<span class="p">$ </span>./install.sh --yes                    <span class="hash"># 39 skills + 11 agents</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
+<span class="p">$ </span>./install.sh --yes                    <span class="hash"># <span data-total="skills">45</span> skills + <span data-total="agents">11</span> agents</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
         <p class="small">This is the supported path: every agent, every skill it holds, and the
         cross-references between them. <code>install.sh</code> symlinks by default, so an edit to
         the repo takes effect live.</p>
         <p class="small" style="margin-bottom:0">Verified into a scratch directory with
         <code>CLAUDE_SKILLS_DIR</code> / <code>CLAUDE_AGENTS_DIR</code> pointed at it &mdash;
-        39 skill directories and 11 agent files land, each skill directory carrying both
-        <code>SKILL.md</code> and <code>README.md</code>, and <code>--uninstall</code> removes
-        exactly the 50 it created.</p>
+        <span data-total="skills">45</span> skill directories and <span data-total="agents">11</span> agent files land, each skill
+        directory carrying both <code>SKILL.md</code> and <code>README.md</code>, and
+        <code>--uninstall</code> removes exactly what it created.</p>
       </div>
     </div>
   </div>
@@ -900,9 +903,9 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <div class="term-head"><span class="dot"></span>./install.sh --yes<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ ./install.sh --yes</span>
 <span class="o">navi-delivery installer (symlink)
-  39 skills -&gt; /Users/you/.claude/skills
+  45 skills -&gt; /Users/you/.claude/skills
   11 agents -&gt; /Users/you/.claude/agents
-Installed 39 skill(s) and 11 agent(s).
+Installed 45 skill(s) and 11 agent(s).
 
 Next:
   cd /path/to/your-repo
@@ -983,20 +986,20 @@ Next:
     <div class="term">
       <div class="term-head"><span class="dot"></span>regenerate<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ python3 scripts/build_adapters.py .</span>
-<span class="o">wrote 92 file(s)
+<span class="o">wrote 104 file(s)
   adapters/claude-code/skills/navi-skill-decision-records/SKILL.md
   adapters/claude-code/skills/navi-skill-decision-records/README.md
-  <span class="dim">… 88 more …</span>
+  <span class="dim">… 100 more …</span>
   adapters/generic/RUNBOOK.md
   templates/delivery/AGENTS.md</span>
 
 <span class="dim"># the README beside every SKILL.md and *.agent.md:</span>
 <span class="c">$ python3 scripts/build_catalogue.py . --readmes</span>
-<span class="o">readmes: 50 written, 0 changed</span>
+<span class="o">readmes: 56 written, 0 changed</span>
 
 <span class="dim"># and this page, from the same source tree:</span>
 <span class="c">$ python3 scripts/build_catalogue.py . --inject</span>
-<span class="o">updated: docs/index.html (11 agents, 39 skills, 12 disciplines)</span>
+<span class="o">updated: docs/index.html (11 agents, 45 skills, 13 disciplines)</span>
 <span class="c">$ python3 scripts/build_catalogue.py . --check</span>
 <span class="o">docs/index.html catalogue is up to date</span>
 </pre>
@@ -7745,7 +7748,7 @@ phase:  1
   "intro": "`adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.",
   "steps": [
    "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
-   "./install.sh --yes                    # symlinks 39 skills + 11 agents into ~/.claude"
+   "./install.sh --yes                    # symlinks 45 skills + 11 agents into ~/.claude"
   ],
   "note": "`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else."
  }
