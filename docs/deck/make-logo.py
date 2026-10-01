@@ -8,7 +8,9 @@ tinted to any brand colour.
 import base64, json, pathlib, subprocess, sys
 from PIL import Image
 
-REPO = pathlib.Path("/Users/avinashnegi/Downloads/agentic-skills-workflow")
+# Found from this file, not hardcoded: the previous absolute path was correct on
+# exactly one machine.
+REPO = pathlib.Path(__file__).resolve().parents[2]
 HERE = pathlib.Path(__file__).parent
 WORK = HERE / "logo-build"
 WORK.mkdir(exist_ok=True)

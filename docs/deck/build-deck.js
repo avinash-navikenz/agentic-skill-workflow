@@ -25,7 +25,10 @@ const fs = require("fs");
 const path = require("path");
 const PptxGenJS = require("pptxgenjs");
 
-const REPO = process.env.NAVI_REPO || "/Users/avinashnegi/Downloads/agentic-skills-workflow";
+// The repository this script lives in, found from the script itself. It used to
+// default to one person's absolute path, which is correct on exactly one
+// machine and silently wrong on every other.
+const REPO = process.env.NAVI_REPO || path.resolve(__dirname, "..", "..");
 const OUT = process.argv[2] || path.join(REPO, "docs", "navi-delivery-overview.pptx");
 
 // Read from the tree, never retyped. A deck that states a count is a deck that
