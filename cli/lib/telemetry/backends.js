@@ -6,6 +6,7 @@
 // what is missing by VARIABLE NAME, which is the one thing worth saying out loud
 // about a credential.
 
+const fs = require("node:fs");
 const { redactUrl } = require("./redact");
 
 const NO_NETWORK_HINT = "set it and run `navi-delivery telemetry doctor` again";
@@ -123,12 +124,32 @@ function resolve(name, env) {
   }
   if (spec.headersVar && env[spec.headersVar]) Object.assign(headers, parseHeaders(env[spec.headersVar]));
 
+  // A self-hosted collector often presents a certificate no public CA signed.
+  // Pointing at that certificate keeps verification ON and pins it to exactly
+  // that server — which is the difference between "I know who I am sending this
+  // key to" and "I have stopped asking".
+  let ca = null;
+  const caFile = (env.NAVI_TELEMETRY_CA_FILE || "").trim();
+  if (caFile) {
+    try {
+      ca = fs.readFileSync(caFile, "utf8");
+      if (!ca.includes("BEGIN CERTIFICATE")) {
+        problems.push(`NAVI_TELEMETRY_CA_FILE (${caFile}) holds no PEM certificate`);
+        ca = null;
+      }
+    } catch (e) {
+      problems.push(`NAVI_TELEMETRY_CA_FILE (${caFile}) cannot be read: ${e.code || e.message}`);
+    }
+  }
+
   return {
     name,
     url: endpoint ? `${endpoint.replace(/\/+$/, "")}${spec.suffix}` : null,
     headers,
     missing,
     problems,
+    ca,
+    caFile: caFile || null,
     kindAttribute: spec.kindAttribute,
     note: spec.note,
     ready: missing.length === 0 && problems.length === 0,

@@ -73,7 +73,7 @@ navi-delivery telemetry export --backend langsmith
 
 ```
 change:add-csv-export        root, kind = NAVI_OTLP_SPAN_KIND (default "agent")
-├─ G1 pass                   kind = NAVI_OTLP_GATE_SPAN_KIND (default "task")
+├─ G1 pass                   kind = NAVI_OTLP_GATE_SPAN_KIND (default "tool")
 ├─ G2 fail                   status 2
 ├─ G2 pass                   navi.attempt = 2, navi.previous_verdict = fail
 └─ G6 waived                 navi.waiver_expires
@@ -102,9 +102,24 @@ AgentObs renders only the kinds it recognises; a kind it does not know is accept
 stored, and shown on no screen — with no error on either side. That is the one failure
 mode here that looks exactly like success.
 
-So: probe before trusting a dashboard. Send one change with `NAVI_OTLP_SPAN_KIND=agent`,
-look at AgentObs, and if nothing appears try `workflow`, `chain` or `task`. Both kinds
-are settings for this reason. Opik and LangSmith ignore the attribute.
+So: probe before trusting a dashboard, and write down what you saw.
+
+**Probed against AgentObs, 2026-10-01.** Root `agent` renders as `agent`. Gate spans sent
+as `task` rendered as **`other`** — accepted, stored, labelled nothing; sent as `tool` they
+render as `tool`. The defaults are now `agent` and `tool` because of that run, not because
+they read well.
+
+Both remain settings, because this is a property of the backend and the next one may
+disagree. If a trace does not appear despite a `200`, change the kind first:
+
+```bash
+NAVI_OTLP_SPAN_KIND=workflow NAVI_OTLP_GATE_SPAN_KIND=chain \
+  navi-delivery telemetry export --backend agentobs
+```
+
+Ids are derived, so re-exporting lands on the same trace rather than creating a second
+one — and `NAVI_OTLP_TRACE_NAMESPACE` gives each candidate its own trace if you would
+rather compare them side by side. Opik and LangSmith ignore the attribute entirely.
 
 ## Knowing whether it arrived
 

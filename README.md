@@ -17,6 +17,7 @@ nine gates.
 | [`docs/CLI.md`](docs/CLI.md) | Every verb, every validator rule, every known limitation |
 | [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) | Adding a skill or an agent, and the gates it must clear |
 | [`docs/TELEMETRY.md`](docs/TELEMETRY.md) | Exporting the gate ledger to AgentObs, Opik or LangSmith |
+| [`docs/VERIFYING-TELEMETRY.md`](docs/VERIFYING-TELEMETRY.md) | Proving telemetry works against a real backend, end to end |
 | [`config/mcp/README.md`](config/mcp/README.md) | MCP connections for Jira, Azure DevOps, Confluence and GitHub |
 | [`automation/cron/README.md`](automation/cron/README.md) | The optional runner from tracker item to proposed branch |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every ruling made while building v1, and what each one cost |

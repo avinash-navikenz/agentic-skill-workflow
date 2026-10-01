@@ -5,6 +5,7 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const http = require("node:http");
+const { execFileSync } = require("node:child_process");
 
 const init = require("../../cli/commands/init");
 const propose = require("../../cli/commands/propose");
@@ -568,4 +569,99 @@ test("redaction does not blank the hostname the sidecar exists to record", () =>
   // The path rule still applies.
   assert.strictEqual(redactUrl("https://h/v1/ingest/TOPSECRETTOKENVALUE123/traces"),
                      "https://h/v1/ingest/<redacted>/traces");
+});
+
+// ------------------------------------------- certificate pinning (self-hosted)
+
+test("a CA file is read and handed to the request, not ignored", () => {
+  const pem = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "nd-ca-")), "c.pem");
+  fs.writeFileSync(pem, "-----BEGIN CERTIFICATE-----\nMIIB\n-----END CERTIFICATE-----\n");
+  const r = resolve("agentobs", {
+    NAVI_AGENTOBS_ENDPOINT: "https://h/x", NAVI_AGENTOBS_INGEST_KEY: "k",
+    NAVI_TELEMETRY_CA_FILE: pem,
+  });
+  assert.strictEqual(r.ready, true);
+  assert.match(r.ca, /BEGIN CERTIFICATE/);
+  assert.strictEqual(r.caFile, pem);
+});
+
+test("a CA file that is missing or not a certificate is refused, not silently skipped", () => {
+  // Silently ignoring it would fall back to public CAs and fail with a
+  // confusing TLS error, instead of naming the file the reader got wrong.
+  const missing = resolve("agentobs", {
+    NAVI_AGENTOBS_ENDPOINT: "https://h/x", NAVI_AGENTOBS_INGEST_KEY: "k",
+    NAVI_TELEMETRY_CA_FILE: "/nonsuch/c.pem",
+  });
+  assert.strictEqual(missing.ready, false);
+  assert.match(missing.problems[0], /NAVI_TELEMETRY_CA_FILE.*cannot be read/);
+
+  const junk = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "nd-ca-")), "c.pem");
+  fs.writeFileSync(junk, "this is not a certificate");
+  const bad = resolve("agentobs", {
+    NAVI_AGENTOBS_ENDPOINT: "https://h/x", NAVI_AGENTOBS_INGEST_KEY: "k",
+    NAVI_TELEMETRY_CA_FILE: junk,
+  });
+  assert.strictEqual(bad.ready, false);
+  assert.match(bad.problems[0], /holds no PEM certificate/);
+});
+
+test("a self-signed endpoint is refused by default and accepted when pinned", async () => {
+  // Fully local and deterministic: a throwaway certificate, a real HTTPS
+  // server, and the same code path an export takes. Without the CA the
+  // connection must be refused AND the error must name the supported fix —
+  // the reader's next move otherwise is to look for a way to turn verification
+  // off, which is the one thing they must not do, because the ingest key
+  // travels on this connection.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "nd-tls-"));
+  const key = path.join(dir, "k.pem");
+  const cert = path.join(dir, "c.pem");
+  execFileSync("openssl", ["req", "-x509", "-newkey", "rsa:2048", "-nodes",
+    "-keyout", key, "-out", cert, "-days", "1",
+    "-subj", "/CN=localhost", "-addext", "subjectAltName=DNS:localhost"],
+    { stdio: "ignore" });
+
+  const https = require("node:https");
+  const server = https.createServer(
+    { key: fs.readFileSync(key), cert: fs.readFileSync(cert) },
+    (req, res) => { req.resume(); res.writeHead(200); res.end("{}"); });
+  const port = await new Promise((r) => server.listen(0, "127.0.0.1", () => r(server.address().port)));
+  const url = `https://localhost:${port}/v1/traces`;
+
+  const unpinned = await post(url, {}, { resourceSpans: [] }, { retries: 0 });
+  assert.strictEqual(unpinned.ok, false, "an untrusted certificate must not be accepted");
+  assert.match(unpinned.error, /NAVI_TELEMETRY_CA_FILE/);
+  assert.match(unpinned.error, /verification stays on/);
+
+  const pinned = await post(url, {}, { resourceSpans: [] },
+                            { retries: 0, ca: fs.readFileSync(cert, "utf8") });
+  server.close();
+  assert.strictEqual(pinned.ok, true, `pinning the certificate should verify: ${pinned.error}`);
+  assert.strictEqual(pinned.status, 200);
+});
+
+
+test("the gate span kind defaults to the value probed against AgentObs", () => {
+  // `task` rendered as `other` — accepted, stored, labelled nothing. `tool`
+  // renders as `tool`. Probed 2026-10-01; this pins the result so a later edit
+  // cannot quietly undo it.
+  const root = repo();
+  const out = path.join(root, "p.json");
+  telemetry.run(["preview", "--out", out], root, () => {}, { NAVI_OTLP_TRACE_NAMESPACE: "ns" });
+  const spans = JSON.parse(fs.readFileSync(out, "utf8"))[0].resourceSpans[0].scopeSpans[0].spans;
+  const kind = (s) => s.attributes.find((a) => a.key === "llm.span.kind").value.stringValue;
+  assert.strictEqual(kind(spans[0]), "agent", "the root kind changed");
+  assert.ok(spans.slice(1).every((s) => kind(s) === "tool"), "gate spans are not 'tool'");
+});
+
+test("both span kinds stay overridable, because the next backend may disagree", () => {
+  const root = repo();
+  const out = path.join(root, "p.json");
+  telemetry.run(["preview", "--out", out], root, () => {}, {
+    NAVI_OTLP_TRACE_NAMESPACE: "ns",
+    NAVI_OTLP_SPAN_KIND: "workflow", NAVI_OTLP_GATE_SPAN_KIND: "chain",
+  });
+  const spans = JSON.parse(fs.readFileSync(out, "utf8"))[0].resourceSpans[0].scopeSpans[0].spans;
+  const kind = (s) => s.attributes.find((a) => a.key === "llm.span.kind").value.stringValue;
+  assert.strictEqual(kind(spans[0]), "workflow");
+  assert.strictEqual(kind(spans[1]), "chain");
 });

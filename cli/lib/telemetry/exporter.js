@@ -14,7 +14,20 @@ const { redactUrl, redactText } = require("./redact");
 // the third attempt, and retrying it only delays the message that says so.
 const RETRYABLE = (status) => status === 0 || status === 429 || (status >= 500 && status < 600);
 
-function once(url, headers, body, timeoutMs) {
+// Node names these precisely; a reader seeing one needs to know there is a
+// supported answer that is not "turn verification off".
+const CERT_ERRORS = new Set([
+  "DEPTH_ZERO_SELF_SIGNED_CERT", "SELF_SIGNED_CERT_IN_CHAIN",
+  "UNABLE_TO_VERIFY_LEAF_SIGNATURE", "CERT_HAS_EXPIRED", "ERR_TLS_CERT_ALTNAME_INVALID",
+]);
+
+function certHint(code) {
+  return ` — the endpoint's certificate was not trusted (${code}). If this is a self-hosted ` +
+         "collector, export its certificate and set NAVI_TELEMETRY_CA_FILE to that file: " +
+         "verification stays on and is pinned to that server.";
+}
+
+function once(url, headers, body, timeoutMs, ca) {
   return new Promise((resolve) => {
     let target;
     try {
@@ -38,6 +51,8 @@ function once(url, headers, body, timeoutMs) {
         method: "POST",
         headers: { ...headers, "Content-Length": Buffer.byteLength(body) },
         timeout: timeoutMs,
+        // Pins verification to this certificate rather than disabling it.
+        ...(ca ? { ca } : {}),
       }, (res) => {
         let chunks = "";
         res.setEncoding("utf8");
@@ -49,7 +64,10 @@ function once(url, headers, body, timeoutMs) {
       return;
     }
     req.on("timeout", () => { req.destroy(new Error(`no response in ${timeoutMs}ms`)); });
-    req.on("error", (e) => resolve({ status: 0, body: "", error: redactText(e.message) }));
+    req.on("error", (e) => resolve({
+      status: 0, body: "",
+      error: redactText(e.message) + (CERT_ERRORS.has(e.code) ? certHint(e.code) : ""),
+    }));
     try {
       req.write(body);
       req.end();
@@ -60,7 +78,8 @@ function once(url, headers, body, timeoutMs) {
 }
 
 async function post(url, headers, payload, opts = {}) {
-  const { retries = 2, timeoutMs = 10000, sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = opts;
+  const { retries = 2, timeoutMs = 10000, ca = null,
+          sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = opts;
   const body = JSON.stringify(payload);
   // The values this request carries as credentials. Every message that leaves
   // here is scrubbed of them by value — a vendor that echoes `X-Ingest-Key=…`
@@ -75,7 +94,7 @@ async function post(url, headers, payload, opts = {}) {
 
   while (attempt <= retries) {
     attempt += 1;
-    last = await once(url, headers, body, timeoutMs);
+    last = await once(url, headers, body, timeoutMs, ca);
     if (last.status >= 200 && last.status < 300) {
       return { ok: true, status: last.status, attempts: attempt, bytes: body.length, error: null };
     }

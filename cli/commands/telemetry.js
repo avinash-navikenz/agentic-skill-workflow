@@ -51,7 +51,12 @@ function foldOptions(cwd, env, lane) {
     namespace: namespaceFor(cwd, env),
     serviceName: env.NAVI_OTLP_SERVICE_NAME || "navi-delivery",
     wrapperKind: env.NAVI_OTLP_SPAN_KIND || "agent",
-    gateKind: env.NAVI_OTLP_GATE_SPAN_KIND || "task",
+    // "tool", not "task". Probed against AgentObs on 2026-10-01: `task` is not a
+    // kind it recognises, so every gate span rendered as `other` — accepted,
+    // stored, and labelled nothing. `tool` renders as `tool`. The value is
+    // overridable because this is a property of the backend, not of the ledger,
+    // and the next backend may disagree.
+    gateKind: env.NAVI_OTLP_GATE_SPAN_KIND || "tool",
     lane,
   };
 }
@@ -126,6 +131,7 @@ function doctor(cwd, env, emit) {
     emit(`            ${r.note}`);
   }
   emit("");
+  emit(`CA file: ${env.NAVI_TELEMETRY_CA_FILE || "(none — public CAs only)"}`);
   emit(`trace namespace: ${namespaceFor(cwd, env)}`);
   emit(`wrapper span kind: ${env.NAVI_OTLP_SPAN_KIND || "agent"} (NAVI_OTLP_SPAN_KIND)`);
   emit(`gate span kind:    ${env.NAVI_OTLP_GATE_SPAN_KIND || "task"} (NAVI_OTLP_GATE_SPAN_KIND)`);
@@ -230,7 +236,7 @@ async function exportSpans(argv, cwd, env, emit) {
       emit(`${change}: would send ${folded.spans.length} span(s) to ${redactUrl(target.url)} (trace ${folded.traceId})`);
       continue;
     }
-    const result = await post(target.url, target.headers, payload);
+    const result = await post(target.url, target.headers, payload, { ca: target.ca });
     entries.push({
       // Redacted: delivery/.adlc/ is part of the committed tree, and an OTLP
       // endpoint may legitimately carry userinfo or a query-string key.
