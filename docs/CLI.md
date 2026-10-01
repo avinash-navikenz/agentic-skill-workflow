@@ -97,7 +97,6 @@ navi-delivery status
 ```text
 change: add-csv-export
 lane:   standard
-phase:  1
 
   G1  pass
   G2  pass
@@ -121,9 +120,10 @@ no active change — run: navi-delivery propose <name> --lane <lane>
 
 Exits `0` in that case — no change open is a state, not an error.
 
-> **`phase:` does not advance.** `state.phase` is set to `1` by `propose` and by `archive`
-> and is never moved by any command. Read the gate verdicts for real progress; the phase line
-> is a placeholder in v1.
+> **There is no `phase:` line.** `state.phase` exists in `state.json`, where `propose` and
+> `archive` both set it to `1` and nothing advances it. `status` used to print it, which made
+> every change look like it was in phase 1 forever. The gate verdicts are the progression
+> signal, and they are what `status` shows.
 
 ---
 

@@ -55,7 +55,6 @@ navi-delivery status
 ```text
 change: add-csv-export
 lane:   standard
-phase:  1
 
   G1  pending
   G2  pending
@@ -274,7 +273,6 @@ navi-delivery status
 ```text
 change: add-csv-export
 lane:   standard
-phase:  1
 
   G1  pass
   G2  pass
@@ -471,9 +469,9 @@ enforced set. It marks the close-out, not a gate verdict.
 
 ## Two things this transcript shows that are worth knowing
 
-**`phase:` in `status` does not advance.** It reads `1` throughout, because `state.phase` is
-set to 1 at `propose` and at `archive` and is never moved by any command. The gate verdicts
-are the real progress signal; treat the phase line as a placeholder.
+**`status` shows no phase.** `state.phase` is in `state.json`, set to 1 at `propose` and at
+`archive` and moved by nothing, so a phase line could only ever read `1`. The gate verdicts
+above are the progress signal, and they are what `status` prints.
 
 **Gate events record no actor.** G3 and G6 are each co-owned by two agents, and the log
 cannot say which of them recorded the verdict. Where that matters — a release approval, an

@@ -1111,7 +1111,6 @@ Next: navi-delivery propose &lt;name&gt; --lane standard</span>
 <span class="c">$ navi-delivery status</span>
 <span class="o">change: add-csv-export
 lane:   standard
-phase:  1
 
   G1  pending
   G2  pending
@@ -1270,7 +1269,6 @@ then no `Download CSV` control is present.</span>
 <span class="c">$ navi-delivery status</span>
 <span class="o">change: add-csv-export
 lane:   standard
-phase:  1
 
   G1  pass
   G2  pass
@@ -1540,14 +1538,6 @@ phase:  1
         <p class="small" style="margin-bottom:0">One reason and one expiry cover every criterion the
         gate checks, so a single unfixable finding waives the gate rather than itself. G8 checks an
         SLI, a runbook and telemetry confirmed arriving; one waiver silences all three.</p>
-      </div>
-
-      <div class="panel">
-        <h4 style="color:var(--bad)"><code>status</code>'s <code>phase:</code> line does not advance</h4>
-        <p class="small" style="margin-bottom:0">It reads <code>1</code> throughout <a href="#/demo">the demo</a>,
-        because <code>state.phase</code> is set to 1 at <code>propose</code> and at
-        <code>archive</code> and is never moved by any command. The gate verdicts are the real
-        progress signal; treat the phase line as a placeholder.</p>
       </div>
 
       <div class="panel">

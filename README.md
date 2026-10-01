@@ -65,7 +65,6 @@ navi-delivery propose add-csv-export --lane standard
 navi-delivery status
 # => change: add-csv-export
 # => lane:   standard
-# => phase:  1
 # =>
 # =>   G1  pending
 # =>   ...
@@ -150,7 +149,7 @@ CI regenerates and diffs, so a hand edit fails the build.
 ```bash
 navi-delivery init                             # scaffold delivery/, generate AGENTS.md, detect harness
 navi-delivery propose <name> --lane <lane>     # open a change from templates
-navi-delivery status                           # change, lane, phase, gate verdicts, stale artifacts
+navi-delivery status                           # change, lane, gate verdicts, stale artifacts
 navi-delivery validate [--strict]              # frontmatter, separation, traceability
 navi-delivery gate <G#> --pass --evidence <p>  # record a gate decision
 navi-delivery archive <name>                   # fold the delta into specs/, emit the insight stub

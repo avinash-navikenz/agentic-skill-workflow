@@ -14,7 +14,12 @@ function run(argv, cwd, emit = console.log) {
 
   emit(`change: ${s.change}`);
   emit(`lane:   ${s.lane}`);
-  emit(`phase:  ${s.phase}`);
+  // No `phase:` line. `state.phase` is assigned 1 by `propose` and by `archive`
+  // and is advanced by nothing, so the line printed `1` for every change for
+  // the whole life of that change. The gate verdicts below carry the real
+  // progression. A decorative field printed as fact is worse than no field, so
+  // it is not printed. `state.phase` itself stays in state.json — removing it
+  // would change the on-disk state format, which is a separate decision.
   emit("");
   for (const g of gatesForLane(s.lane)) emit(`  ${g}  ${s.gates[g] || "pending"}`);
   if (s.stale.length) {
