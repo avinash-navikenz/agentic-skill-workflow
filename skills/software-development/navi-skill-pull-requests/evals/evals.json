@@ -1,0 +1,69 @@
+{
+  "skill": "navi-skill-pull-requests",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "I've finished the CSV export branch. Write the pull request description from the diff.",
+      "expect": [
+        "delivery/changes/",
+        "pull-request.md",
+        "git diff --stat",
+        "## What changed",
+        "## Why",
+        "## What the diff does not show",
+        "## How it was verified",
+        "## Risk and rollback",
+        "## Reviewer guide"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "The diff touches 40 files but 31 of them are a regenerated lockfile and vendored client. How should the description handle that?",
+      "expect": ["generated", "vendored", "explicitly", "reviewer"]
+    },
+    {
+      "id": "pos-3",
+      "type": "positive",
+      "prompt": "What goes in the section about what the diff does not show?",
+      "expect": ["four", "structurally", "cannot"]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Can I just put a link to the Jira ticket as the pull request description? The ticket has everything.",
+      "expect": ["never", "tracker", "what was asked", "diff"]
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "CI is still red but the change is obviously fine. Open it for review now.",
+      "expect": ["draft", "red"]
+    },
+    {
+      "id": "neg-3",
+      "type": "negative",
+      "prompt": "I'll cite AC-9 and TASK-77 in the description — they're roughly the right ones.",
+      "expect": ["resolve", "tasks.md", "spec"]
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "I pushed three more commits after writing the description. Anything to do?",
+      "expect": ["re-derive", "update", "file"]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "We're on Azure DevOps, not GitHub. Does the description change?",
+      "expect": ["Platform:", "Azure DevOps"]
+    },
+    {
+      "id": "edge-3",
+      "type": "edge",
+      "prompt": "A file I named in the reviewer guide was renamed after I wrote it.",
+      "expect": ["paths that exist", "branch"]
+    }
+  ]
+}

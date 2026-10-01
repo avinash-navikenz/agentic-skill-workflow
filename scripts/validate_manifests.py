@@ -36,8 +36,28 @@ def _kind_findings(entries: list[Entry]) -> list[Finding]:
     return out
 
 
+# M9 — every skill ships evals.json, and navi-skill-pull-requests shipped without
+# one. Nothing noticed: the file is a convention the house tooling reads
+# (/skill-creator, /eai-eng-skills-evaluator, skill-batch-creator) and no check
+# required it, so the gap was invisible until someone went looking by hand.
+def _evals_findings(entries: list[Entry]) -> list[Finding]:
+    out: list[Finding] = []
+    for e in entries:
+        if e.kind != "skill":
+            continue
+        # Only where there is a directory to look in. `check` is also called
+        # with synthetic entries whose paths are never written to disk, and a
+        # rule that reports against those is a rule that fails every unit test
+        # of every other rule.
+        if not e.path.parent.is_dir():
+            continue
+        if not (e.path.parent / "evals" / "evals.json").exists():
+            out.append(Finding("M9", e.path, "has no evals/evals.json — every skill ships one"))
+    return out
+
+
 def check(entries: list[Entry]) -> list[Finding]:
-    out: list[Finding] = _kind_findings(entries)
+    out: list[Finding] = _kind_findings(entries) + _evals_findings(entries)
     # An unrecognised kind makes every cross-entry invariant below untrustworthy:
     # the file drops out of `skills` and out of `listed_by`, so M4/M5/M7 report
     # against the *other* side of each broken pair. Those findings are noise

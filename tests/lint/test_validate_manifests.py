@@ -23,6 +23,17 @@ def agent(name="navi-agent-architect", skills=("navi-skill-alpha",)):
                   "capabilities": ["read_file"], "consumes": [], "produces": [],
                   "handoff_to": [], "escalate_to_human_when": ["conflict"]}, "body")
 
+def _with_evals(tmp, entry, write=True):
+    """Materialise a skill directory so the evals check has something to look at."""
+    path = Path(tmp) / entry.path
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("body")
+    if write:
+        (path.parent / "evals").mkdir(exist_ok=True)
+        (path.parent / "evals" / "evals.json").write_text("{}")
+    return Entry(entry.name, entry.kind, path, entry.meta, entry.body)
+
+
 def rules(findings):
     return sorted({f.rule for f in findings})
 
@@ -174,3 +185,21 @@ class TestKindValidation(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestEvals(unittest.TestCase):
+    def test_M9_skill_without_evals_json(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            s = _with_evals(tmp, skill(), write=False)
+            self.assertIn("M9", rules(check([s, agent()])))
+
+    def test_M9_satisfied_when_evals_json_is_present(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            s = _with_evals(tmp, skill(), write=True)
+            self.assertNotIn("M9", rules(check([s, agent()])))
+
+    def test_M9_does_not_ask_an_agent_for_evals(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            a = _with_evals(tmp, agent(), write=False)
+            s = _with_evals(tmp, skill(), write=True)
+            self.assertNotIn("M9", rules(check([s, a])))

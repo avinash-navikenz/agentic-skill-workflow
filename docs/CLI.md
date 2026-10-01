@@ -450,6 +450,7 @@ python3 scripts/build_catalogue.py . --readmes --inject   # regenerate the page 
 | `M6` | A skill's `description` contains `Trigger phrases include:` |
 | `M7` | A skill's `used_by_agents` equals exactly the set of agents listing it |
 | `M8` | `metadata.kind` is one of `skill`, `agent` — spelled exactly |
+| `M9` | Every skill ships `evals/evals.json` |
 
 M7 reports in two directions, because the fix differs: one means the skill's claim is stale,
 the other means an agent acquired the skill without being recorded.
