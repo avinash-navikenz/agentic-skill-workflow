@@ -33,9 +33,20 @@ function stripTrailers(value) {
   return cut === -1 ? value : `${value.slice(0, cut)}${value[cut]}<redacted>`;
 }
 
+// Applied to the PATH only. Run over the whole string it also matched host
+// labels, so `https://agentobs-prod-eastus.example.com/...` lost its hostname —
+// destroying the one fact the sidecar exists to record, which endpoint this
+// went to.
 function stripTokenPath(value) {
-  return value.replace(/\/([A-Za-z0-9_-]+)/g, (whole, seg) =>
+  const authority = /^[a-z][a-z0-9+.-]*:\/\//i.exec(value);
+  const afterHost = authority
+    ? value.indexOf("/", authority[0].length)
+    : value.indexOf("/");
+  if (afterHost === -1) return value;
+  const head = value.slice(0, afterHost);
+  const tail = value.slice(afterHost).replace(/\/([A-Za-z0-9_-]+)/g, (whole, seg) =>
     (TOKENISH_SEGMENT.test(seg) ? "/<redacted>" : whole));
+  return head + tail;
 }
 
 // An OTLP endpoint is ordinarily not a secret, but four ordinary forms carry
@@ -71,17 +82,29 @@ function redactUrl(url) {
 // caller does not know about.
 function redactText(text, known = []) {
   if (typeof text !== "string" || !text) return text;
-  let out = text;
+
+  // Pattern passes FIRST. The marker `<redacted>` contains `<`, which ends the
+  // URL pattern's character class — so substituting by value first truncated
+  // every URL at the first known secret and let the rest of it through.
+  // Supplying a known secret made the output strictly less redacted than
+  // supplying none.
+  let out = text
+    .replace(/\b((?:https?|grpc):\/\/[^\s"'<>]+)/gi, (m) => redactUrl(m))
+    .replace(SECRET_PARAM, "$1$2=<redacted>")
+    .replace(/(^|\s|\/\/)([^/\s:]+):([^/\s]*)@/g, "$1<redacted>@");
+
   for (const secret of known) {
     // Short values are not credentials worth matching and would redact ordinary
     // words out of a diagnostic message.
-    if (typeof secret === "string" && secret.length >= 8) {
-      out = out.replace(new RegExp(escapeRe(secret), "g"), "<redacted>");
+    if (typeof secret !== "string" || secret.length < 8) continue;
+    // Case-insensitively, and in percent-encoded form: a vendor that lowercases
+    // or url-encodes the value it echoes back was leaking it in full.
+    const forms = new Set([secret, encodeURIComponent(secret), encodeURI(secret)]);
+    for (const form of forms) {
+      out = out.replace(new RegExp(escapeRe(form), "gi"), "<redacted>");
     }
   }
-  out = out.replace(/\b((?:https?|grpc):\/\/[^\s"'<>]+)/gi, (m) => redactUrl(m));
-  out = out.replace(SECRET_PARAM, "$1$2=<redacted>");
-  return out.replace(/(^|\s|\/\/)([^/\s:]+):([^/\s]*)@/g, "$1<redacted>@");
+  return out;
 }
 
 module.exports = { redactUrl, redactText };

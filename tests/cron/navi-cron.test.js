@@ -452,9 +452,44 @@ test("a base that already has a change in flight is reported once, not per item"
   git(["push", "-q", "origin", "main"], work);
 
   const { lines, emit } = capture();
-  const result = cron.run(config(work), ctx(work, { log: emit }));
+  const result = cron.run(config(work), ctx(work, { log: () => {}, warn: emit }));
   assert.strictEqual(result.proposed.length, 0);
   assert.strictEqual(result.failed.length, 0, "it should stop, not fail each item in turn");
+  // On the warn channel, so --quiet cannot swallow the only line explaining
+  // why an otherwise successful run did nothing.
   assert.match(lines.join("\n"), /already-in-flight/);
   assert.match(lines.join("\n"), /navi-delivery archive/);
+});
+
+test("a hard link is refused the way a symbolic link is", () => {
+  // A hard link has nothing to resolve: lstat reports a regular file and every
+  // path check passes, while the write lands on the other name.
+  const { work } = fixture();
+  const outside = path.join(path.dirname(work), "precious.json");
+  fs.writeFileSync(outside, JSON.stringify({ processed: ["PRECIOUS"] }));
+  fs.linkSync(outside, path.join(work, "hard.json"));
+  items(work, [{ id: "PROJ-80", title: "Hard link" }]);
+
+  assert.throws(() => cron.run(config(work, { stateFile: "hard.json" }), ctx(work)),
+                /hard links/);
+  assert.deepStrictEqual(JSON.parse(fs.readFileSync(outside, "utf8")).processed, ["PRECIOUS"],
+                         "the run wrote through a hard link");
+});
+
+test("an unwritable state file stops the run before anything irreversible", () => {
+  // It used to be written only after a branch was pushed and a PR opened, so a
+  // config typo meant the work landed, the id was never recorded, and every
+  // later run opened the same pull request again.
+  const { work, origin } = fixture();
+  items(work, [{ id: "PROJ-81", title: "Unwritable" }]);
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+  const cfg = config(work, { stateFile: "nope/state.json" });
+
+  for (let run = 0; run < 3; run += 1) {
+    assert.throws(() => cron.run(cfg, ctx(work)), /ENOENT|no such file/i);
+  }
+  assert.strictEqual(git(["branch", "--list", "navi/*"], origin), "",
+                     "work was done despite the record being unwritable");
+  assert.strictEqual(fs.existsSync(path.join(work, "pr.txt")), false,
+                     "a pull request was opened despite the record being unwritable");
 });

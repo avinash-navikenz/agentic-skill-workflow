@@ -127,7 +127,8 @@ key back inside a `400` body matches no pattern, and that body is both printed a
 
 A path segment of 20 or more characters is redacted on the assumption it is a token, which
 will occasionally blank a long route id. A less precise sidecar is the right trade against a
-key in a committed file. A `401` here is a stale key, and it is visible where you would look rather
+key in a committed file. The rule applies to the path only — the host is the one fact the
+sidecar exists to record, and blanking it would defeat the purpose. A `401` here is a stale key, and it is visible where you would look rather
 than only in a vendor's UI you have not opened.
 
 A failed export exits non-zero and reports why, but changes nothing about the delivery

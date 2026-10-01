@@ -90,7 +90,12 @@ async function post(url, headers, payload, opts = {}) {
     bytes: body.length,
     // The response body is the only place a vendor says WHY it refused, so it
     // is carried through rather than reduced to the status code.
-    error: scrub(last.error || `HTTP ${last.status}${last.body ? `: ${last.body.slice(0, 400)}` : ""}`),
+    // Scrubbed BEFORE truncation. Slicing first cut credentials in half, and
+    // half a key no longer matches by value — so a body over 400 characters,
+    // which is the normal case for an HTML gateway page, put most of a live key
+    // into a committed file. The 400 applies to what is kept, not to what is
+    // searched.
+    error: scrub(last.error || `HTTP ${last.status}${last.body ? `: ${last.body}` : ""}`).slice(0, 400),
   };
 }
 

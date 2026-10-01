@@ -100,9 +100,11 @@ Delete a line from the state file to make it propose an item again. If the file 
 read or parsed the run **stops** rather than treating it as empty: a missing file means
 "nothing yet", but an unreadable one means the record is unavailable, and treating that as
 empty re-opens a duplicate branch and pull request for every item it holds. It must also sit
-inside the repository, and it may not be a symlink at all: resolving a chain and then
-writing to it are two operations, and a link planted between them wins — refusing links
-removes the question. Both the state file and `.navi-cron.log` are gitignored.
+inside the repository, and it may be neither a symbolic nor a hard link: resolving a chain
+and then writing to it are two operations, and a link planted between them wins — refusing
+links removes the question. The runner also proves the file is writable before it does
+anything irreversible, so a mistyped path fails on the first run rather than after a pull
+request is already open. Both the state file and `.navi-cron.log` are gitignored.
 
 ## One change at a time
 

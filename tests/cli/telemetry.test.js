@@ -13,6 +13,7 @@ const telemetry = require("../../cli/commands/telemetry");
 const { fold, traceIdFor } = require("../../cli/lib/telemetry/spans");
 const { toPayload, truncate } = require("../../cli/lib/telemetry/payload");
 const { resolve, parseHeaders, redactUrl } = require("../../cli/lib/telemetry/backends");
+const { redactText } = require("../../cli/lib/telemetry/redact");
 const { post } = require("../../cli/lib/telemetry/exporter");
 
 const EVENTS = [
@@ -512,4 +513,59 @@ test("a credential outside a query string is redacted too", () => {
   assert.strictEqual(redactUrl("https://h/v1/traces#key=TOPSECRET"), "https://h/v1/traces#<redacted>");
   // An ordinary endpoint is left alone.
   assert.strictEqual(redactUrl("https://host/v1/otlp/traces"), "https://host/v1/otlp/traces");
+});
+
+test("a credential survives neither truncation nor the marker that redacts it", async () => {
+  const root = repo();
+  const key = "sk-live-9f3a2b1c8d7e6f5a4b3c2d1e0f9a8b7c";
+  // Over 400 characters, which is the normal case for a gateway error page.
+  // Slicing before scrubbing cut the key in half, and half a key matches
+  // nothing by value — so most of it reached the committed sidecar.
+  const { s, url } = await server((req, res) => {
+    res.writeHead(400);
+    res.end("gateway rejected the request; ".repeat(12) + ` X-Ingest-Key: ${req.headers["x-ingest-key"]} (end)`);
+  });
+  const { lines, emit } = capture();
+  await telemetry.run(["export", "--backend", "agentobs"], root, emit,
+                      { NAVI_AGENTOBS_ENDPOINT: url, NAVI_AGENTOBS_INGEST_KEY: key });
+  s.close();
+
+  const sidecar = fs.readFileSync(telemetry.sidecarPath(root), "utf8");
+  for (const where of [sidecar, lines.join("\n")]) {
+    for (let cut = 12; cut <= key.length; cut += 4) {
+      assert.ok(!where.includes(key.slice(0, cut)),
+                `${cut} characters of the key leaked: ${where.slice(0, 300)}`);
+    }
+  }
+});
+
+test("supplying a known secret never makes the output less redacted", () => {
+  // `<redacted>` contains `<`, which ends the URL pattern's character class, so
+  // substituting by value first truncated every URL at the first known secret
+  // and let the rest of it through.
+  const text = "HTTP 400: https://h/WORKSPACEVALUE1/ingest/BBBBBBBBBBBBBBBBBBBBBBBB/traces?apikey=ZZZ";
+  const withKnown = redactText(text, ["WORKSPACEVALUE1"]);
+  assert.ok(!withKnown.includes("BBBBBBBBBBBBBBBBBBBBBBBB"), withKnown);
+  assert.ok(!withKnown.includes("WORKSPACEVALUE1"), withKnown);
+  assert.ok(!withKnown.includes("apikey=ZZZ"), withKnown);
+});
+
+test("a secret the vendor re-cases or url-encodes is still removed", () => {
+  const key = "SK-LIVE-9F3A2B1C8D7E6F5A";
+  assert.ok(!redactText(`400: sent key=${key.toLowerCase()}`, [key]).includes(key.toLowerCase()));
+  const encodable = "tok/en+value=abc";
+  assert.ok(!redactText(`400: ${encodeURIComponent(encodable)}`, [encodable])
+    .includes(encodeURIComponent(encodable)));
+});
+
+test("redaction does not blank the hostname the sidecar exists to record", () => {
+  // Applied to the whole url it matched host labels too, so the one fact worth
+  // keeping — which endpoint this went to — was destroyed.
+  assert.strictEqual(redactUrl("https://agentobs-prod-eastus.example.com/v1/otlp/traces"),
+                     "https://agentobs-prod-eastus.example.com/v1/otlp/traces");
+  assert.strictEqual(redactUrl("http://my-company-telemetry:4318/v1/traces"),
+                     "http://my-company-telemetry:4318/v1/traces");
+  // The path rule still applies.
+  assert.strictEqual(redactUrl("https://h/v1/ingest/TOPSECRETTOKENVALUE123/traces"),
+                     "https://h/v1/ingest/<redacted>/traces");
 });

@@ -203,13 +203,29 @@ function stateFileFor(repoRoot, cfg) {
   const resolved = path.resolve(repoRoot, cfg.stateFile);
   const root = fs.realpathSync(repoRoot);
 
-  // A state file has no business being a symlink, and refusing one removes the
-  // whole class rather than racing it: resolving a chain and then writing to it
-  // is two operations, and a link planted between them wins.
-  const stat = fs.lstatSync(resolved, { throwIfNoEntry: false });
+  // A state file has no business being a link of either kind, and refusing one
+  // removes the whole class rather than racing it: resolving a chain and then
+  // writing to it is two operations, and a link planted between them wins.
+  let stat;
+  try {
+    stat = fs.lstatSync(resolved, { throwIfNoEntry: false });
+  } catch (e) {
+    // throwIfNoEntry suppresses only ENOENT. ELOOP (a symlink loop in a parent)
+    // and ENOTDIR (a file used as a directory) arrive here as raw errnos.
+    throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} cannot be examined (${e.code}) — ` +
+                    "check the directories above it");
+  }
   if (stat && stat.isSymbolicLink()) {
     throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} is a symbolic link. Point it at a ` +
                     "real file inside the repository.");
+  }
+  // A hard link has nothing to resolve: lstat reports a regular file and every
+  // path check passes, while the write lands on the other name — outside the
+  // repository, if that is where the other name is. More than one link is the
+  // only signal there is, and a state file has no reason to have one.
+  if (stat && stat.isFile() && stat.nlink > 1) {
+    throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} has ${stat.nlink} hard links, so ` +
+                    "writing it would write another name too. Point it at a file of its own.");
   }
 
   // Resolving only the final component left two ways through: a symlinked
@@ -231,7 +247,10 @@ function activeChangeOnBase(cfg, repoRoot) {
   try {
     const raw = git(["show", `${cfg.repo.remote}/${cfg.repo.base}:delivery/.adlc/state.json`], repoRoot);
     const change = JSON.parse(raw).change;
-    return change || null;
+    // A string, or nothing. Any truthy value used to be printed, so a malformed
+    // state file produced `has change '[object Object]'` and advised
+    // `navi-delivery archive [object Object]`.
+    return typeof change === "string" && change ? change : null;
   } catch {
     return null;            // no state file on the base yet, or nothing readable
   }
@@ -383,6 +402,9 @@ function processItem(item, cfg, ctx) {
 
 function run(cfg, ctx) {
   const { repoRoot, log } = ctx;
+  // Warnings go to stderr by default: they survive --quiet, and in a cron job
+  // they land in the same log either way.
+  if (!ctx.warn) ctx.warn = (m) => process.stderr.write(m + "\n");
   const seen = readProcessed(repoRoot, cfg);
   const fetched = shell(cfg.source.fetch, { cwd: repoRoot });
   if (fetched.status !== 0) {
@@ -399,10 +421,20 @@ function run(cfg, ctx) {
   // base saying a change is active and every later item fails at `propose`. For
   // an unattended hourly job that is a log full of identical git errors; say it
   // once, name the change, and name the command that clears it.
+  // Prove the record is writable before anything irreversible happens. It used
+  // to be written only after a branch was pushed and a pull request opened, so
+  // a config typo (`stateFile: "nope/state.json"`) or a read-only mount meant
+  // the work landed, the id was never recorded, and every later run opened the
+  // same pull request again.
+  writeProcessed(repoRoot, cfg, seen);
+
   const active = activeChangeOnBase(cfg, repoRoot);
   if (active) {
-    log(`${cfg.repo.base} has change '${active}' in flight, and delivery/ takes one at a time — ` +
-        `nothing can be proposed until it is closed out (navi-delivery archive ${active}).`);
+    // Not through `log`: --quiet exists to silence per-item chatter, and this is
+    // the only line explaining why an otherwise successful run did nothing.
+    ctx.warn(`${cfg.repo.base} has change '${active}' in flight, and delivery/ takes one at a ` +
+             `time — nothing can be proposed until it is closed out ` +
+             `(navi-delivery archive ${active}).`);
     return { considered: items.length, proposed: [], failed: [] };
   }
 
@@ -423,7 +455,16 @@ function run(cfg, ctx) {
       // nothing, forever.
       if (outcome.pushed) {
         seen.add(item.id);
-        writeProcessed(repoRoot, cfg, seen);
+        try {
+          writeProcessed(repoRoot, cfg, seen);
+        } catch (e) {
+          // The branch is pushed and the pull request is open. Losing the record
+          // now means the next run opens a second one, so this is reported as
+          // its own thing rather than folded into "the item failed".
+          throw new Error(`${item.id}: the pull request is OPEN on ${outcome.branch}, but recording ` +
+                          `it failed (${e.message}). Add "${item.id}" to the state file by hand, or ` +
+                          "the next run will open a duplicate.");
+        }
       }
     } catch (e) {
       failed.push({ id: item.id, message: e.message });
@@ -489,6 +530,7 @@ function main(argv) {
   try {
     result = run(cfg, {
       repoRoot, log, push: flag("--push"),
+      warn: (m) => process.stderr.write(m + "\n"),
       max: maxFlag !== null ? Number(maxFlag) : undefined,
       cliPath: path.resolve(__dirname, "..", "..", "cli", "index.js"),
     });
