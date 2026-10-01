@@ -10,3 +10,8 @@ __pycache__/
 # the copy holds credentials and must not be.
 config/mcp/.env
 config/mcp/*.env
+
+# navi-cron writes these beside the checkout it runs in.
+.navi-cron-state.json
+.navi-cron.log
+.navi-cron.env

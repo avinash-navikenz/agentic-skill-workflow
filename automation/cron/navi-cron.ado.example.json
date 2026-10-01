@@ -1,0 +1,13 @@
+{
+  "source": {
+    "name": "azure-boards",
+    "fetch": "az boards query --wiql \"SELECT [System.Id], [System.Title] FROM workitems WHERE [System.Tags] CONTAINS 'navi-delivery' AND [System.State] <> 'Closed'\" --output json | jq '[.[] | {id: (\"AB-\" + (.fields.\"System.Id\"|tostring)), title: .fields.\"System.Title\"}]'"
+  },
+  "repo": { "base": "main", "remote": "origin", "branchPrefix": "navi/" },
+  "lane": "standard",
+  "maxPerRun": 3,
+  "stateFile": ".navi-cron-state.json",
+  "pr": {
+    "command": "az repos pr create --source-branch \"$NAVI_BRANCH\" --target-branch \"$NAVI_BASE\" --title \"$NAVI_ITEM_TITLE\" --description \"Proposed by navi-cron from $NAVI_ITEM_ID. Nothing in this branch has been reviewed by a person.\" --output none"
+  }
+}

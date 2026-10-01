@@ -1,0 +1,13 @@
+{
+  "source": {
+    "name": "jira",
+    "fetch": "curl -sS -u \"$JIRA_USER:$JIRA_API_TOKEN\" -H 'Content-Type: application/json' -X POST \"$JIRA_SITE/rest/api/3/search/jql\" -d '{\"jql\":\"labels = navi-delivery AND statusCategory != Done\",\"fields\":[\"summary\",\"description\"],\"maxResults\":20}' | jq --arg site \"$JIRA_SITE\" '[.issues[] | {id: .key, title: .fields.summary, url: ($site + \"/browse/\" + .key)}]'"
+  },
+  "repo": { "base": "main", "remote": "origin", "branchPrefix": "navi/" },
+  "lane": "standard",
+  "maxPerRun": 3,
+  "stateFile": ".navi-cron-state.json",
+  "pr": {
+    "command": "gh pr create --base \"$NAVI_BASE\" --head \"$NAVI_BRANCH\" --title \"$NAVI_ITEM_TITLE\" --body \"Proposed by navi-cron from $NAVI_ITEM_ID ($NAVI_ITEM_URL). Nothing in this branch has been reviewed by a person.\""
+  }
+}

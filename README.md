@@ -201,6 +201,25 @@ of those files, so a pasted token is caught before it is committed, not after.
 
 ---
 
+## Proposing changes from the tracker, on a schedule
+
+Optional, and off unless you install it. [`automation/cron/`](automation/cron/README.md)
+holds a runner that asks Jira or Azure Boards for tagged work items and, for each new
+one, branches off the base, proposes a change, seeds the proposal from the item, pushes
+and opens a pull request.
+
+```bash
+node automation/cron/navi-cron.js --config automation/cron/navi-cron.jira.example.json
+./automation/cron/install-cron.sh --config /abs/path/to/config.json   # prints the crontab line
+```
+
+It never touches the checkout it runs in — every change happens in a worktree it creates
+and removes — it does nothing irreversible without `--push`, and tracker text never
+reaches a shell as code, which the tests assert with a hostile title. What it opens is a
+scaffolded branch, not a proposal: a person still writes the why.
+
+---
+
 ## The two halves
 
 | | Agents — the thinking | Skills — the rules |
