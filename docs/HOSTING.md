@@ -1,120 +1,79 @@
-# Publishing the field guide, behind Entra
+# Publishing the field guide
 
-`docs/index.html` is published to **Azure Static Web Apps** with Microsoft Entra ID in
-front of it. Two destinations, one workflow (`.github/workflows/site.yml`):
+`docs/index.html` is published to **GitHub Pages** by `.github/workflows/pages.yml`:
 
-| Branch | Where it lands | Who can see it |
+| Branch | URL | |
 | --- | --- | --- |
-| `main` | the production URL | anyone in the tenant you assign |
-| `dev` | a named staging environment, its own URL | the same people, same login |
+| `main` | `https://<owner>.github.io/<repo>/` | the stable page |
+| `dev` | `https://<owner>.github.io/<repo>/dev/` | orange banner, links back to stable |
 
-The dev copy carries an orange banner saying so. The two pages are otherwise identical,
-and a preview read as released is the mistake worth one line of CSS to prevent.
+A push to either branch rebuilds **both**. Pages serves one site per repository, so the
+two copies are assembled into a single artifact by a job that checks out both branches —
+the only way to publish two branches to one site without each deployment wiping the other.
 
-## Why not GitHub Pages
+## The site is public. There is no way to gate it here.
 
-GitHub Pages has no authentication. A login added to a static page in JavaScript is not
-access control — the HTML is served to anyone who requests the URL, and the content is in
-the network tab before any script runs.
+Anyone with the URL can read every page, every skill and every agent README.
 
-GitHub *can* gate a Pages site, but only on **GitHub Enterprise Cloud**, and only to
-people holding a **GitHub account with an org seat**; Entra is the identity provider, but
-GitHub org membership is the authorisation. Static Web Apps asks a reader for an Entra
-account and nothing else, which is the right trade when the audience is wider than the
-engineers who already have seats.
+This is not a setting that was left off. GitHub Pages has **no access control** unless the
+repository is owned by an **organization** on **GitHub Enterprise Cloud** — and even then,
+every reader needs a GitHub account with a seat. A personal account cannot restrict a Pages
+site at all.
 
-## What to configure, once
+And a login added to a static page in JavaScript is **not** access control: the HTML is
+served to whoever requests the URL, and the content sits in the browser's network tab
+before any script runs. If you ever see that offered as a solution, it is theatre.
 
-### 1. Entra app registration
+So the rule for this page is simple: **anything you would not post publicly does not belong
+in it.** Before publishing, the Navikenz tenant names were replaced with `contoso`
+throughout for exactly this reason.
 
-In **Microsoft Entra admin centre → App registrations → New registration**:
+### If it must be private later
 
-- **Name:** anything — `navi-delivery field guide` reads well in a consent prompt.
-- **Supported account types:** *Accounts in this organizational directory only* (single
-  tenant). This is the first of two things keeping the page internal.
-- **Redirect URI:** *Web* →
-  `https://<your-site>.azurestaticapps.net/.auth/login/aad/callback`
+| Route | Login | Cost shape | Catch |
+| --- | --- | --- | --- |
+| Org on GitHub Enterprise Cloud | GitHub, Entra via SAML SSO | per seat | every reader needs a GitHub seat |
+| Azure Static Web Apps, Standard | Entra, direct | per app | needs an Azure subscription |
+| Cloudflare Pages + Access | Entra, direct | free to 50 users | a second vendor |
 
-  Add a second one for the dev environment once Azure has given it a URL. The pattern is
-  always `<site>/.auth/login/aad/callback`; these endpoints are provided by Static Web
-  Apps, so there is nothing to build at those paths.
+All three are real server-side access control. Static Web Apps was built and then removed
+from this repository when it turned out no Azure subscription was available; the commit is
+in the history if it becomes an option again.
 
-Then either:
+## Turning it on, once
 
-- **Certificates & secrets → New client secret** — simplest, and expires, so diarise it; or
-- **a user-assigned managed identity as a federated credential** — no secret to rotate.
-  Assign the identity to the static web app only: anything else holding it can act as this
-  app registration.
+1. **Settings → Pages → Build and deployment → Source: GitHub Actions.** Not "Deploy from
+   a branch" — this workflow uploads an artifact, and the branch option would ignore it.
+2. Push to `main`. The first run creates the site; the URL appears on the workflow summary
+   and under Settings → Pages.
+3. Create `dev` when you want a preview page. Until it exists the workflow publishes the
+   stable page alone and says so in the log, rather than failing.
 
-### 2. Restrict who can sign in
+Nothing else. No secrets, no variables, no tokens.
 
-A single-tenant app still lets *everyone in the tenant* in. To narrow it:
+## What the workflow does
 
-**Entra → Enterprise applications → your app → Properties → Assignment required: Yes**,
-then **Users and groups → Add** the group that should read it.
-
-Without this step the page is open to the whole of Navikenz. That may be what you want —
-decide it deliberately rather than inherit it.
-
-### 3. The Static Web App
-
-Create it on the **Standard** plan. Custom authentication — your own app registration —
-is not available on Free, and Free's preconfigured providers cannot be pinned to your
-tenant.
-
-Under **Settings → Environment variables**, add:
-
-| Name | Value |
-| --- | --- |
-| `AZURE_CLIENT_ID` | the app registration's Application (client) ID |
-| `AZURE_CLIENT_SECRET` | the client secret itself |
-
-`site/staticwebapp.config.json` refers to these **by name only**, so no secret is ever in
-git. If you took the managed-identity route instead, set
-`OVERRIDE_USE_MI_FIC_ASSERTION_CLIENTID` to the managed identity's client ID and point
-`clientSecretSettingName` at that name.
-
-### 4. GitHub
-
-| Kind | Name | Value |
-| --- | --- | --- |
-| Secret | `AZURE_STATIC_WEB_APPS_API_TOKEN` | Static Web App → **Manage deployment token** |
-| Variable | `AZURE_TENANT_ID` | your Entra tenant ID |
-| Variable | `PRODUCTION_URL` | optional; the dev banner links back to it |
-
-`AZURE_TENANT_ID` is a variable rather than a secret because a tenant ID is not one — it
-appears in every sign-in URL. It is kept out of git so the tenant can change without a
-commit. The workflow **fails** if it is unset rather than deploying a site nobody can sign
-in to.
-
-## What the config does
-
-`site/staticwebapp.config.json`, in order:
-
-- **`routes`** — `/*` requires the `authenticated` role, so every path needs a sign-in.
-  `/.auth/login/aad` stays open to `anonymous`, or nobody could reach the login.
-- **`responseOverrides.401`** — redirects an unauthenticated visitor to the Entra login
-  instead of showing them a 401. The page is for reading, not for debugging.
-- **`navigationFallback`** — the guide is one file using hash routes (`#/skills`), so any
-  path serves `index.html`. `/.auth/*` is excluded; those are the platform's.
-- **`globalHeaders`** — a content security policy matching exactly what the page loads:
-  Google Fonts, one inline style, one inline script. Nothing else, and no framing.
-
-## Checking it works
-
-The honest check is a reader who should *not* get in:
-
-1. Open the production URL in a private window. You should be sent to Entra, not to the page.
-2. Sign in as somebody in the assigned group. You should land on the guide.
-3. Sign in as somebody in the tenant but **not** in the group. You should be refused.
-   If they get in, step 2 of the Entra setup was skipped.
-4. Open the dev URL. Same login, orange banner.
-
-`/.auth/me` returns the signed-in identity as JSON, which is the quickest way to see what
-the platform thinks about a session.
+- **Regenerates the catalogue** on both branches before publishing, rather than trusting
+  what was committed. CI already fails a pull request whose generated files are stale, so
+  by merge time they are current — regenerating anyway costs seconds and makes "the
+  published page matches the tree" true by construction rather than by convention.
+- **Stamps the dev copy** with `data-env="dev"` on `<html>`. The banner and its styling
+  live in the page and are inert without that attribute, so there is no markup in the
+  workflow to drift out of sync with the page.
+- **Writes `.nojekyll`.** Pages runs Jekyll by default, which silently drops any path
+  beginning with an underscore. Nothing here does today; the file costs nothing and removes
+  the trap.
+- **Never cancels a deployment in flight.** A half-uploaded site is worse than a late one.
 
 ## When a skill or agent is added
 
-Nothing. CI already fails a pull request whose generated files are stale, and this
-workflow regenerates the catalogue before publishing — so a merge to `main` puts the new
-entry on the site, and a merge to `dev` puts it on the preview.
+Nothing. Merge to `main` and the entry is on the site; merge to `dev` and it is on the
+preview. The regeneration step is what makes that true without anyone remembering to run it.
+
+## Reading it without a web server
+
+The page is a single self-contained file — the only external references are three Google
+Fonts links, which fall back to system fonts. Nothing is fetched at runtime, so
+`docs/index.html` opens correctly straight from a clone over `file://`, hash routes and all.
+That is the zero-infrastructure way to read it, and it respects whatever access control the
+repository already has.

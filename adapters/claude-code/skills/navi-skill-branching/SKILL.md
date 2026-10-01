@@ -231,7 +231,7 @@ there is one and throws away every change to the file called `config` if there i
 outcomes look nothing alike and the second cannot be undone. `git switch` and `git restore` each
 do one of those jobs.
 
-**The token in the URL.** `git remote set-url origin https://navikenz:9c2f4b@dev.azure.com/…`
+**The token in the URL.** `git remote set-url origin https://contoso:9c2f4b@dev.azure.com/…`
 because the credential helper was being awkward. The token is now in `.git/config`, in the
 backup, and in the screenshot of `git remote -v` in the support ticket. Use the helper; rotate
 the token.

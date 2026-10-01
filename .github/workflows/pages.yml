@@ -1,0 +1,112 @@
+# Publishes the field guide to GitHub Pages.
+#
+#   main -> https://<owner>.github.io/<repo>/
+#   dev  -> https://<owner>.github.io/<repo>/dev/
+#
+# Pages serves ONE site per repository, so both copies are assembled into a
+# single artifact by a job that checks out both branches. A push to either
+# branch rebuilds both — which is the only way to publish two branches to one
+# site without one deployment wiping the other.
+#
+# The catalogue is regenerated here rather than trusted from the commit. CI
+# already fails a pull request whose generated files are stale, so by merge time
+# they are current — regenerating anyway costs seconds and makes "the published
+# page matches the tree" true by construction. A skill or agent merged to main
+# therefore appears on the site with no further step.
+#
+# THE SITE IS PUBLIC. GitHub Pages has no access control outside an organization
+# on GitHub Enterprise Cloud, and a login added to a static page in JavaScript is
+# not access control. Everything published here is readable by anyone with the
+# URL — see docs/HOSTING.md before putting anything internal in the page.
+name: pages
+
+on:
+  push:
+    branches: [main, dev]
+  workflow_dispatch:
+
+concurrency:
+  # One deployment at a time, and never cancel one in flight: a half-uploaded
+  # site is worse than a late one.
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+
+      # `continue-on-error`, because dev legitimately may not exist yet and the
+      # stable page must publish regardless.
+      - name: check out dev
+        id: dev
+        continue-on-error: true
+        uses: actions/checkout@v4
+        with:
+          ref: dev
+          path: dev
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: build both copies
+        run: |
+          set -euo pipefail
+          pip install -r main/requirements-dev.txt
+          mkdir -p out
+
+          build() {   # $1 = checkout dir, $2 = output path, $3 = "dev" or ""
+            ( cd "$1" && python3 scripts/build_catalogue.py . --readmes --inject \
+                      && python3 scripts/build_catalogue.py . --check )
+            mkdir -p "$(dirname "$2")"
+            python3 - "$1/docs/index.html" "$2" "$3" <<'PY'
+          import pathlib, re, sys
+          src, dst, env = sys.argv[1], sys.argv[2], sys.argv[3]
+          html = pathlib.Path(src).read_text(encoding="utf8")
+          if env == "dev":
+              # The two copies are pixel-identical otherwise, so the dev one says
+              # so. The page carries the banner already; this turns it on, and
+              # "../" resolves to the stable page one directory up.
+              html = html.replace('<html lang="en">', '<html lang="en" data-env="dev">', 1)
+          pathlib.Path(dst).write_text(html, encoding="utf8")
+          print(f"{'dev' if env else 'production'} build -> {dst}")
+          PY
+          }
+
+          build main out/index.html ""
+          if [ "${{ steps.dev.outcome }}" = "success" ]; then
+            build dev out/dev/index.html dev
+          else
+            echo "no dev branch yet — publishing the stable page only"
+          fi
+
+          # Pages runs Jekyll unless told not to, which would drop any path
+          # beginning with an underscore. Nothing here does today; this costs
+          # one empty file and removes the trap.
+          touch out/.nojekyll
+          ls -R out
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

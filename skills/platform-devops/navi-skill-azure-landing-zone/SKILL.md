@@ -128,18 +128,18 @@ Tenant: `navikenz.onmicrosoft.com`. Primary region `westeurope` (`weu`), paired 
 | Management group | Parent | Holds |
 |---|---|---|
 | mg-navikenz | Tenant Root Group | everything this tenant owns |
-| mg-navikenz-platform | mg-navikenz | connectivity, identity, the registry, the log workspace |
-| mg-navikenz-workloads | mg-navikenz | every delivery workload |
-| mg-navikenz-nonprod | mg-navikenz-workloads | development and staging subscriptions |
-| mg-navikenz-prod | mg-navikenz-workloads | production subscriptions |
+| mg-contoso-platform | mg-navikenz | connectivity, identity, the registry, the log workspace |
+| mg-contoso-workloads | mg-navikenz | every delivery workload |
+| mg-contoso-nonprod | mg-contoso-workloads | development and staging subscriptions |
+| mg-contoso-prod | mg-contoso-workloads | production subscriptions |
 
 ## Subscriptions
 
 | Id | Subscription | Management group | Environment | Owner | Monthly budget | Alert at |
 |---|---|---|---|---|---|---|
-| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-prod | production | Dan Okafor | 18000 EUR | 80% |
-| SUB-002 | sub-navikenz-nonprod-weu | mg-navikenz-nonprod | development and staging | Ana Costa | 4000 EUR | 80% |
-| SUB-003 | sub-navikenz-platform-weu | mg-navikenz-platform | platform | Priya Raman | 2500 EUR | 80% |
+| SUB-001 | sub-contoso-prod-weu | mg-contoso-prod | production | Dan Okafor | 18000 EUR | 80% |
+| SUB-002 | sub-contoso-nonprod-weu | mg-contoso-nonprod | development and staging | Ana Costa | 4000 EUR | 80% |
+| SUB-003 | sub-contoso-platform-weu | mg-contoso-platform | platform | Priya Raman | 2500 EUR | 80% |
 
 Production is SUB-001 and nothing else is. Staging shares SUB-002 with development on purpose:
 they share a blast radius already, and separating them would buy a boundary that protects
@@ -189,8 +189,8 @@ hyphens in run the segments together; the pattern per type is the authority, not
 |---|---|---|---|---|
 | POL-001 | Required tags on every resource | mg-navikenz | Default | 2027-03-31 |
 | POL-002 | Allowed regions | mg-navikenz | Default | 2027-03-31 |
-| POL-003 | Deny public network access on data services | mg-navikenz-workloads | Default | 2027-03-31 |
-| POL-004 | Deny storage accounts that allow shared key access | mg-navikenz-workloads | Default | 2027-03-31 |
+| POL-003 | Deny public network access on data services | mg-contoso-workloads | Default | 2027-03-31 |
+| POL-004 | Deny storage accounts that allow shared key access | mg-contoso-workloads | Default | 2027-03-31 |
 | POL-005 | Diagnostic settings to the platform workspace | mg-navikenz | Default | 2027-03-31 |
 
 ## Exemptions
@@ -276,7 +276,7 @@ Copy the third into `infra/azure/policy/assignments.json` — the deployable for
     {
       "id": "POL-001",
       "displayName": "Required tags on every resource",
-      "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/mg-navikenz/providers/Microsoft.Authorization/policySetDefinitions/navikenz-required-tags",
+      "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/mg-navikenz/providers/Microsoft.Authorization/policySetDefinitions/contoso-required-tags",
       "scope": "/providers/Microsoft.Management/managementGroups/mg-navikenz",
       "enforcementMode": "Default",
       "identity": "None",
@@ -313,8 +313,8 @@ Copy the third into `infra/azure/policy/assignments.json` — the deployable for
     {
       "id": "POL-003",
       "displayName": "Deny public network access on data services",
-      "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/mg-navikenz/providers/Microsoft.Authorization/policySetDefinitions/navikenz-deny-public-data",
-      "scope": "/providers/Microsoft.Management/managementGroups/mg-navikenz-workloads",
+      "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/mg-navikenz/providers/Microsoft.Authorization/policySetDefinitions/contoso-deny-public-data",
+      "scope": "/providers/Microsoft.Management/managementGroups/mg-contoso-workloads",
       "enforcementMode": "Default",
       "identity": "None",
       "parameters": {}
@@ -323,7 +323,7 @@ Copy the third into `infra/azure/policy/assignments.json` — the deployable for
       "id": "POL-004",
       "displayName": "Deny storage accounts that allow shared key access",
       "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/8c6a50c6-9ffd-4ae7-986f-5fa6111f9a54",
-      "scope": "/providers/Microsoft.Management/managementGroups/mg-navikenz-workloads",
+      "scope": "/providers/Microsoft.Management/managementGroups/mg-contoso-workloads",
       "enforcementMode": "Default",
       "identity": "None",
       "parameters": {}
@@ -331,7 +331,7 @@ Copy the third into `infra/azure/policy/assignments.json` — the deployable for
     {
       "id": "POL-005",
       "displayName": "Diagnostic settings to the platform workspace",
-      "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/mg-navikenz/providers/Microsoft.Authorization/policySetDefinitions/navikenz-diagnostics",
+      "policyDefinitionId": "/providers/Microsoft.Management/managementGroups/mg-navikenz/providers/Microsoft.Authorization/policySetDefinitions/contoso-diagnostics",
       "scope": "/providers/Microsoft.Management/managementGroups/mg-navikenz",
       "enforcementMode": "Default",
       "identity": "SystemAssigned",
@@ -369,9 +369,9 @@ Copy the third into `infra/azure/policy/assignments.json` — the deployable for
 ## Anti-patterns
 
 **The policy on one subscription.** `Deny public network access` is assigned to
-`sub-navikenz-prod-weu`, which was the only subscription when it was written. Two subscriptions
+`sub-contoso-prod-weu`, which was the only subscription when it was written. Two subscriptions
 later, two thirds of the estate is uncovered and the compliance dashboard is green because it
-reports on the scope the assignment has. Assign at `mg-navikenz-workloads`.
+reports on the scope the assignment has. Assign at `mg-contoso-workloads`.
 
 **Production as a resource group.** `rg-webshell-prd-weu` and `rg-webshell-stg-weu` in one
 subscription, described as separated. A staging load test exhausts the subscription's regional

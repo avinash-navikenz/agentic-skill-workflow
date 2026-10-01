@@ -142,7 +142,7 @@ with an expiry date and nothing here to rotate on a schedule.
 
 | Principal | Issuer | Subject | Audience | For |
 |---|---|---|---|---|
-| id-webshell-prd-weu | the Entra ID issuer of the navikenz Azure DevOps organisation | sc://navikenz/web-shell/sc-web-shell-prod | api://AzureADTokenExchange | the production service connection |
+| id-webshell-prd-weu | the Entra ID issuer of the navikenz Azure DevOps organisation | sc://contoso/web-shell/sc-web-shell-prod | api://AzureADTokenExchange | the production service connection |
 
 The subject names one connection in one project. Widening it to the project, or to the
 organisation, would let any pipeline anyone can create obtain this identity's token.
@@ -241,7 +241,7 @@ resource adoFederation 'Microsoft.ManagedIdentity/userAssignedIdentities/federat
   name: 'ado-sc-web-shell-prod'
   properties: {
     issuer: adoIssuer
-    subject: 'sc://navikenz/web-shell/sc-web-shell-prod'
+    subject: 'sc://contoso/web-shell/sc-web-shell-prod'
     audiences: [
       'api://AzureADTokenExchange'
     ]
@@ -366,7 +366,7 @@ is no secret and no expiry.
 **The wildcard subject.**
 
 ```
-subject: sc://navikenz/*
+subject: sc://contoso/*
 ```
 
 Any pipeline anyone can create in that organisation now obtains this identity's token, and the

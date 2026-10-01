@@ -34,7 +34,7 @@ dependencies.
 publishing one plugin. From inside Claude Code:
 
 ```
-/plugin marketplace add navikenz/navi-delivery
+/plugin marketplace add avinash-navikenz/agentic-skill-workflow
 /plugin install navi-delivery@navi-delivery
 ```
 

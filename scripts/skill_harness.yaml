@@ -567,8 +567,8 @@ skills:
         expects: "variable 'storageConnectionString' in variable group 'web-shell-common'"
       - name: a role assignment is widened above the resource group
         file: "delivery/ops/azure/identity.md"
-        replace: ["| RBAC-002 | id-webshell-prd-weu | AcrPull | rg-webshell-bld-weu |", "| RBAC-002 | id-webshell-prd-weu | AcrPull | sub-navikenz-platform-weu |"]
-        expects: "RBAC-002 is scoped to 'sub-navikenz-platform-weu'"
+        replace: ["| RBAC-002 | id-webshell-prd-weu | AcrPull | rg-webshell-bld-weu |", "| RBAC-002 | id-webshell-prd-weu | AcrPull | sub-contoso-platform-weu |"]
+        expects: "RBAC-002 is scoped to 'sub-contoso-platform-weu'"
       - name: a workload is given a role that can grant itself further roles
         file: "delivery/ops/azure/identity.md"
         replace: ["| RBAC-001 | id-webshell-prd-weu | Key Vault Secrets User |", "| RBAC-001 | id-webshell-prd-weu | Owner |"]
@@ -596,8 +596,8 @@ skills:
       - name: a federated credential is widened to the whole organisation
         file: "delivery/ops/azure/identity.md"
         replace:
-          - "| sc://navikenz/web-shell/sc-web-shell-prod | api://AzureADTokenExchange |"
-          - "| sc://navikenz/* | api://AzureADTokenExchange |"
+          - "| sc://contoso/web-shell/sc-web-shell-prod | api://AzureADTokenExchange |"
+          - "| sc://contoso/* | api://AzureADTokenExchange |"
         expects: "subject contains a wildcard"
 
   navi-skill-azure-landing-zone:
@@ -605,8 +605,8 @@ skills:
       - name: a policy is assigned on a subscription, which the next subscription does not inherit
         file: "infra/azure/policy/assignments.json"
         replace:
-          - "policySetDefinitions/navikenz-deny-public-data\",\n      \"scope\": \"/providers/Microsoft.Management/managementGroups/mg-navikenz-workloads\","
-          - "policySetDefinitions/navikenz-deny-public-data\",\n      \"scope\": \"/subscriptions/0f2a4c6e-8b1d-4f3a-9c7e-5d2b6a8f1c40\","
+          - "policySetDefinitions/contoso-deny-public-data\",\n      \"scope\": \"/providers/Microsoft.Management/managementGroups/mg-contoso-workloads\","
+          - "policySetDefinitions/contoso-deny-public-data\",\n      \"scope\": \"/subscriptions/0f2a4c6e-8b1d-4f3a-9c7e-5d2b6a8f1c40\","
         expects: "POL-003 is assigned at subscription scope"
       - name: an assignment is left in audit mode with no recorded exemption
         file: "infra/azure/policy/assignments.json"
@@ -634,8 +634,8 @@ skills:
         expects: "param 'costCentre' has no @description"
       - name: a subscription is placed in a management group the tree does not declare
         file: "delivery/ops/azure/landing-zone.md"
-        replace: ["| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-prod |", "| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-sandbox |"]
-        expects: "management group 'mg-navikenz-sandbox' is not declared"
+        replace: ["| SUB-001 | sub-contoso-prod-weu | mg-contoso-prod |", "| SUB-001 | sub-contoso-prod-weu | mg-contoso-sandbox |"]
+        expects: "management group 'mg-contoso-sandbox' is not declared"
       - name: a tenant-specific GUID is baked into a template
         file: "infra/azure/platform/main.bicep"
         append: "\nparam legacySubscriptionId string = '00000000-1111-2222-3333-444444444444'\n"
@@ -689,7 +689,7 @@ skills:
         file: .git/config
         replace:
           - "url = ./.remote.git"
-          - "url = https://navikenz:9c2f4b@dev.azure.com/navikenz/shell/_git/shell"
+          - "url = https://contoso:9c2f4b@dev.azure.com/contoso/shell/_git/shell"
         expects: "remote URL carries an embedded credential"
       - name: the repository stops pruning branches the server deleted
         file: .git/config

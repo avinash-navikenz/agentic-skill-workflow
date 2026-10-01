@@ -199,15 +199,15 @@ The same two operations on Azure DevOps Boards and on Jira:
 # --- Azure DevOps -----------------------------------------------------------
 # Create. The reference form is AB#<id>, and the id comes back as `id`.
 az boards work-item create --type Task --title "TASK-004 Degrade to the light theme" \
-  --org https://dev.azure.com/navikenz --project shell \
+  --org https://dev.azure.com/contoso --project shell \
   --fields "System.Description=delivery/changes/theme-persistence/tasks.md -> TASK-004" \
   --query id -o tsv
 
 # Move state. Azure DevOps takes the workflow state by name.
-az boards work-item update --id 4414 --state "Active" --org https://dev.azure.com/navikenz
+az boards work-item update --id 4414 --state "Active" --org https://dev.azure.com/contoso
 
 # Read the board back. The WIQL bounds the result; there is no --limit.
-az boards query --org https://dev.azure.com/navikenz --project shell \
+az boards query --org https://dev.azure.com/contoso --project shell \
   --wiql "SELECT [System.Id], [System.State], [System.Title] FROM WorkItems \
           WHERE [System.TeamProject] = 'shell' AND [System.Tags] CONTAINS 'theme-persistence'"
 
@@ -215,7 +215,7 @@ az boards query --org https://dev.azure.com/navikenz --project shell \
 # body or a pull request description also links, while the same text in a title
 # or a comment does not.
 az repos pr work-item add --id 482 --work-items 4414 4415 \
-  --org https://dev.azure.com/navikenz
+  --org https://dev.azure.com/contoso
 
 # --- Jira -------------------------------------------------------------------
 # Create. The key comes back in .key, e.g. SHELL-4411.

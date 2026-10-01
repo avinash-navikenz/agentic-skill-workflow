@@ -122,7 +122,7 @@ The register, at `delivery/published.md`:
 # Published — navikenz shell
 
 **Destination:** confluence
-**Site:** https://navikenz.atlassian.net/wiki
+**Site:** https://contoso.atlassian.net/wiki
 **Space:** ENG
 **Route:** the Atlassian MCP server when the session has one connected; `curl` against
 `/wiki/api/v2` when it does not. Both write the same page — only the transport differs, and
@@ -153,7 +153,7 @@ EOF
 Publishing to Confluence — the REST route, when no MCP server is connected:
 
 ```bash
-SITE=https://navikenz.atlassian.net/wiki
+SITE=https://contoso.atlassian.net/wiki
 # The token comes from the environment. It is never written into a file in this repository.
 AUTH="$JIRA_USER:$CONFLUENCE_API_TOKEN"
 
@@ -191,16 +191,16 @@ The same publish on the other two destinations:
 # Azure DevOps wiki is markdown natively.
 az devops wiki page create --wiki shell.wiki --path "/Decisions/ADR-007" \
   --file-path /tmp/page.md --encoding utf-8 \
-  --org https://dev.azure.com/navikenz --project shell \
+  --org https://dev.azure.com/contoso --project shell \
   --comment "publish ADR-007 from delivery/decisions/ADR-007.md"
 
 # Update. --version is the page's ETag, which `show` returns; it is this
 # platform's version of the same concurrency check Confluence spells as a number.
 ETAG=$(az devops wiki page show --wiki shell.wiki --path "/Decisions/ADR-007" \
-         --org https://dev.azure.com/navikenz --project shell --query eTag -o tsv)
+         --org https://dev.azure.com/contoso --project shell --query eTag -o tsv)
 az devops wiki page update --wiki shell.wiki --path "/Decisions/ADR-007" \
   --version "$ETAG" --file-path /tmp/page.md --encoding utf-8 \
-  --org https://dev.azure.com/navikenz --project shell \
+  --org https://dev.azure.com/contoso --project shell \
   --comment "republish ADR-007 from delivery/decisions/ADR-007.md"
 
 # --- A docs repository on GitHub -------------------------------------------
