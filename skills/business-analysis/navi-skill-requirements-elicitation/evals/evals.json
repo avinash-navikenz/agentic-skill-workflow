@@ -1,0 +1,70 @@
+{
+  "skill": "navi-skill-requirements-elicitation",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The proposal is approved. Before I write the spec, work out what is actually wanted and who to ask.",
+      "expect": [
+        "elicitation.md",
+        "ACTOR-",
+        "operator",
+        "support",
+        "empty state",
+        "concurrent",
+        "partial failure",
+        "Q-"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G2 wants open questions recorded rather than resolved by assumption. How is that actually done?",
+      "expect": [
+        "Q-",
+        "by-when",
+        "ASSUM-",
+        "Falsified by",
+        "Source",
+        "Inferred"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Extract the schema, ownership, freshness and nullability for the session_events source and write the contract.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Turn 'it must be fast and secure' into thresholds, by category, with a source for each number.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The stakeholder asked for a dropdown on the settings page and said it should apply instantly. Write that up as REQ-004.",
+      "expect": [
+        "solution",
+        "ASSUM-",
+        "outcome",
+        "instantly",
+        "Quantify",
+        "Q-"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Nobody knows what happens to the preference when an account is deleted. Deleting it alongside the account is obviously right, so just write that.",
+      "expect": [
+        "Never close a gap by assumption",
+        "Q-",
+        "who can answer",
+        "by-when",
+        "ASSUM-"
+      ]
+    }
+  ]
+}

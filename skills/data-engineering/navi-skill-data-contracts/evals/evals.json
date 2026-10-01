@@ -1,0 +1,67 @@
+{
+  "skill": "navi-skill-data-contracts",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We're adding a session_events table the ML work will train on. G4 needs a data contract for it.",
+      "expect": [
+        "delivery/changes/<name>/specs/data/",
+        "contract.md",
+        "DC-",
+        "## Freshness",
+        "## Classification",
+        "## Produced by",
+        "## Not fit for"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "I'm handing the session_events dataset to the ML Engineer. What travels with it so they know how it was produced and what it isn't good for?",
+      "expect": [
+        "NOTFIT-",
+        "## Produced by",
+        "name the DC-",
+        "artifacts",
+        "handoffs.md",
+        "copy"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our supplier contract with the analytics vendor renews in March — pull out the data-retention and termination clauses and summarise them for legal.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Set the null-rate threshold for client_region, decide what the run does when it breaches, and work out where that number should come from.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The contract's done except for 'Not fit for' — the dataset's clean and there's nothing to put there, so leave it as n/a.",
+      "expect": [
+        "refused",
+        "every dataset has at least one use it does not support",
+        "empty section means nobody asked",
+        "observable fact"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "We're on the standard lane and this change adds a new table. Just write the contract and record G4 when we get there.",
+      "expect": [
+        "standard cannot record G4",
+        "cli/lib/lanes.js",
+        "navi-delivery gate refuses",
+        "re-propose",
+        "full"
+      ]
+    }
+  ]
+}

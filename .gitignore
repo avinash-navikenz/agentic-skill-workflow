@@ -1,3 +1,17 @@
 node_modules/
 *.pdf
 .DS_Store
+.superpowers/
+__pycache__/
+*.pyc
+.venv/
+
+# A filled-in copy of config/mcp/.env.example. The example itself is committed;
+# the copy holds credentials and must not be.
+config/mcp/.env
+config/mcp/*.env
+
+# navi-cron writes these beside the checkout it runs in.
+.navi-cron-state.json
+.navi-cron.log
+.navi-cron.env

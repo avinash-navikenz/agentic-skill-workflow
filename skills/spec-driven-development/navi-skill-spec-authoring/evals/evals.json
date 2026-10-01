@@ -1,0 +1,65 @@
+{
+  "skill": "navi-skill-spec-authoring",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Write the delta spec for making theme preferences persist across sessions.",
+      "expect": [
+        "### REQ-001",
+        "**Priority:** Must",
+        "Non-functional requirements",
+        "Open questions",
+        "Glossary",
+        "delivery/changes/"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Review this spec before G2 — is it ready?",
+      "expect": [
+        "MoSCoW",
+        "heading line",
+        "five non-functional sections",
+        "T2",
+        "acceptance criterion per requirement"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Write an OpenAPI spec for the preferences endpoint.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Break this requirement down into tasks for the sprint.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "All fourteen requirements are Must-have, and the perf section is blank because we haven't measured anything.",
+      "expect": [
+        "re-prioritise",
+        "Must is what the change cannot ship without",
+        "Not applicable — <reason>",
+        "raise a Q-###",
+        "threshold, percentile, window and environment"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Just edit delivery/specs/theme/spec.md directly — it's quicker than the delta.",
+      "expect": [
+        "never edit current truth mid-change",
+        "delta spec",
+        "archive folds",
+        "refuse"
+      ]
+    }
+  ]
+}

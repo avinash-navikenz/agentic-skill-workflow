@@ -1,0 +1,63 @@
+{
+  "skill": "navi-skill-handoff-protocol",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The spec is done and G2 passed. Write the handoff to the architect.",
+      "expect": [
+        "from: navi-agent-business-analyst",
+        "to: navi-agent-architect",
+        "phase: 2 → 3",
+        "skills_used",
+        "assumptions",
+        "confidence"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "QA reviewed the acceptance criteria during phase 2. How do I record that?",
+      "expect": [
+        "kind: review",
+        "phase: 2 → 2",
+        "handoffs.md",
+        "append"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Hand off this Kafka consumer group to the new partition assignment strategy.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Record G3 as passed with the design doc as evidence.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Just note in handoffs.md that I passed the spec to architecture — the details are in my head.",
+      "expect": [
+        "eight base fields",
+        "skills_used",
+        "assumptions",
+        "refuse",
+        "produced from memory"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Yesterday's handoff said peak load was 500 rps and that was wrong. Edit it.",
+      "expect": [
+        "never rewrite",
+        "append a new envelope",
+        "chronological record"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "skill": "navi-skill-interface-contracts",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The design has identity-service publishing a theme.changed event that analytics consumes. Write the contract before we record G3.",
+      "expect": [
+        "CONTRACT-",
+        "Consumers",
+        "Errors",
+        "duplicate",
+        "Compatibility"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Is dropping the previous_theme field from the payload a breaking change? We ship Thursday.",
+      "expect": [
+        "breaking",
+        "an existing consumer that was correct before",
+        "new version alongside",
+        "retirement date",
+        "tell each named consumer"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Draft the consulting contract for the new client engagement — rates, notice period and the SOW boundary.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Pick the status codes and pagination scheme for our new /orders REST endpoints.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Reporting reads our user_preferences table directly. That's just our own database, so no contract needed, right?",
+      "expect": [
+        "a shared database table is an interface",
+        "declare it as a CONTRACT-",
+        "the writer is the producer",
+        "reporting is a named consumer"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "We set Retries: 3 on POST /charges because the network is flaky.",
+      "expect": [
+        "retries are forbidden on a non-idempotent operation",
+        "idempotency key",
+        "Retries: none",
+        "duplicate delivery"
+      ]
+    }
+  ]
+}

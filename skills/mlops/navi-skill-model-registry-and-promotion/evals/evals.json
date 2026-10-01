@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-model-registry-and-promotion",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "theme-ranker v7 is ready. Decide whether it goes to production and record what that decision rested on.",
+      "expect": [
+        "promotion.md",
+        "PROMO-",
+        "registry.md",
+        "candidate",
+        "staging",
+        "production",
+        "retired",
+        "Approved by"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G7 needs the model version registered and the rollback path known. What has to exist before I record it?",
+      "expect": [
+        "evidence/g7-promotion.md",
+        "measured",
+        "rehearsal",
+        "time to restore",
+        "non-model path",
+        "one --evidence"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Plan the Q4 promotion campaign for the new tier — the discount codes, the email sequence and the landing page.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "The model's been live a month. Work out what we should be watching, at what threshold, and who gets paged.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The candidate scored 0.859, so set the promotion bar at 0.85 and we can promote today.",
+      "expect": [
+        "before any candidate has been scored",
+        "dated amendment",
+        "re-evaluate",
+        "description of the score"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Aggregate accuracy is up two points. One region slice is down six, well outside its interval. Promote it — the overall number is better.",
+      "expect": [
+        "Blocking: yes",
+        "refuse",
+        "regresses any SLICE-",
+        "beyond that slice's interval",
+        "not argued at the promotion meeting"
+      ]
+    }
+  ]
+}

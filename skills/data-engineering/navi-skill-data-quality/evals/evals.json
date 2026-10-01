@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-data-quality",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Define the checks for session_events and what the run does when each one breaches. G4 needs thresholds.",
+      "expect": [
+        "checks.md",
+        "CHK-",
+        "fail",
+        "quarantine",
+        "warn",
+        "Threshold",
+        "derived"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Which dimensions do we need covered on this dataset, and what do we write where there's no check?",
+      "expect": [
+        "completeness",
+        "validity",
+        "uniqueness",
+        "consistency",
+        "timeliness",
+        "none",
+        "reason"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Support data shows a spike in quality complaints about the packaging on the new hardware bundle — cluster the themes and tell me what's driving it.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Decide the run mode and the idempotency key for the session_events load, and write the backfill procedure.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "CHK-008 failed, we re-ran the job and it passed, so record the pass and move on.",
+      "expect": [
+        "record the first verdict",
+        "flaky",
+        "owner and a date",
+        "never re-run"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Make the null check pass by having it COALESCE client_region to 'ZZ' before it measures the rate.",
+      "expect": [
+        "checks report",
+        "do not repair",
+        "## Produced by",
+        "NOTFIT-",
+        "destroys the evidence"
+      ]
+    }
+  ]
+}

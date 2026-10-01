@@ -1,0 +1,360 @@
+---
+name: navi-skill-backlog-prioritisation
+description: >
+  Use when deciding what is done next and what is deliberately not, or when a G9 insight has to
+  land somewhere a future change will actually find it. Defines delivery/backlog.md, the CAND-###
+  entry, the single total order with no buckets and no ties, the recorded ordering rule and its
+  inputs, value evidence marked assumed with the observation that would settle it, the
+  cost-of-delay class, and the declined record that stops an idea being re-argued from zero.
+  Trigger phrases include: backlog, prioritisation, prioritization, what do we do next,
+  roadmap order, value vs effort, WSJF, cost of delay, MoSCoW at portfolio level, say no,
+  decline a request, candidate requirement, INSIGHT routing, sequencing work.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: product-management
+  lifecycle_phases: [1, 9]
+  used_by_agents: [navi-agent-product-owner]
+  owner: avinash.negi@navikenz.com
+  tags: "product, backlog, prioritisation, cost-of-delay, insights, declined, g1, g9"
+  model: opus
+---
+
+## When to use
+
+More work is wanted than can be done; a stakeholder is asking why their request has not started;
+a G9 insight is being routed to the backlog; or the same idea is being argued for the third time
+and nobody can find what was decided last time.
+
+## Rules
+
+1. Keep one backlog at `delivery/backlog.md`. `navi-delivery init` does not scaffold it — create
+   it once, at the repository root of the delivery tree. No gate names it by path, but
+   `references/gates.md`'s G9 routes insights to "the product backlog as a candidate
+   requirement", and an insight routed to a file that does not exist is an insight deleted.
+2. Number candidates `CAND-###`, never reused. Give every candidate eight fields: `Outcome`,
+   `Value evidence`, `Effort`, `Cost of delay`, `Expected lane`, `Blocked by`, `Serves`,
+   `Decision`. All eight, on every candidate.
+3. Keep one total order with no ties and no priority buckets. A `P1` bucket holding forty items
+   has not prioritised anything; it has renamed the backlog. The order is the schedule, and two
+   items cannot both be next.
+4. Treat the order as literal. `cli/commands/propose.js` refuses a second change while one is
+   active — `change '<name>' is already active` — so exactly one candidate is in flight at a
+   time and the top of the list is what starts when the current change archives.
+5. State every candidate as an `Outcome`, never as a solution. A request arriving as a solution
+   is rewritten as the difference it would make, and the solution it named becomes one option
+   under it. A backlog of solutions cannot be re-ordered, because nothing in it is comparable.
+6. Cite `Value evidence` or mark it `assumed`, and give every `assumed` the cheapest observation
+   that would settle it. An assumption with no test beside it is indistinguishable from a
+   conviction, and it will be carried to the top of the list by whoever repeats it most.
+7. Write `Effort` as a range with what drives the spread, never a point. The spread is the
+   information: `2–8 weeks, depending on whether the legacy importer has to keep working` tells
+   a reader what to go and find out.
+8. Classify `Cost of delay` as exactly one of `none`, `linear`, `deadline` or `compounding`,
+   with the reason. Where two candidates have comparable value and effort, the higher class goes
+   first — that is the whole of the tie-break, and it is stated rather than felt.
+9. Record the ordering rule and its inputs at the top of the file. Any scheme is admissible —
+   value over effort, cost of delay over duration, a stated judgement — provided a reader can
+   recompute the order from what is written. A ranking whose inputs are not recorded cannot be
+   argued with, and a decision nobody can argue with is not a decision.
+10. Keep the top item startable: every `Blocked by` on it is resolved. A blocked top item means
+    the list is a wish and the real next item is somewhere below, chosen by whoever starts work.
+11. Record a rejected candidate as `Decision: declined` with the reason and the date. Never
+    delete it. The same idea returns about every quarter, and the recorded reason is the only
+    thing that stops it being re-argued from zero by people who were not there.
+12. Give every candidate an `Expected lane` from `navi-skill-lane-selection`. A candidate
+    touching a dataset, a schema, a feature or a model takes `full`, which enforces G4 and G9 as
+    well — that is an effort input, and discovering it after proposing is a re-proposal rather
+    than a lane edit.
+13. Name the `KPI-###` a candidate would move, or write `no KPI — <reason>`. A candidate that
+    moves no measure is either maintenance, which is a legitimate reason, or is unexamined,
+    which is not — and the two are indistinguishable without the line.
+14. Route every G9 `INSIGHT-###` destined for the backlog to exactly one `CAND-###` and record
+    the insight id in `Serves`. G9 requires exactly one destination per insight; an insight
+    recorded in a postmortem and in no candidate is a learning that has already been lost.
+15. Re-order on a stated cadence and record the date of the last ordering. An order not revisited
+    since the last incident does not know about the incident, and the insight that incident
+    produced is sitting below things chosen before it happened.
+16. Flag a candidate that has been top for three consecutive orderings without being proposed.
+    It is either blocked by something not recorded in `Blocked by`, or it is not actually top;
+    record which, because both are facts about the list rather than about the candidate.
+17. Never carry an estimate forward as a fact. An `Effort` older than the last change to the
+    area it touches is re-estimated or marked `stale` with the date it was last assessed.
+
+## Decision table
+
+| Observed condition | Required action |
+|---|---|
+| The backlog has priority buckets | Flatten to one total order; a bucket of forty has prioritised nothing |
+| Two candidates are tied | Break the tie on `Cost of delay` class and record it; the order is the schedule |
+| A candidate is stated as a solution | Rewrite as the outcome; the solution becomes one option under it |
+| Value is asserted with no source | Mark it `assumed` and name the cheapest observation that would settle it |
+| Effort is a single number | Replace with a range and what drives the spread |
+| `Cost of delay` is missing | Classify it `none`, `linear`, `deadline` or `compounding`, with the reason |
+| The order cannot be recomputed from the file | Record the ordering rule and its inputs |
+| The top item is blocked | Resolve the blocker or re-order; otherwise the real next item is chosen by whoever starts |
+| A request is being declined | Record `declined` with the reason and the date — never delete it |
+| A candidate touches data or a model | `Expected lane: full`; G4 and G9 are enforced and that is effort |
+| A candidate moves no measure | Write `no KPI — <reason>`; maintenance is a reason, silence is not |
+| A G9 insight is being routed here | Give it exactly one `CAND-###` and record the insight id in `Serves` |
+| The order has not been revisited since an incident | Re-order; the list does not yet know what the incident taught |
+| An item has been top for three orderings | Record whether it is blocked or was never actually top |
+| An estimate predates the last change to that area | Re-estimate or mark it `stale` with a date |
+| A second change is wanted while one is active | `propose` refuses it; the order decides what waits |
+
+## Template
+
+Copy into `delivery/backlog.md`:
+
+```markdown
+# Backlog
+
+Ordering rule: cost of delay class first, then value evidence strength, then effort — with the
+inputs for each candidate recorded below so the order can be recomputed rather than recalled.
+Ties are broken on cost-of-delay class and never left standing. Last ordered 2026-09-29 by
+Priya Raman; cadence is fortnightly, on the Monday.
+
+One change is in flight at a time — `navi-delivery propose` refuses a second — so position 1 is
+what starts when the active change archives.
+
+## Order
+
+| # | Candidate | Cost of delay | Effort | Decision |
+|---|---|---|---|---|
+| 1 | CAND-041 — Live exposure figure beside the alert | compounding | 1–2 weeks | active |
+| 2 | CAND-038 — Kiosk browser test harness | linear | 3–6 weeks | active |
+| 3 | CAND-044 — Preference sync across devices | none | 6–10 weeks | active |
+| — | CAND-039 — Rewrite the settings screen in the new framework | — | — | declined 2026-09-15 |
+
+## Candidates
+
+### CAND-041 — The person paged can see the live exposure
+
+- **Outcome:** whoever is paged can tell, without opening another system, what share of traffic
+  the change is currently serving — so severity is set from the live figure rather than from a
+  wave plan that may be twenty minutes stale
+- **Value evidence:** cited. INC-2291's postmortem records that severity was declared SEV2 on an
+  estimate of 40,000 affected when the measured figure was 213,000, and names the stale wave
+  plan as the cause. One incident, one measured gap.
+- **Effort:** 1–2 weeks. The spread is whether the flag service exposes a current-exposure
+  endpoint; if it does not, the alert has to compute it from the routing weights.
+- **Cost of delay:** compounding — every rollout between now and this landing carries the same
+  mis-declaration risk, and the number of concurrent rollouts is rising
+- **Expected lane:** `standard` — no dataset, schema, feature or model is touched
+- **Blocked by:** none
+- **Serves:** INSIGHT-003 (`delivery/ops/postmortems/theme-persistence-hotfix.md`); no KPI —
+  this is incident-response capability, and its effect is on how well a severity is set rather
+  than on a measure we publish
+- **Decision:** active, position 1
+
+### CAND-038 — Kiosk fleet has an automated browser harness
+
+- **Outcome:** the kiosk population stops being represented by a single manual pass, so a
+  release report can place it in `## Proven` rather than `## Untouched`
+- **Value evidence:** assumed. The belief is that kiosk sessions fail at a higher rate than
+  measured sessions, but the kiosk fleet emits no telemetry, so the rate is unknown. The
+  cheapest observation that would settle it: ship the beacon to 20 kiosks for one week, which is
+  two days of work and answers whether the harness is worth six weeks.
+- **Effort:** 3–6 weeks. The spread is whether the fleet's browser can run the existing harness
+  at all; one device is available to find out.
+- **Cost of delay:** linear — one enterprise tenant, roughly 2,000 sessions a day, and the
+  exposure does not grow
+- **Expected lane:** `standard`
+- **Blocked by:** none
+- **Serves:** KPI-001 — the 0.02 gap at G9 was this population
+- **Decision:** active, position 2
+
+### CAND-044 — Preference follows the user across devices
+
+- **Outcome:** a user who sets a theme on one device sees it on the next, so the preference is a
+  property of the person rather than of the browser
+- **Value evidence:** assumed. Requested by three enterprise customers in the last quarter; no
+  measurement of how many users have two devices. The cheapest observation: a count of distinct
+  device fingerprints per user id over 28 days, which is one query.
+- **Effort:** 6–10 weeks. The spread is the identity join — if preferences move to the user
+  directory it is a data contract change and the lane changes with it.
+- **Cost of delay:** none — no deadline, no compounding risk, and the three customers have a
+  workaround
+- **Expected lane:** `full` if the preference moves to the user directory, because a dataset and
+  its contract are touched and `cli/lib/lanes.js` gives `standard` no G4 to record. The 6–10
+  week estimate assumes `full`.
+- **Blocked by:** CAND-041 — not technically, but the identity join needs DC-001's owner, who is
+  committed to CAND-041 until it lands. Recorded here rather than discovered at proposal.
+- **Serves:** no KPI yet — the outcome is real but no measure is currently instrumented; a KPI
+  is written under `navi-skill-outcome-and-kpi-definition` at proposal time
+- **Decision:** active, position 3
+
+### CAND-039 — Rewrite the settings screen in the new framework
+
+- **Outcome:** none that a user would notice. Stated as a solution on arrival, and rewriting it
+  as an outcome produced nothing observable outside the codebase.
+- **Value evidence:** assumed, and the assumption is about future development speed. The
+  cheapest observation that would settle it — time the last three settings changes against the
+  last three changes elsewhere — was run on 2026-09-12 and found no difference.
+- **Effort:** 4–7 weeks
+- **Cost of delay:** none
+- **Expected lane:** `standard`
+- **Blocked by:** none
+- **Serves:** no KPI — no measure moves
+- **Decision:** **declined 2026-09-15**, Priya Raman. The observation that would have justified
+  it was run and did not. Kept here so that the next time it is raised, the measurement is found
+  before the argument is had again.
+
+## Ordering inputs
+
+| Candidate | Cost of delay | Value evidence | Effort midpoint | Position |
+|---|---|---|---|---|
+| CAND-041 | compounding | cited, one measured incident | 1.5 weeks | 1 |
+| CAND-038 | linear | assumed, settlable in 2 days | 4.5 weeks | 2 |
+| CAND-044 | none | assumed, settlable in 1 query | 8 weeks | 3 |
+
+CAND-041 outranks CAND-038 on cost-of-delay class before either value or effort is consulted.
+CAND-038 outranks CAND-044 on class as well; the effort difference would have given the same
+answer, and this is recorded so a reader does not have to guess which rule did the work.
+
+## Stalled at the top
+
+None. CAND-041 reached position 1 at the 2026-09-29 ordering.
+```
+
+Routing a G9 insight into the backlog, with the postmortem's own record beside it:
+
+```bash
+# The postmortem names exactly one destination per insight; this is the other half of it
+grep -A3 'INSIGHT-003' delivery/ops/postmortems/theme-persistence-hotfix.md
+# => Destination: product backlog
+# => Target: CAND-041, a live exposure figure surfaced beside the alert
+grep -n 'INSIGHT-003' delivery/backlog.md
+# => CAND-041's Serves line. An insight in the postmortem and in no candidate is lost.
+```
+
+## Checklist
+
+- [ ] One backlog at `delivery/backlog.md`, created once because `init` does not scaffold it
+- [ ] Every `CAND-###` carries all eight fields
+- [ ] One total order, no buckets, no ties
+- [ ] The ordering rule and its inputs are recorded, so the order can be recomputed
+- [ ] Every candidate is stated as an outcome, not as a solution
+- [ ] Every `Value evidence` is cited, or `assumed` with the cheapest settling observation
+- [ ] Every `Effort` is a range with what drives the spread
+- [ ] Every `Cost of delay` is one of `none`, `linear`, `deadline`, `compounding`, with a reason
+- [ ] The top item has no unresolved `Blocked by`
+- [ ] Every declined candidate is recorded with a reason and a date, and not deleted
+- [ ] Every candidate has an `Expected lane`, and anything touching data or a model is `full`
+- [ ] Every candidate names a `KPI-###` or says `no KPI — <reason>`
+- [ ] Every backlog-destined `INSIGHT-###` appears in exactly one candidate's `Serves`
+- [ ] The last ordering date and the cadence are recorded
+- [ ] Anything top for three orderings is recorded as blocked or as not actually top
+- [ ] No estimate predates the last change to the area it touches without being marked `stale`
+
+## Anti-patterns
+
+**The P1 bucket.** Forty items marked P1, eleven marked P0 after somebody escalated. Nothing is
+ordered, so what gets built is what the loudest person asked for most recently. One list, one
+order.
+
+**The backlog of solutions.** `Add a settings toggle`, `Migrate to the new framework`,
+`Use Redis`. None of them is comparable to any other, because none says what would be different
+afterwards. Rewrite each as an outcome; the solution survives as an option.
+
+**Conviction as evidence.** `High value — customers want this.` Three customers mentioned it,
+none of them in the last quarter, and nobody has looked at how many users it would reach. Mark
+it `assumed` and write down the two-day observation that would settle it.
+
+**The point estimate.** `Effort: 6 weeks.` The 6 assumed the legacy importer could be dropped,
+which nobody has confirmed, and the honest range was 3 to 14. State the range and the spread's
+cause — the spread is the part worth reading.
+
+**The blocked top item.** Position 1 has been waiting on a decision from another team for five
+weeks. Work is happening on position 4, chosen by whoever had capacity. The list has stopped
+describing what happens. Re-order, or record the blocker.
+
+**The deleted request.** A declined idea is removed from the file. It returns in the next
+quarter, is argued from zero by people who were not there, and this time it is accepted. Keep
+it with its reason and its date.
+
+**The insight with nowhere to land.** G9 routes an insight to the product backlog, the backlog
+is a spreadsheet somebody maintains privately, and the insight is never seen again. One file, in
+the repository, with the insight id in `Serves`.
+
+**The lane discovered at proposal.** A candidate estimated at 4 weeks turns out to touch a data
+contract, so it takes `full`, which enforces G4 and G9 — and the estimate never included them.
+Record the expected lane while estimating.
+
+**The estimate from before the rewrite.** An 8-week estimate made two years ago, for an area
+that has since been rebuilt. It is still being used to keep the item at position 6.
+Re-estimate, or mark it `stale` with the date.
+
+## Validation
+
+```bash
+B=delivery/backlog.md
+
+test -f "$B" || echo "no delivery/backlog.md — G9 routes insights to a backlog that must exist"
+
+# The ordering rule and the last ordering date are recorded
+grep -qi 'ordering rule' "$B" || echo "$B: no recorded ordering rule"
+grep -qiE 'last ordered [0-9]{4}-[0-9]{2}-[0-9]{2}' "$B" || echo "$B: no last-ordered date"
+
+# Every candidate carries all eight fields
+for id in $(grep -o 'CAND-[0-9]\{3,\}' "$B" | sort -u); do
+  body=$(awk -v id="$id" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$B")
+  [ -n "$body" ] || { echo "$id: named in the file but has no '### $id — …' entry"; continue; }
+  for k in Outcome "Value evidence" Effort "Cost of delay" "Expected lane" "Blocked by" Serves Decision; do
+    printf '%s\n' "$body" | grep -q "\*\*$k:\*\*" || echo "$id: missing $k"
+  done
+  # Cost of delay is one of the four classes
+  printf '%s\n' "$body" | grep '\*\*Cost of delay:\*\*' \
+    | grep -qE 'none|linear|deadline|compounding' \
+    || echo "$id: 'Cost of delay' is not one of none/linear/deadline/compounding"
+  # Effort is a range
+  printf '%s\n' "$body" | grep '\*\*Effort:\*\*' | grep -qE '[0-9]+ *(–|-|to) *[0-9]+' \
+    || echo "$id: effort is a point estimate rather than a range"
+  # Assumed value evidence carries a settling observation
+  ve=$(printf '%s\n' "$body" | awk '/\*\*Value evidence:\*\*/{on=1} /\*\*Effort:\*\*/{on=0} on')
+  if printf '%s\n' "$ve" | grep -qi 'assumed'; then
+    printf '%s\n' "$ve" | grep -qi 'cheapest observation\|would settle it' \
+      || echo "$id: value evidence is assumed with no settling observation"
+  fi
+  # The expected lane is a real lane
+  printf '%s\n' "$body" | grep '\*\*Expected lane:\*\*' \
+    | grep -qE 'express|standard|full|hotfix' || echo "$id: 'Expected lane' is not a lane"
+  # A KPI is named, or its absence is reasoned
+  printf '%s\n' "$body" | grep '\*\*Serves:\*\*' | grep -qE 'KPI-[0-9]{3,}|no KPI' \
+    || echo "$id: names neither a KPI-### nor 'no KPI — <reason>'"
+  # A declined candidate carries a reason and a date
+  printf '%s\n' "$body" | grep '\*\*Decision:\*\*' | grep -qi 'declined' \
+    && { printf '%s\n' "$body" | grep '\*\*Decision:\*\*' | grep -qE '[0-9]{4}-[0-9]{2}-[0-9]{2}' \
+         || echo "$id: declined with no date"; }
+done
+
+# No priority buckets, and no duplicate positions
+grep -nE '^\| *(P[0-9]|High|Medium|Low) *\|' "$B" \
+  && echo "the order uses priority buckets rather than a total order"
+awk '/^## Order$/{on=1;next} /^## /{on=0}
+     on && /^\| [0-9]+ \|/ { split($0,c,"|"); gsub(/ /,"",c[2]);
+       if (seen[c[2]]++) print "position " c[2] " appears more than once" }' "$B"
+
+# The top item is not blocked
+top=$(awk '/^## Order$/{on=1;next} /^## /{on=0} on && /^\| 1 \|/{print}' "$B" | grep -o 'CAND-[0-9]\{3,\}' | head -1)
+if [ -n "$top" ]; then
+  awk -v id="$top" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$B" \
+    | grep '\*\*Blocked by:\*\*' | grep -qi 'none' \
+    || echo "$top is at position 1 with an unresolved 'Blocked by'"
+fi
+
+# Every backlog-destined insight lands in exactly one candidate
+for f in $(find delivery/ops/postmortems -name '*.md' 2>/dev/null); do
+  awk '/^- \*\*INSIGHT-/{id=$2; gsub(/\*/,"",id)}
+       /Destination:.*backlog/{print id}' "$f" | while read -r ins; do
+    n=$(grep -c "$ins" "$B" 2>/dev/null || true); n=${n:-0}
+    [ "$n" -eq 1 ] || echo "$ins is routed to the backlog and appears $n time(s) in $B"
+  done
+done
+```
+
+Each command prints nothing when the rule holds. The insight-routing loop is the one to run
+after every G9: it is the only mechanical check that a learning the framework recorded has
+somewhere it will actually be read.

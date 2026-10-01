@@ -1,0 +1,341 @@
+---
+name: navi-skill-model-cards
+description: >
+  Use when a model is about to be handed to whoever will operate it, promoted, or released, and
+  whoever inherits it needs to know how it was judged, who it is worst for, and what it is not
+  to be used for. Defines the model card file, its nine mandatory sections, the NOTFIT-###
+  entry, the rule that every number cites an EVAL-### with its interval, and the failure modes
+  each bound to a detection.
+  Trigger phrases include: model card, model documentation, intended use, model limitations,
+  what is this model not for, failure modes, model handover, model transparency, segments,
+  operating point, model owner, retirement criteria, G7 model release.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: machine-learning
+  lifecycle_phases: [4, 5, 7]
+  used_by_agents: [navi-agent-machine-learning-engineer, navi-agent-mlops-engineer]
+  owner: avinash.negi@navikenz.com
+  tags: "ml, model-card, documentation, limitations, segments, handover, g7"
+  model: sonnet
+---
+
+## When to use
+
+A model is about to be handed to MLOps, promoted to a serving stage, or released; G7 is about
+to be recorded for a model-bearing change; or someone is deciding whether to reuse an existing
+model for a new purpose.
+
+## Rules
+
+1. Write one card per model at
+   `delivery/changes/<name>/specs/models/<model>/model-card.md`, beside the framing and the
+   evaluation. `navi-delivery archive` folds `changes/<name>/specs/` into `delivery/specs/`,
+   so the card stays current truth for whoever operates the model after the change closes.
+2. Keep one card per model name across versions, with a `## Versions` table naming every
+   version that has served traffic, what changed, and when it stopped serving. A new card per
+   version leaves the operator to guess which file describes what is running.
+3. Give the card all nine sections, in this order, none omitted: `## Identity`,
+   `## Intended use`, `## Not fit for`, `## Training data`, `## Evaluation`, `## Segments`,
+   `## Operating point`, `## Failure modes`, `## Maintenance`. A missing section is an
+   unanswered question, and the question gets answered by assumption.
+4. Give `## Identity` six facts: the model name, the registry version, the code commit, the
+   `DC-###` versions it was trained on, the training run identifier, and the date. Those six
+   are what `navi-skill-model-registry-and-promotion` matches against the registry entry before
+   a promotion; a mismatch on any of them refuses the promotion.
+5. Restate the decision from `framing.md` in `## Intended use`, with the `REQ-###` it serves.
+   The card is read by people who have not read the framing, and "what is this for" is the
+   first thing they ask.
+6. Write at least one `NOTFIT-###` in `## Not fit for`, each naming the use, the observable
+   fact that rules it out, and the consequence of ignoring it. `Use with care` and `not for
+   critical decisions` are not entries: they name no use, no fact and no consequence, and they
+   are read as boilerplate and skipped.
+7. Cite `EVAL-###` ids in `## Evaluation`, with the set each was measured on and its
+   uncertainty interval. No number appears anywhere in the card that is not in
+   `evaluation.md`, and no number appears without its interval. A card is where a point
+   estimate goes to become a fact.
+8. Reproduce every `SLICE-###` in `## Segments`, including the underpowered ones with their row
+   counts. A card reporting only the aggregate hides exactly who the model is worst for, which
+   is the question the card exists to answer.
+9. Give `## Operating point` the threshold, the cost arithmetic from `framing.md` that produced
+   it, and the confusion counts at that threshold on the held-out set. An operator changing the
+   threshold under pressure needs to see what it was derived from.
+10. Give every entry in `## Failure modes` three parts: the input condition, the wrong output it
+    produces, and how it is detected in production — the `MON-###` from
+    `navi-skill-drift-monitoring`, or `none` with the reason. A failure mode with no detection
+    is a failure mode a user will report.
+11. Give `## Maintenance` a named owner, the retraining trigger, and the condition that retires
+    the model. An owner that is a team alias is an escalation path, not an owner.
+12. Write the card before G7 is recorded, at the version being promoted.
+    `navi-skill-model-registry-and-promotion` refuses a promotion whose candidate has no card at
+    that version, and gates.md requires the model version registered and the promotion criteria
+    met for a model release.
+13. Update the card in the change that changes the model, never afterwards. A card describing
+    the previous version is worse than no card, because it is read and believed.
+14. Keep the card readable by the whole delivery team: no credential, no connection string, no
+    row of training data, no personal data. The card describes the model; the data it describes
+    stays behind its contract's classification.
+15. Where a `DC-###` the model was trained on carries a `NOTFIT-###`, carry the consequence
+    into the card's own `## Not fit for` rather than referring to it. The operator reading the
+    card is not reading the data contract.
+16. A model change is a `full` lane change. `cli/lib/lanes.js` gives `standard` a fixed gate
+    set without G4 and `navi-delivery gate` refuses a gate outside the lane's set, so the
+    evaluation the card cites has no G4 to be recorded against on `standard`.
+
+## Decision table
+
+| Observed condition | Required action |
+|---|---|
+| A model is being handed to MLOps | The card exists at the candidate's version, or the handoff is refused |
+| The model version changed | Update the same card and add a `## Versions` row; never fork a new file |
+| `## Not fit for` says "use with care" | Not an entry — name the use, the observable fact, and the consequence |
+| A number in the card is not in `evaluation.md` | Remove it or add it to the evaluation; the card cites, it does not measure |
+| A number appears without its interval | Add the interval; a point estimate in a card becomes a fact |
+| A slice was underpowered | Report it with its row count; never omit it |
+| The threshold is stated with no derivation | Add the cost arithmetic from `framing.md` |
+| A failure mode has no detection | Add the `MON-###`, or write `none` and the reason |
+| The owner offered is a team alias | Name the accountable person; keep the alias as escalation |
+| A training `DC-###` carries a `NOTFIT-###` | Carry its consequence into the card's own `## Not fit for` |
+| The card contains a connection string or a data row | Remove it; the card is readable by the whole team |
+| G7 is about to be recorded and no card exists at this version | Write it; promotion is refused without it |
+| The model is being reused for a new decision | Read `## Not fit for` first; a new decision is a new framing |
+| The change is on the `standard` lane | Re-propose on `full`; the evaluation has no G4 to pass |
+
+## Template
+
+Copy into `delivery/changes/<name>/specs/models/theme-ranker/model-card.md`:
+
+```markdown
+# Model card — theme-ranker
+
+## Versions
+
+| Version | Served from | Served until | What changed |
+|---|---|---|---|
+| 7 | 2026-10-02 | — | Region target-encoder refitted inside the training fold (LEAK-002); `sessions_last_30d` removed (LEAK-001) |
+| 6 | 2026-08-11 | 2026-10-02 | First served version; superseded — its aggregate score was inflated by LEAK-002 |
+
+## Identity
+
+- **Model:** theme-ranker
+- **Registry version:** 7
+- **Commit:** `a41f2c8`
+- **Trained on:** DC-003@v2, DC-001@v4
+- **Training run:** `train-20260924-03`
+- **Date:** 2026-09-24
+
+## Intended use
+
+Picking a default theme for a signed-in user's first render when no preference is stored, at
+render time, in the web shell. Serves REQ-007. The output changes which stylesheet is served
+on the first paint and nothing else; the user's own later choice always overrides it and is
+stored.
+
+## Not fit for
+
+- **NOTFIT-004 — Users who never set a theme.** 4% of first renders are followed by no theme
+  event within 24 hours, and those rows were excluded from training. The model has no evidence
+  about them and its output for that population is the prior, not a prediction. Consequence:
+  do not report per-user confidence for a user with no theme history.
+- **NOTFIT-005 — Regional reporting of model quality.** DC-003 NOTFIT-002 records that
+  `client_region` is null for 8.4% of rows and the nulls concentrate in corporate proxy ranges.
+  Any regional breakdown of this model's accuracy understates those populations. Consequence:
+  SLICE-008 is reported as underpowered and no regional quality claim is made for it.
+- **NOTFIT-006 — Any decision affecting a user's account, billing or access.** The model is
+  fitted to a cosmetic preference with a one-click cost of being wrong, and its operating point
+  was derived from that cost. Consequence: reusing it for any decision with an asymmetric or
+  irreversible cost gives a threshold chosen for the wrong problem.
+- **NOTFIT-007 — First renders before 2026-07-02.** The theme default changed that day and
+  DC-003 NOTFIT-003 records that rows either side of it mean different things. Consequence:
+  back-testing the model on older data compares it against a different world.
+
+## Training data
+
+- **Source:** DC-003@v2 `session_events`, first-render rows, 2026-03-01..2026-08-01
+- **Rows:** 2,914,220 over 811,402 users
+- **Quality:** CHK-007, CHK-008, CHK-009, CHK-011 run against the training snapshot on
+  2026-09-27. CHK-008 failed on 2026-06-11..06-18 (`null_rate(client_region)` 0.144 vs 0.12);
+  that week is excluded from training and the exclusion is waived at G4 until 2026-12-15.
+- **Excluded:** users with no theme event within 24h (4%, NOTFIT-004); the 2026-06-11..06-18
+  window (CHK-008)
+- **Personal data:** `user_id` is `personal` under DC-003's classification and is not a
+  feature — it is used only to form the split and is dropped before fitting.
+
+## Evaluation
+
+Full detail in `./evaluation.md`. Every figure below is measured on the held-out test set
+(411,904 rows, `event_ts >= 2026-08-16`).
+
+| Id | Metric | Value | Interval | Compared against |
+|---|---|---|---|---|
+| EVAL-001 | 24h switch rate | 0.191 | [0.188, 0.194] | BASELINE-001 0.388 [0.384, 0.392] |
+| EVAL-002 | Accuracy | 0.859 | [0.850, 0.868] | BASELINE-003 0.847 [0.838, 0.856] — **no difference** |
+
+EVAL-002 is explicitly not a win: the intervals overlap. EVAL-001 is the outcome
+`proposal.md` names, and it is met.
+
+## Segments
+
+| Slice | Cuts on | Rows | Accuracy | Interval |
+|---|---|---|---|---|
+| SLICE-001 header present | request header | 331,442 | 0.921 | [0.912, 0.930] |
+| SLICE-002 header absent | request header | 80,462 | 0.601 | [0.584, 0.618] |
+| SLICE-003 region EU | `client_region` | 154,901 | 0.864 | [0.852, 0.876] |
+| SLICE-007 region LATAM | `client_region` | 6,204 | 0.792 | [0.761, 0.823] |
+| SLICE-008 region unresolved | `client_region` null | 3,118 | 0.588 | underpowered, n = 3,118 |
+
+**The model is worst where the `prefers-color-scheme` header is absent** (SLICE-002, 0.601),
+which is 19.5% of first renders and is concentrated in older browsers. SLICE-007 regressed
+against BASELINE-003 in the evaluation and is the reason version 6 was held rather than
+promoted; version 7 closes it to `no difference`.
+
+## Operating point
+
+Threshold 0.500 on P(dark). Derived from `framing.md`'s cost table, where both error types cost
+one manual switch: `cost(FN) / (cost(FP) + cost(FN))` = 1 / (1 + 1) = 0.500. Confusion counts
+on the test set at that threshold: TP 148,204 · FP 27,911 · FN 30,190 · TN 205,599.
+
+## Failure modes
+
+| Input condition | Wrong output | Detected by |
+|---|---|---|
+| `prefers-color-scheme` header absent | Near-prior predictions; accuracy falls to 0.601 | MON-004 — share of requests with no header, alerting above 0.25 |
+| `client_region` null rate rises | Region encoder falls back to the global mean; predictions flatten | MON-002 — input drift on `client_region`, tied to CHK-008 |
+| A new browser ships a third `prefers-color-scheme` value | Unseen category; the encoder maps it to the global mean silently | MON-003 — unseen-category rate per feature, alerting above 0.001 |
+| Theme default changes again, as on 2026-07-02 | Labels stop meaning what they meant; accuracy decays with no input drift | none — no monitor detects a semantic change to the label. The retraining trigger in `## Maintenance` is the only control, and it is a schedule, not a detector. |
+
+## Maintenance
+
+- **Owner:** Sam Idowu, ML Engineering
+- **Escalation:** `#ml-platform` rota, then Priya Raman, Head of Platform
+- **Retraining trigger:** quarterly, or when MON-002 or MON-003 fires for three consecutive
+  windows. Retraining produces a `candidate`; promotion runs through
+  `navi-skill-model-registry-and-promotion` like any other.
+- **Retirement condition:** retire when EVAL-002 falls within BASELINE-003's interval on a
+  fresh hold-out — at that point the rule is equal and costs nothing to run. Retire immediately
+  if SLICE-002's accuracy falls below BASELINE-003's on the same slice.
+```
+
+## Checklist
+
+- [ ] The card is under `changes/<name>/specs/models/<model>/`, so `archive` folds it
+- [ ] One card per model name, with a `## Versions` row per version that has served
+- [ ] All nine sections are present, in order
+- [ ] `## Identity` carries all six facts
+- [ ] `## Intended use` restates the decision and names the `REQ-###`
+- [ ] At least one `NOTFIT-###`, each with a use, an observable fact and a consequence
+- [ ] Every `NOTFIT-###` on a training `DC-###` has its consequence carried into this card
+- [ ] Every number cites an `EVAL-###` that exists in `evaluation.md`
+- [ ] No number appears without its interval
+- [ ] Every `SLICE-###` from the evaluation appears, underpowered ones with their counts
+- [ ] The section says plainly which slice the model is worst on
+- [ ] `## Operating point` shows the threshold, the arithmetic and the confusion counts
+- [ ] Every failure mode names an input condition, a wrong output and a `MON-###` or `none`
+- [ ] `## Maintenance` names a person, a retraining trigger and a retirement condition
+- [ ] No credential, connection string, personal data or training row appears anywhere
+- [ ] The card exists at the version being promoted, before G7
+
+## Anti-patterns
+
+**The marketing card.** Three paragraphs about what the model achieves, one headline number, no
+limitations. It is read as a claim rather than a description, and the first person to reuse the
+model has no idea what it was fitted to. The card's value is entirely in `## Not fit for` and
+`## Segments`.
+
+**"Use with care."** The whole of `## Not fit for`. It names no use, no fact and no
+consequence, so it constrains nothing and everybody skips it. Name the use, the observable
+fact, and what goes wrong.
+
+**The number with no interval.** `Accuracy: 0.859` in the card, `0.859 [0.850, 0.868] — no
+difference against the baseline` in the evaluation. The card's version is the one quoted in the
+promotion meeting. Carry the interval, and carry the `no difference` verdict with it.
+
+**Aggregate-only segments.** One accuracy figure, no slices, because the slice table was long.
+The model is 32 points worse on a fifth of traffic and the card does not say so. Reproduce
+every slice.
+
+**The stale card.** Version 7 is serving and the card describes version 6. Every number in it
+was inflated by a leak that version 7 fixed, and the operator is making decisions on the old
+figures. Update the card in the change that changes the model.
+
+**The alias owner.** `Owner: ML team.` At 2am, with a drift alert firing and a rollback to
+decide, the alias has no rota. Name the person.
+
+**The card that leaks.** A connection string in `## Training data` so the reader can look at
+the data themselves. The card is readable by the whole delivery team; the data is not. Cite the
+`DC-###` and let its classification govern access.
+
+**Failure modes with no detection.** Four failure modes, no `MON-###` against any of them. Each
+is now a thing that will be reported by a user. Bind each to a monitor, or write `none` and say
+why — an honest `none` at least tells the operator where they are blind.
+
+**The new file per version.** `model-card-v6.md`, `model-card-v7.md`, `model-card-final.md`. The
+operator opens whichever one search returns. One card, one `## Versions` table.
+
+## Validation
+
+```bash
+CHANGE=<name>
+MD=$(find delivery/changes/$CHANGE/specs/models -name model-card.md 2>/dev/null | head -1)
+test -n "$MD" || echo "no model-card.md under changes/$CHANGE/specs/models/"
+DIR=$(dirname "$MD")
+
+for s in Versions Identity "Intended use" "Not fit for" "Training data" Evaluation \
+         Segments "Operating point" "Failure modes" Maintenance; do
+  grep -q "^## $s\$" "$MD" || echo "$MD: missing section '## $s'"
+done
+
+# Identity carries all six facts
+for k in Model "Registry version" Commit "Trained on" "Training run" Date; do
+  awk '/^## Identity$/{on=1;next} /^## /{on=0} on' "$MD" \
+    | grep -q "\*\*$k:\*\*" || echo "$MD: '## Identity' is missing $k"
+done
+
+# At least one NOTFIT, and none of them is boilerplate
+awk '/^## Not fit for$/{on=1;next} /^## /{on=0} on' "$MD" \
+  | grep -q 'NOTFIT-[0-9]\{3,\}' || echo "$MD: '## Not fit for' carries no NOTFIT-###"
+awk '/^## Not fit for$/{on=1;next} /^## /{on=0} on' "$MD" \
+  | grep -niE 'use with care|not for critical|use responsibly|as appropriate'
+
+# Every EVAL-### the card cites exists in the evaluation
+for id in $(grep -o 'EVAL-[0-9]\{3,\}' "$MD" | sort -u); do
+  grep -q "$id" "$DIR/evaluation.md" || echo "card cites $id, which evaluation.md does not define"
+done
+
+# Every SLICE-### in the evaluation appears in the card
+for id in $(grep -o 'SLICE-[0-9]\{3,\}' "$DIR/evaluation.md" | sort -u); do
+  grep -q "$id" "$MD" || echo "evaluation reports $id, which the card omits"
+done
+
+# No metric row without an interval or an explicit 'underpowered'
+awk '/^## (Evaluation|Segments)$/{on=1;next} /^## /{on=0}
+     on && /^\| (EVAL-|SLICE-)/ {
+       if ($0 !~ /\[[0-9.]+, *[0-9.]+\]/ && $0 !~ /underpowered/)
+         print "row with no interval: " $0 }' "$MD"
+
+# Every failure mode has a detection column that is a MON-### or 'none'
+awk '/^## Failure modes$/{on=1;next} /^## /{on=0}
+     on && /^\| / && !/^\| *Input condition/ && !/^\| *-/ {
+       if ($0 !~ /MON-[0-9]{3,}/ && $0 !~ /none/)
+         print "failure mode with no detection: " $0 }' "$MD"
+
+# Owner is a person, not an alias
+awk '/^## Maintenance$/{on=1;next} /^## /{on=0} on' "$MD" \
+  | grep '\*\*Owner:\*\*' | grep -qE '#|@|team|group|alias' \
+  && echo "$MD: '## Maintenance' owner looks like an alias, not a person"
+
+# Nothing secret-shaped in the card
+grep -nEi '(postgres|mysql|mongodb|jdbc|https?)://[^ )]*:[^ )]*@|(api[_-]?key|secret|password|token)[[:space:]]*[:=]' "$MD"
+
+# The card's registry version matches the version being promoted
+V=$(sed -n 's/^- \*\*Registry version:\*\* *//p' "$MD" | head -1)
+[ -n "$V" ] || echo "$MD: '## Identity' has no '- **Registry version:** <n>' line"
+[ -n "$V" ] && { grep -q "^## Version $V\$" delivery/ops/models/*/registry.md 2>/dev/null \
+  || echo "card is at version $V, which no registry entry names"; }
+```
+
+Each command prints nothing when the rule holds. The SLICE cross-check is the one worth running
+before every promotion: a slice that exists in the evaluation and not in the card is a
+population the operator has not been told about.

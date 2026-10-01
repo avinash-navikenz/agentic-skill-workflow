@@ -1,0 +1,59 @@
+"use strict";
+const fs = require("node:fs");
+const path = require("node:path");
+const { deliveryDir } = require("../lib/paths");
+const { newState, writeState } = require("../lib/state");
+const { detectHarness } = require("../lib/capabilities");
+const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
+
+const DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", "ops/models", ".adlc"];
+const GITKEEP_DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", "ops/models"];
+
+// Template name (relative to the "delivery" templates dir) -> destination
+// path relative to delivery/.
+const TEMPLATE_FILES = [
+  { name: "project.md", dest: "project.md" },
+  { name: "AGENTS.md", dest: "AGENTS.md" },
+  { name: path.join(".adlc", "waivers.md"), dest: path.join(".adlc", "waivers.md") },
+  // G8-OPERATE's exit criteria name delivery/ops/slo.md by path. Before this
+  // entry existed, `init` created ops/runbooks/ and ops/postmortems/ and no
+  // slo.md, so a freshly initialised tree could not satisfy G8 without a file
+  // nothing told the team to create. Registered in TEMPLATE_FILES rather than
+  // written inline so it goes through findUnreadableTemplate() with the
+  // others — an unregistered template reintroduces the half-built delivery/
+  // trap the preflight exists to prevent.
+  { name: path.join("ops", "slo.md"), dest: path.join("ops", "slo.md") },
+];
+
+function copyTemplate(templatesDir, name, dest) {
+  fs.writeFileSync(dest, fs.readFileSync(path.join(templatesDir, name), "utf8"));
+}
+
+function run(argv, cwd, emit = console.log) {
+  const dir = deliveryDir(cwd);
+  if (fs.existsSync(dir)) {
+    emit(`delivery/ already exists at ${dir} — refusing to overwrite. Remove it or run elsewhere.`);
+    return 1;
+  }
+
+  // Resolved per-call (not cached at module load) so NAVI_DELIVERY_TEMPLATES
+  // can be set for the duration of a single test — see lib/templates.js.
+  const templates = path.join(templatesRoot(), "delivery");
+
+  const missing = findUnreadableTemplate(templates, TEMPLATE_FILES.map((t) => t.name));
+  if (missing) {
+    emit(`cannot init: template '${missing}' is missing or unreadable (expected at ${path.join(templates, missing)}). Nothing was created.`);
+    return 1;
+  }
+
+  for (const d of DIRS) fs.mkdirSync(path.join(dir, d), { recursive: true });
+  for (const d of GITKEEP_DIRS) fs.writeFileSync(path.join(dir, d, ".gitkeep"), "");
+  for (const { name, dest } of TEMPLATE_FILES) copyTemplate(templates, name, path.join(dir, dest));
+  writeState(cwd, newState());
+
+  emit(`Initialised delivery/ (harness: ${detectHarness(process.env)})`);
+  emit("Next: navi-delivery propose <name> --lane standard");
+  return 0;
+}
+
+module.exports = { run };

@@ -1,0 +1,70 @@
+{
+  "skill": "navi-skill-test-design",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "AC-013 says an absent prefers-color-scheme header resolves to light. What cases does that actually need?",
+      "expect": [
+        "TC-",
+        "absent",
+        "empty",
+        "equivalence",
+        "boundary",
+        "error",
+        "timeout",
+        "none"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "First render must be under 400ms at p95. Write the test cases for that bound.",
+      "expect": [
+        "boundary",
+        "399",
+        "400",
+        "401",
+        "one below",
+        "one above",
+        "observable"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Design the evaluation set for the ranker: hold out a test set, check it for leakage and pick the metric.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "We have two weeks of testing capacity across three components. Decide where the effort goes and what we knowingly leave untested.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Write one test per criterion that checks the row landed in user_preferences, and use expect(() => resolve()).toThrow() for the bad-input ones.",
+      "expect": [
+        "observer",
+        "outside the system",
+        "type",
+        "field",
+        "wrong one",
+        "one subject"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Just read the resolver and write tests covering each branch it has — that way we know the tests match the code.",
+      "expect": [
+        "never from the implementation",
+        "criterion",
+        "what was built",
+        "unable to detect"
+      ]
+    }
+  ]
+}

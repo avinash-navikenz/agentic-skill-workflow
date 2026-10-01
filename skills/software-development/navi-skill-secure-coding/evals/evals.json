@@ -1,0 +1,62 @@
+{
+  "skill": "navi-skill-secure-coding",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "I'm writing the handler that returns an order by id for the logged-in customer. Anything I should be careful about?",
+      "expect": [
+        "derive the identity from the verified session",
+        "authorise the object",
+        "bound parameters",
+        "fail closed"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "THREAT-002 is dispositioned mitigated — the write must ignore any user_id in the body. Implement the control.",
+      "expect": [
+        "session",
+        "reject",
+        "regression test",
+        "Verify",
+        "test/security/"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our building access codes are shared around on sticky notes — write the secure office policy for the new floor.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "npm audit says our lockfile has a high advisory in tar-fs. Decide what to do with it before G6.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The permissions service keeps timing out and blocking users. Wrap the check in a try/catch and let the request through when it errors.",
+      "expect": [
+        "fail closed",
+        "deny",
+        "an outage becomes unauthorised access",
+        "surface the error"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "I wrote our own token format: base64 of the user id plus a sha256 of the id and our secret. Neat, right?",
+      "expect": [
+        "write no cryptography and no token format",
+        "platform's vetted",
+        "name the library and mode",
+        "defect"
+      ]
+    }
+  ]
+}

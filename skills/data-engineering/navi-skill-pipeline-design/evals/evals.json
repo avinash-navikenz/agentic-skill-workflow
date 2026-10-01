@@ -1,0 +1,66 @@
+{
+  "skill": "navi-skill-pipeline-design",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We need a nightly job that turns raw_session_events into session_events. Design it so a rerun after an outage lands on the same answer.",
+      "expect": [
+        "delivery/changes/<name>/pipeline.md",
+        "PIPE-",
+        "incremental-merge",
+        "idempotency key",
+        "rerun test",
+        "design.md"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G4 wants lineage from source to the consumed artifact for the theme work. Where does that live and what does it need to say?",
+      "expect": [
+        "## Lineage",
+        "DC-",
+        "PIPE-",
+        "hop",
+        "source system",
+        "consumed artifact"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our GitHub Actions pipeline takes 22 minutes on every push. Work out which jobs to cache or parallelise to get it under 8.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Document the schema, the accountable owner, the freshness guarantee and the PII classification for session_events.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The source was empty this morning so the job finished in 11 seconds and reported success. That's fine — nothing to process.",
+      "expect": [
+        "never succeeds",
+        "minimum expected volume",
+        "fail or quarantine",
+        "indistinguishable"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "One script writes both session_events and theme_daily in the same run — it saves a read. Write it up as PIPE-006.",
+      "expect": [
+        "two pipelines",
+        "exactly one output",
+        "backfill",
+        "restated",
+        "split"
+      ]
+    }
+  ]
+}

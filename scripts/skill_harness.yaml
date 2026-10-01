@@ -1,0 +1,1167 @@
+# Declarations for scripts/validate_skill_checks.py.
+#
+# Every skill under skills/*/*/ MUST appear under the `skills` key below. A
+# skill with no entry fails the harness — a silent skip is how a check that
+# cannot fail survives one. A skill that genuinely cannot be exercised from a
+# fixture declares `unharnessable:` with the reason.
+#
+# stage:    a skill's ## Template fence, materialised at the path its own prose
+#           names. `group: qa` entries are added only for skills that declare
+#           `group: qa` (the QA cluster's Templates presuppose a spec numbered
+#           AC-011..019; the spec cluster's own Template writes AC-001..003).
+# corpus:   fixture files no Template supplies — application source, lockfiles,
+#           CI definitions, the test files several blocks assert exist on disk.
+#           Written before the Templates are staged.
+# post:     overlays applied after staging, where content must replace or follow
+#           a staged Template rather than precede it.
+# gates:    gate decisions recorded through the CLI, so delivery/.adlc/events.jsonl
+#           exists for the blocks that read a gate's current verdict.
+# backdate: files whose mtime must precede everything else (a dependency scan
+#           record has to post-date the lockfile it scanned).
+
+change: theme-persistence
+model: theme-ranker
+lane: full
+
+corpus:
+  - path: package.json
+    content: |
+      { "name": "fixture", "private": true, "scripts": { "test": "node -e \"process.exit(0)\"" } }
+  - path: package-lock.json
+    content: "{}\n"
+  - path: .gitignore
+    content: "node_modules/\n.remote.git/\n"
+
+  # A CI definition the pipeline-automation and test-strategy blocks scan. It
+  # deliberately contains none of what they forbid: no `|| true`, no floating
+  # tag, no literal secret, no blanket retry.
+  - path: .github/workflows/ci.yml
+    content: |
+      name: ci
+      on: [push]
+      jobs:
+        build:
+          runs-on: ubuntu-latest
+          steps:
+            - uses: actions/checkout@v4.1.7
+            - run: npm test
+
+  # Application source. The secure-coding, api-design, test-design and
+  # test-driven-development blocks grep these trees; each file is written the
+  # way those blocks say it should be, so a clean run means the greps ran and
+  # found nothing rather than that the tree was absent.
+  - path: src/routes/orders.ts
+    content: |
+      router.get("/v1/orders", listOrders);
+      router.post("/v1/orders", createOrder);
+  - path: src/errors/handler.ts
+    content: |
+      export function toBody(kind: string, field: string) {
+        return { type: `https://errors.example.com/${kind}`, title: kind, field };
+      }
+  - path: src/flags/index.ts
+    content: |
+      export const THEME_PERSISTENCE_ENABLED = "theme-persistence-enabled";
+  - path: src/preferences/store.ts
+    content: |
+      import { randomUUID } from "node:crypto";
+      export const newId = () => randomUUID();
+      export async function read(db, userId: string) {
+        return db.query("select theme from user_preferences where user_id = $1", [userId]);
+      }
+
+  # Tests several blocks assert exist by the exact path the artifacts name.
+  - path: test/contract/session-v1.spec.ts
+    content: "it('AC-011 session contract', () => {});\n"
+  - path: test/contract/theme-changed-v1.spec.ts
+    content: "it('AC-013 theme changed contract', () => {});\n"
+  - path: test/contract/user-preferences-columns.spec.sql
+    content: "-- AC-011 column contract\n"
+  - path: test/integration/two-tab.spec.ts
+    content: "it('AC-011 two tabs', () => {});\n"
+  - path: test/unit/resolver.spec.ts
+    content: "it('AC-013 resolver', () => {});\n"
+  - path: test/integration/store-timeout.spec.ts
+    content: "it('AC-015 store timeout', () => {});\n"
+  - path: perf/first-render.js
+    content: "// AC-016 AC-017 k6 scenario\n"
+  - path: security/threat-004.sh
+    content: "#!/bin/sh\n# THREAT-004 control test\n"
+  - path: test/pipelines/pipe-004-rerun-idempotent.spec.py
+    content: "# PIPE-004 rerun idempotency\n"
+  - path: ml/baselines/constant_light.py
+    content: "# BASELINE-001\n"
+  - path: ml/baselines/prefers_color_scheme.py
+    content: "# BASELINE-002\n"
+  - path: ml/baselines/header_plus_hour.py
+    content: "# BASELINE-003\n"
+  - path: test/security/session-forgery.spec.ts
+    content: "it('THREAT-001 session forgery', () => {});\n"
+  - path: test/security/preference-write-ignores-body-userid.spec.ts
+    content: "it('THREAT-002 write ignores body user id', () => {});\n"
+  - path: test/security/log-redaction.spec.ts
+    content: "it('THREAT-003 log redaction', () => {});\n"
+  - path: test/security/status-payload-fields.spec.ts
+    content: "it('THREAT-004 status payload fields', () => {});\n"
+  - path: config/settings.yml
+    content: |
+      preference_store_url: ${PREFERENCE_STORE_URL}
+      session_cookie: theme_session
+
+  # Runbooks the observability, drift-monitoring and data-quality blocks
+  # require to exist for every alert, monitor and non-failing check.
+  - path: delivery/ops/runbooks/alert-002.md
+    content: "# ALERT-002\n\nFirst check the saturation panel, then the last deploy's digest.\n"
+  - path: delivery/ops/runbooks/chk-008.md
+    content: "# CHK-008\n\nFirst check the quarantine table's row count for the last hour.\n"
+  - path: delivery/ops/runbooks/chk-009.md
+    content: "# CHK-009\n\nFirst check the producer's schema version against the contract.\n"
+  - path: delivery/ops/runbooks/chk-012.md
+    content: "# CHK-012\n\nFirst check the join key's null rate in the last landed partition.\n"
+  - path: delivery/ops/runbooks/chk-014.md
+    content: "# CHK-014\n\nFirst check the watermark against the source's own event time.\n"
+  - path: delivery/ops/runbooks/mon-002.md
+    content: "# MON-002\n\nFirst check the feature's null rate against the baseline window.\n"
+  - path: delivery/ops/runbooks/mon-003.md
+    content: "# MON-003\n\nFirst check the prediction histogram against the promotion snapshot.\n"
+  - path: delivery/ops/runbooks/mon-004.md
+    content: "# MON-004\n\nFirst check the label delay against the outcome table's lag.\n"
+  - path: delivery/ops/runbooks/mon-005.md
+    content: "# MON-005\n\nFirst check the serving latency panel for the last hour.\n"
+  - path: delivery/ops/runbooks/mon-006.md
+    content: "# MON-006\n\nFirst check the feature store's freshness timestamp.\n"
+  - path: delivery/ops/runbooks/mon-007.md
+    content: "# MON-007\n\nFirst check the segment's volume against the baseline window.\n"
+
+  # Evidence indexes the gate-facing blocks read by path.
+  - path: "delivery/changes/{change}/evidence/g3-design.md"
+    content: |
+      # G3 evidence — {change}
+
+      Indexes design.md, ADR-007, ADR-009, ADR-014 and threat-model.md.
+  - path: "delivery/changes/{change}/evidence/g8-operate.md"
+    content: |
+      # G8 evidence — {change}
+
+      Indexes delivery/ops/slo.md, the runbooks and delivery/ops/models/{model}/monitors.md.
+  - path: "delivery/changes/{change}/evidence/g6-dependencies-npm.json"
+    content: |
+      {"findings": ["GHSA-4x7v-2q8m", "GHSA-9wc3-hh7q", "CVE-2026-1188", "GO-2026-3401"]}
+
+  # An ADR the dependency record names as the acceptor of a waived advisory.
+  - path: delivery/decisions/ADR-014.md
+    content: |
+      # ADR-014 — Accept the transitive advisory until the upstream fix lands
+
+      ## Status
+      Accepted
+
+      ## Context
+      The advisory is reachable only through a code path this service does not call.
+
+      ## Decision
+      Accept it until the upstream release, tracked as TASK-047.
+
+      ## Alternatives rejected
+      Forking the dependency: the maintenance cost exceeds the residual risk.
+
+      ## Consequences
+      The finding stays open in the scan record until the upstream fix lands.
+
+      ## Accepted-risk
+      A future caller could reach the vulnerable path without noticing.
+
+      ## Accepted-by
+      Ana Costa, 2026-09-28
+
+      ## Binds
+      The settings service's dependency set.
+
+      ## Review
+      2026-11-15
+
+  # design.md's Linked artifacts table. The design template ships the heading
+  # and an empty table; several blocks check the design links their artifact.
+  - path: "delivery/changes/{change}/design.md"
+    mode: append
+    content: |
+
+      | pipeline.md | delivery/changes/{change}/pipeline.md | navi-skill-pipeline-design |
+      | rollout.md | delivery/changes/{change}/rollout.md | navi-skill-progressive-delivery |
+      | test-strategy.md | delivery/changes/{change}/test-strategy.md | navi-skill-test-strategy |
+      | threat-model.md | delivery/changes/{change}/threat-model.md | navi-skill-threat-modelling |
+
+derive_ac_tests: test/acceptance/criteria.spec.ts
+
+# Overlays applied after the Templates are staged.
+post:
+  # navi-skill-change-proposal's Template illustrates a `standard` change; this
+  # fixture runs on `full`, because five skills' blocks refuse to record G4 on
+  # any other lane. The proposal's declared gate set has to say so — its own
+  # check, and navi-skill-lane-selection's, compare that line with state.json.
+  - path: "delivery/changes/{change}/proposal.md"
+    replace: ["gates: G1 · G2 · G3 · G5 · G6 · G7 · G8", "gates: G1 · G2 · G3 · G4 · G5 · G6 · G7 · G8 · G9"]
+  - path: "delivery/changes/{change}/proposal.md"
+    replace: ["lane: standard\n", "lane: full\n"]
+  - path: "delivery/changes/{change}/proposal.md"
+    replace: ["`standard` — a feature inside an existing capability.", "`full` — the change introduces a model and a dataset."]
+  # The fixture's repository is built by `git init` + `git remote add`, which
+  # sets no upstream for `main`; a clone would. navi-skill-branching's block
+  # reports every local branch that tracks nothing, so without this the fixture
+  # would fail a check that is working correctly.
+  - path: ".git/config"
+    mode: append
+    content: |
+      [branch "main"]
+      	remote = origin
+      	merge = refs/heads/main
+
+  # navi-skill-quality-attributes' QAS scenarios name AC-004 and AC-012 as the
+  # criteria they measure. No skill Template defines those two, so the fixture
+  # declares them, in the shape navi-skill-spec-authoring defines, under a
+  # requirement the task list implements.
+  - path: "delivery/changes/{change}/specs/theme-preference/spec.md"
+    mode: append
+    content: |
+
+      ## Requirements (continued)
+
+      ### REQ-005 — The settings panel reflects the applied theme immediately
+      **Priority:** Should
+      **Source:** Elicited from ACTOR-002, 2026-09-19
+
+      #### AC-004
+      Given a signed-in user on the settings panel,
+      when they select a theme,
+      then the panel repaints in that theme within 100ms without a page load.
+      Implements: REQ-005
+
+      #### AC-012
+      Given a signed-in user on the settings panel,
+      when the preference write fails,
+      then the panel returns to the previously applied theme and states that nothing was saved.
+      Implements: REQ-005
+
+  # The model work's own outcome sentence. navi-skill-problem-framing quotes it
+  # verbatim from proposal.md and checks the quote resolves;
+  # navi-skill-change-proposal's Template illustrates a non-model change, so the
+  # fixture supplies the outcome the framing cites.
+  - path: "delivery/changes/{change}/proposal.md"
+    mode: append
+    content: |
+
+      ## Model outcome
+
+      The default-theme chooser is expected to reduce first-session theme switches by 30% for
+      users arriving with no stored preference, measured on the existing theme-events report.
+
+  # Tasks for the requirements the staged spec fragments introduce, and the
+  # removal task rollout.md names. Every task carries its Implements: line, so
+  # T1 and T4 stay clean.
+  - path: "delivery/changes/{change}/tasks.md"
+    mode: append
+    content: |
+
+      - [ ] **TASK-008** Repaint the settings panel in the applied theme without a page load
+        - Implements: REQ-005
+        - Verified by: AC-004, AC-012
+        - Depends on: TASK-002
+
+      - [ ] **TASK-006** Resolve the theme from the request header when the store is unreadable
+        - Implements: REQ-015
+        - Verified by: AC-015
+        - Depends on: TASK-002
+
+      - [ ] **TASK-007** Remove a stored preference when the account is removed
+        - Implements: REQ-017
+        - Verified by: AC-017
+        - Depends on: TASK-001
+
+      - [ ] **TASK-020** Measure and record the non-functional thresholds REQ-020..REQ-027 state
+        - Implements: REQ-020
+        - Verified by: AC-020
+        - Depends on: TASK-005
+
+      - [ ] **TASK-021** Hold availability through a store outage
+        - Implements: REQ-021
+        - Depends on: TASK-004
+
+      - [ ] **TASK-022** Size the preference store for ten times today's rows
+        - Implements: REQ-022
+        - Depends on: TASK-001
+
+      - [ ] **TASK-023** Restrict preference reads to the owner and the audited agent
+        - Implements: REQ-023
+        - Depends on: TASK-001
+
+      - [ ] **TASK-024** Delete a preference with its account
+        - Implements: REQ-024
+        - Depends on: TASK-001
+
+      - [ ] **TASK-025** Meet AA contrast for body text in both themes
+        - Implements: REQ-025
+        - Depends on: TASK-002
+
+      - [ ] **TASK-026** Distinguish a theme fault from a store outage in the logs
+        - Implements: REQ-026
+        - Depends on: TASK-004
+
+      - [ ] **TASK-027** Keep existing session consumers working with the added field
+        - Implements: REQ-027
+        - Depends on: TASK-001
+
+      - [ ] **TASK-034** Remove the THEME_PERSISTENCE_ENABLED flag and the in-memory path
+        - Implements: REQ-001
+        - Depends on: TASK-002
+        - Notes: removes `src/flags` entry THEME_PERSISTENCE_ENABLED one week after the final wave.
+
+  # The QA cluster's spec. navi-skill-test-strategy, -test-design and
+  # -release-readiness are each written against a change whose criteria are
+  # AC-011..AC-019; the spec cluster's own Template writes AC-001..AC-003, and a
+  # single tree would make one cluster's Template fail a check that is working
+  # correctly. This fixture carries exactly the criteria all three of those
+  # Templates handle, in the shape navi-skill-spec-authoring defines.
+  - group: qa
+    path: "delivery/changes/{change}/specs/theme-preference/spec.md"
+    content: |
+      # Capability — Theme preference
+
+      **Status:** delta for change `{change}`
+      **Owner:** Priya Raman
+
+      ## Requirements
+
+      ### REQ-011 — The stored preference is applied on first render
+      **Priority:** Must
+      **Source:** Elicited from ACTOR-001, 2026-09-18
+
+      #### AC-011
+      Given a signed-in user with a stored preference,
+      when they load any page,
+      then the stored theme is applied before first paint.
+      Implements: REQ-011
+
+      ### REQ-013 — An absent preference resolves to the system scheme
+      **Priority:** Must
+      **Source:** Elicited from ACTOR-001, 2026-09-18
+
+      #### AC-013
+      Given a signed-in user with no stored preference,
+      when they load any page,
+      then the operating-system colour scheme is applied and nothing is written.
+      Implements: REQ-013
+
+      ### REQ-015 — The resolver degrades when the store is unreachable
+      **Priority:** Must
+      **Source:** Elicited from ACTOR-004, 2026-09-19
+
+      #### AC-015
+      Given the preference store is unreachable,
+      when a first render is requested,
+      then the light theme is applied and one warning is logged with the user id omitted.
+      Implements: REQ-015
+
+      ### REQ-016 — First render stays inside its latency budget
+      **Priority:** Must
+      **Source:** Inferred — ASSUM-002
+
+      #### AC-016
+      Given production's traffic mix,
+      when first render is measured over a rolling 24 hours,
+      then p95 is at or below 400ms.
+      Implements: REQ-016
+
+gates:
+  - { gate: G1, evidence: "delivery/changes/{change}/proposal.md" }
+  - { gate: G2, evidence: "delivery/changes/{change}/specs/theme-preference/spec.md" }
+  - { gate: G3, evidence: "delivery/changes/{change}/evidence/g3-design.md" }
+  # G4 is waived rather than passed: the evidence the data-quality Template
+  # ships records a failed check run, and the evaluation records a slice
+  # regression. Both skills' blocks report a G4 *pass* over either as a defect,
+  # so a corpus that passed G4 would assert something the skills forbid.
+  - { gate: G4, waive: "CHK-014 timeliness breach and the SLICE-003 regression are both open; TASK-047 carries the fix." }
+  - { gate: G5, evidence: "delivery/changes/{change}/evidence/g5-review.md" }
+  - { gate: G7, evidence: "delivery/changes/{change}/evidence/g7-release.md" }
+  - { gate: G8, evidence: "delivery/changes/{change}/evidence/g8-operate.md" }
+
+# `gate --waive` leaves the approver column for a person to fill in by hand.
+waiver_approver: Ana Costa
+
+# Lockfiles the dependency scan record must post-date. mtime ordering is the
+# check, and everything in the corpus is written within the same second.
+backdate:
+  - package-lock.json
+
+stage:
+  # --- the change's backbone -------------------------------------------------
+  - { skill: navi-skill-change-proposal, fence: 0, path: "delivery/changes/{change}/proposal.md" }
+  - { skill: navi-skill-outcome-and-kpi-definition, fence: 0, path: "delivery/changes/{change}/proposal.md", mode: append }
+  - { skill: navi-skill-spec-authoring, fence: 0, path: "delivery/changes/{change}/specs/theme-preference/spec.md" }
+  - { skill: navi-skill-non-functional-requirements, fence: 0, path: "delivery/changes/{change}/specs/theme-preference/spec.md", mode: append }
+  - { skill: navi-skill-requirements-elicitation, fence: 0, path: "delivery/changes/{change}/specs/theme-preference/elicitation.md" }
+  # Fence 1 is the provenance shape a requirement carries in spec.md, and it
+  # ships REQ-015 and REQ-017 — the two requirements the elicitation example's
+  # own open-questions table refers to. The `## ` prefix closes the preceding
+  # `## Non-functional pass` region, which every awk scan in the file ends on.
+  - { skill: navi-skill-requirements-elicitation, fence: 1, path: "delivery/changes/{change}/specs/theme-preference/spec.md", mode: append, prefix: "## Requirements (continued)\n\n" }
+  - { skill: navi-skill-task-decomposition, fence: 0, path: "delivery/changes/{change}/tasks.md" }
+  # --- design and its companions --------------------------------------------
+  - { skill: navi-skill-interface-contracts, fence: 0, path: "delivery/changes/{change}/design.md", mode: append }
+  - { skill: navi-skill-quality-attributes, fence: 0, path: "delivery/changes/{change}/design.md", mode: append }
+  - { skill: navi-skill-threat-modelling, fence: 0, path: "delivery/changes/{change}/threat-model.md" }
+  - { skill: navi-skill-decision-records, fence: 0, path: "delivery/decisions/ADR-007.md" }
+  - { skill: navi-skill-decision-records, fence: 1, path: "delivery/decisions/ADR-009.md" }
+  # --- data ------------------------------------------------------------------
+  - { skill: navi-skill-pipeline-design, fence: 0, path: "delivery/changes/{change}/pipeline.md" }
+  - { skill: navi-skill-data-contracts, fence: 0, path: "delivery/changes/{change}/specs/data/session-events/contract.md" }
+  - { skill: navi-skill-data-quality, fence: 0, path: "delivery/changes/{change}/specs/data/session-events/checks.md" }
+  - { skill: navi-skill-data-quality, fence: 1, path: "delivery/changes/{change}/evidence/g4-data-model.md" }
+  # --- model -----------------------------------------------------------------
+  - { skill: navi-skill-problem-framing, fence: 0, path: "delivery/changes/{change}/specs/models/{model}/framing.md" }
+  - { skill: navi-skill-evaluation-design, fence: 0, path: "delivery/changes/{change}/specs/models/{model}/evaluation.md" }
+  - { skill: navi-skill-model-cards, fence: 0, path: "delivery/changes/{change}/specs/models/{model}/model-card.md" }
+  - { skill: navi-skill-model-registry-and-promotion, fence: 0, path: "delivery/changes/{change}/specs/models/{model}/promotion.md" }
+  - { skill: navi-skill-model-registry-and-promotion, fence: 1, path: "delivery/ops/models/{model}/registry.md" }
+  - { skill: navi-skill-model-registry-and-promotion, fence: 2, path: "delivery/changes/{change}/evidence/g7-promotion.md" }
+  # --- operations ------------------------------------------------------------
+  - { skill: navi-skill-observability, fence: 0, path: "delivery/ops/slo.md" }
+  - { skill: navi-skill-drift-monitoring, fence: 1, path: "delivery/ops/slo.md", mode: append }
+  - { skill: navi-skill-observability, fence: 1, path: "delivery/ops/runbooks/alert-001.md" }
+  # navi-skill-agent-observability ships two artefacts the repository carries: the span
+  # register and the emitter it names. Nothing here reaches a backend — the block reads
+  # the register, the emitter, and the SLIs in delivery/ops/slo.md.
+  - { skill: navi-skill-agent-observability, fence: 0, path: "delivery/ops/agent-telemetry.md" }
+  - { skill: navi-skill-agent-observability, fence: 1, path: "src/agent/telemetry.ts" }
+  - { skill: navi-skill-drift-monitoring, fence: 0, path: "delivery/ops/models/{model}/monitors.md" }
+  - { skill: navi-skill-pipeline-automation, fence: 0, path: "delivery/ops/delivery-pipeline.md" }
+  - { skill: navi-skill-pipeline-automation, fence: 1, path: "delivery/changes/{change}/evidence/g7-release.md" }
+  - { skill: navi-skill-progressive-delivery, fence: 0, path: "delivery/changes/{change}/rollout.md" }
+  # --- the Azure cluster -----------------------------------------------------
+  # These four skills' artefacts are files in the repository — an ADO pipeline
+  # definition, Bicep, a policy assignment set, and the registers that bind them
+  # to the platform-neutral ops/ files. Nothing here reaches a subscription:
+  # `az` is not available to the harness and the blocks never call it.
+  - { skill: navi-skill-azure-pipelines, fence: 0, path: ".azure/azure-pipelines.yml" }
+  - { skill: navi-skill-azure-pipelines, fence: 1, path: ".azure/templates/deploy-stage.yml" }
+  - { skill: navi-skill-azure-pipelines, fence: 2, path: "delivery/ops/azure/pipeline-bindings.md" }
+  - { skill: navi-skill-azure-landing-zone, fence: 0, path: "delivery/ops/azure/landing-zone.md" }
+  - { skill: navi-skill-azure-landing-zone, fence: 1, path: "infra/azure/platform/main.bicep" }
+  - { skill: navi-skill-azure-landing-zone, fence: 2, path: "infra/azure/policy/assignments.json" }
+  - { skill: navi-skill-azure-identity-and-secrets, fence: 0, path: "delivery/ops/azure/identity.md" }
+  - { skill: navi-skill-azure-identity-and-secrets, fence: 1, path: "infra/azure/identity/main.bicep" }
+  - { skill: navi-skill-azure-identity-and-secrets, fence: 2, path: ".azure/variable-groups.yml" }
+  - { skill: navi-skill-azure-deployment-safety, fence: 0, path: "delivery/ops/azure/deployment-safety.md" }
+  - { skill: navi-skill-azure-deployment-safety, fence: 1, path: "infra/azure/app/containerapp.bicep" }
+  - { skill: navi-skill-backlog-prioritisation, fence: 0, path: "delivery/backlog.md" }
+  - { skill: navi-skill-incident-response, fence: 0, path: "delivery/ops/postmortems/{change}.md" }
+  - { skill: navi-skill-outcome-and-kpi-definition, fence: 1, path: "delivery/ops/postmortems/{change}.md", mode: append }
+  # --- evidence and protocol -------------------------------------------------
+  - { skill: navi-skill-code-review, fence: 2, path: "delivery/changes/{change}/evidence/g5-review.md" }
+  - { skill: navi-skill-commit-craft, fence: 0, path: "delivery/changes/{change}/commits/TASK-006.msg" }
+  # navi-skill-branching's Template is the repository configuration its rules assume;
+  # its own block reads those keys back out of this file.
+  - { skill: navi-skill-branching, fence: 0, path: ".git/config", mode: append }
+  # navi-skill-merge-conflicts ships two fences the repository itself has to carry:
+  # the merge attributes (fence 0) and the config its rules assume (fence 1). Its
+  # own block reads both back out, and `git check-attr` resolves the first against
+  # the lockfile the corpus already supplies.
+  - { skill: navi-skill-merge-conflicts, fence: 0, path: ".gitattributes" }
+  - { skill: navi-skill-merge-conflicts, fence: 1, path: ".git/config", mode: append }
+  - { skill: navi-skill-pull-requests, fence: 0, path: "delivery/changes/{change}/pull-request.md" }
+  - { skill: navi-skill-work-item-sync, fence: 0, path: "delivery/changes/{change}/work-items.md" }
+  - { skill: navi-skill-knowledge-publishing, fence: 0, path: "delivery/published.md" }
+  - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
+  - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
+  - { skill: navi-skill-handoff-protocol, fence: 0, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-handoff-protocol, fence: 1, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-handoff-protocol, fence: 2, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-handoff-protocol, fence: 3, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-human-checkpoints, fence: 0, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-human-checkpoints, fence: 2, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-phase-gate-protocol, fence: 2, path: "delivery/changes/{change}/handoffs.md", mode: append, prefix: "```yaml\n", suffix: "```\n" }
+  - { skill: navi-skill-waivers-and-deferrals, fence: 1, path: "delivery/.adlc/waivers.md", mode: append }
+  # --- the QA cluster --------------------------------------------------------
+  - { group: qa, skill: navi-skill-test-strategy, fence: 0, path: "delivery/changes/{change}/test-strategy.md" }
+  - { group: qa, skill: navi-skill-test-design, fence: 0, path: "delivery/changes/{change}/test-design.md" }
+  - { group: qa, skill: navi-skill-release-readiness, fence: 0, path: "delivery/changes/{change}/evidence/g6-quality.md" }
+
+skills:
+
+  # ---- informational output ------------------------------------------------
+  # Several blocks are written to be *read*, not to be silent: `navi-delivery
+  # status` prints the lane and its gates, `validate` prints each validator's
+  # summary, and a couple of greps list what the reader must then check by eye.
+  # Those lines are declared here, per skill, as regexes. Anything a block emits
+  # that is not declared is a failure, and a mutation's expected message must be
+  # a line that is *not* declared — the harness refuses a mutation whose expected
+  # output the clean run already produces.
+
+  navi-skill-acceptance-criteria:
+    mutations:
+      - name: an acceptance criterion states a quality as an adjective
+        file: "delivery/changes/{change}/specs/theme-preference/spec.md"
+        replace: ["then the saved theme is applied before first paint.", "then the saved theme is applied fast."]
+        expects: "then the saved theme is applied fast"
+
+  navi-skill-api-design:
+    informational:
+      - "npx is not run here"
+    mutations:
+      - name: an object schema lists its required fields and does not forbid unlisted ones
+        file: openapi.yaml
+        delete_line: "additionalProperties: false"
+        expects: "forbid unlisted ones"
+
+  navi-skill-azure-deployment-safety:
+    mutations:
+      - name: the column every incident turns on is left blank
+        file: "delivery/ops/azure/deployment-safety.md"
+        replace:
+          - "| settings and connection strings marked `slotSetting: true`, which stay with the slot, and anything the new build wrote to shared storage |"
+          - "| — |"
+        expects: "says nothing for 'Rollback does not restore'"
+      - name: a wave in the rollout has no Azure operation behind it
+        file: "delivery/ops/azure/deployment-safety.md"
+        delete_line: "| ROLL-003 |"
+        expects: "ROLL-003 is a wave in"
+      - name: the container app is put in a revision mode that silently discards the traffic block
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["      activeRevisionsMode: 'Multiple'", "      activeRevisionsMode: 'Single'"]
+        expects: "activeRevisionsMode is 'Single'"
+      - name: the probe that decides exposure disappears
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["              type: 'Readiness'", "              type: 'Startup'"]
+        expects: "no Readiness probe"
+      - name: the rollback target is allowed to scale to zero
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["        minReplicas: 1", "        minReplicas: 0"]
+        expects: "minReplicas is 0"
+      - name: the two traffic weights become independently editable numbers
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["            weight: 100 - candidateWeight", "            weight: 95"]
+        expects: "does not derive the incumbent's weight"
+      - name: a secret is written into the resource definition
+        file: "infra/azure/app/containerapp.bicep"
+        replace:
+          - "          keyVaultUrl: '${vaultUri}/secrets/upstream-api-token'\n          identity: workloadIdentityResourceId\n"
+          - "          value: 'the-literal-value-nobody-should-be-able-to-read'\n"
+        expects: "a secret carries an inline value"
+      - name: a kill switch becomes a pipeline run
+        file: "delivery/ops/azure/deployment-safety.md"
+        replace: ["| set the incumbent's weight back to 100 |", "| redeploy the previous digest through the pipeline |"]
+        expects: "is a redeploy"
+      - name: an operation with no rollback loses the control that replaces it
+        file: "delivery/ops/azure/deployment-safety.md"
+        replace:
+          - "| expand and contract — add the new column, write both, migrate readers, and drop the old one in a separate change at least one release later |"
+          - "| — |"
+        expects: "has no replacement control"
+
+  navi-skill-azure-identity-and-secrets:
+    mutations:
+      - name: a value that would matter if it were read is put in a variable group
+        file: ".azure/variable-groups.yml"
+        replace:
+          - "      - name: healthPath\n        value: /healthz\n"
+          - "      - name: healthPath\n        value: /healthz\n      - name: storageConnectionString\n        value: DefaultEndpointsProtocol=https;AccountName=stwebshellweu;AccountKey=aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcd\n"
+        expects: "variable 'storageConnectionString' in variable group 'web-shell-common'"
+      - name: a role assignment is widened above the resource group
+        file: "delivery/ops/azure/identity.md"
+        replace: ["| RBAC-002 | id-webshell-prd-weu | AcrPull | rg-webshell-bld-weu |", "| RBAC-002 | id-webshell-prd-weu | AcrPull | sub-navikenz-platform-weu |"]
+        expects: "RBAC-002 is scoped to 'sub-navikenz-platform-weu'"
+      - name: a workload is given a role that can grant itself further roles
+        file: "delivery/ops/azure/identity.md"
+        replace: ["| RBAC-001 | id-webshell-prd-weu | Key Vault Secrets User |", "| RBAC-001 | id-webshell-prd-weu | Owner |"]
+        expects: "RBAC-001 grants 'Owner'"
+      - name: a vault falls back to access policies
+        file: "infra/azure/identity/main.bicep"
+        replace: ["    enableRbacAuthorization: true", "    enableRbacAuthorization: false"]
+        expects: "enableRbacAuthorization is false, not true"
+      - name: a vault secret can be destroyed permanently by one command
+        file: "infra/azure/identity/main.bicep"
+        replace: ["    enablePurgeProtection: true", "    enablePurgeProtection: false"]
+        expects: "enablePurgeProtection is false, not true"
+      - name: a production vault is opened to the internet
+        file: "infra/azure/identity/main.bicep"
+        replace: ["    publicNetworkAccess: 'Disabled'", "    publicNetworkAccess: 'Enabled'"]
+        expects: "publicNetworkAccess is 'Enabled', not 'Disabled'"
+      - name: a template fetches a key where a managed identity would do
+        file: "infra/azure/identity/main.bicep"
+        append: "\nvar legacyStorageKey = listKeys(resourceId('Microsoft.Storage/storageAccounts', 'stwebshellweu'), '2023-01-01').keys[0].value\n"
+        expects: "template fetches a key with listKeys("
+      - name: a service connection is re-created with a stored client secret
+        file: "delivery/ops/azure/identity.md"
+        replace: ["| ID-002 | sc-web-shell-prod | workload identity federation |", "| ID-002 | sc-web-shell-prod | app registration with client secret |"]
+        expects: "authenticates by 'app registration with client secret'"
+      - name: a federated credential is widened to the whole organisation
+        file: "delivery/ops/azure/identity.md"
+        replace:
+          - "| sc://navikenz/web-shell/sc-web-shell-prod | api://AzureADTokenExchange |"
+          - "| sc://navikenz/* | api://AzureADTokenExchange |"
+        expects: "subject contains a wildcard"
+
+  navi-skill-azure-landing-zone:
+    mutations:
+      - name: a policy is assigned on a subscription, which the next subscription does not inherit
+        file: "infra/azure/policy/assignments.json"
+        replace:
+          - "policySetDefinitions/navikenz-deny-public-data\",\n      \"scope\": \"/providers/Microsoft.Management/managementGroups/mg-navikenz-workloads\","
+          - "policySetDefinitions/navikenz-deny-public-data\",\n      \"scope\": \"/subscriptions/0f2a4c6e-8b1d-4f3a-9c7e-5d2b6a8f1c40\","
+        expects: "POL-003 is assigned at subscription scope"
+      - name: an assignment is left in audit mode with no recorded exemption
+        file: "infra/azure/policy/assignments.json"
+        replace:
+          - "\"enforcementMode\": \"Default\",\n      \"identity\": \"SystemAssigned\","
+          - "\"enforcementMode\": \"DoNotEnforce\",\n      \"identity\": \"SystemAssigned\","
+        expects: "POL-005 is DoNotEnforce with no unexpired exemption"
+      - name: a resource group is named outside its own convention
+        file: "infra/azure/platform/main.bicep"
+        replace: ["    name: 'rg-webshell-prd-weu'", "    name: 'rg-WebShell-Prod'"]
+        expects: "names a resource group 'rg-WebShell-Prod', which does not match"
+      - name: a required tag stops being applied by the template
+        file: "infra/azure/platform/main.bicep"
+        replace: ["  costCentre: costCentre\n", ""]
+        expects: "required tag 'costCentre' is in '## Required tags' and is not applied"
+      - name: an assignment that runs loses its row in the register
+        file: "delivery/ops/azure/landing-zone.md"
+        delete_line: "| POL-002 | Allowed regions |"
+        expects: "POL-002 is in infra/azure/policy/assignments.json and has no row"
+      - name: a parameter's legal values live only in a reviewer's memory
+        file: "infra/azure/platform/main.bicep"
+        replace:
+          - "@description('Finance cost centre every group in this deployment is billed to.')\nparam costCentre string"
+          - "param costCentre string"
+        expects: "param 'costCentre' has no @description"
+      - name: a subscription is placed in a management group the tree does not declare
+        file: "delivery/ops/azure/landing-zone.md"
+        replace: ["| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-prod |", "| SUB-001 | sub-navikenz-prod-weu | mg-navikenz-sandbox |"]
+        expects: "management group 'mg-navikenz-sandbox' is not declared"
+      - name: a tenant-specific GUID is baked into a template
+        file: "infra/azure/platform/main.bicep"
+        append: "\nparam legacySubscriptionId string = '00000000-1111-2222-3333-444444444444'\n"
+        expects: "hardcoded GUID in a template"
+
+  navi-skill-azure-pipelines:
+    mutations:
+      - name: a deployment job loses the environment every approval hangs off
+        file: ".azure/azure-pipelines.yml"
+        replace: ["        environment: web-shell-prod\n        pool:\n          vmImage: ubuntu-22.04\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - template: templates/deploy-stage.yml\n                  parameters:\n                    serviceConnection: sc-web-shell-prod\n                    resourceGroup: rg-webshell-prd-weu\n                    appName: ca-webshell-prd-weu\n                    imageDigest: $(imageDigest)\n", "        pool:\n          vmImage: ubuntu-22.04\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - template: templates/deploy-stage.yml\n                  parameters:\n                    serviceConnection: sc-web-shell-prod\n                    resourceGroup: rg-webshell-prd-weu\n                    appName: ca-webshell-prd-weu\n                    imageDigest: $(imageDigest)\n"]
+        expects: "deployment job that names no environment"
+      - name: an ADO stage is bound to a STAGE-### the pipeline of record does not define
+        file: "delivery/ops/azure/pipeline-bindings.md"
+        replace: ["| rollback_production | STAGE-005 |", "| rollback_production | STAGE-009 |"]
+        expects: "STAGE-009 is named in pipeline-bindings.md but not defined"
+      - name: a task reference loses its pinned major version
+        file: ".azure/azure-pipelines.yml"
+        replace: ["          - task: AzureCLI@2\n            name: publish", "          - task: AzureCLI\n            name: publish"]
+        expects: "task reference with no pinned major version"
+      - name: a variable group is linked that nothing records
+        file: ".azure/azure-pipelines.yml"
+        replace: ["  - group: web-shell-common", "  - group: web-shell-prod-secrets"]
+        expects: "variable group 'web-shell-prod-secrets', which has no row"
+      - name: a condition is written in macro syntax, which is evaluated too late to matter
+        file: ".azure/azure-pipelines.yml"
+        replace: ["    condition: succeeded()", "    condition: and(succeeded(), eq('$(Build.Reason)', 'IndividualCI'))"]
+        expects: "macro syntax in a condition"
+      - name: production is given a deploy template staging never rehearsed
+        file: "delivery/ops/azure/pipeline-bindings.md"
+        replace: ["| deploy_production | STAGE-004 | templates/deploy-stage.yml |", "| deploy_production | STAGE-004 | templates/deploy-prod.yml |"]
+        expects: "bound to 2 different deploy templates"
+      - name: a stage that deploys drops its exclusive lock
+        file: ".azure/azure-pipelines.yml"
+        replace: ["    dependsOn: deploy_staging\n    condition: succeeded()\n    lockBehavior: sequential\n", "    dependsOn: deploy_staging\n    condition: succeeded()\n"]
+        expects: "no `lockBehavior: sequential`"
+
+  navi-skill-backlog-prioritisation:
+    mutations:
+      - name: a candidate's cost of delay is outside the four classes
+        file: delivery/backlog.md
+        replace: ["- **Cost of delay:** compounding —", "- **Cost of delay:** urgent —"]
+        expects: "'Cost of delay' is not one of none/linear/deadline/compounding"
+
+  navi-skill-branching:
+    mutations:
+      - name: a branch tracks an upstream origin no longer has
+        file: .git/config
+        replace: ["merge = refs/heads/main", "merge = refs/heads/trunk"]
+        expects: "tracks origin/trunk, which origin does not have"
+      - name: a personal access token is written into the remote URL
+        file: .git/config
+        replace:
+          - "url = ./.remote.git"
+          - "url = https://navikenz:9c2f4b@dev.azure.com/navikenz/shell/_git/shell"
+        expects: "remote URL carries an embedded credential"
+      - name: the repository stops pruning branches the server deleted
+        file: .git/config
+        replace: ["prune = true", "prune = false"]
+        expects: "fetch.prune is not true"
+
+  navi-skill-change-proposal:
+    informational:
+      - "^(change|lane|phase):"
+      - "^  G[1-9] +(pass|fail|waived|pending)"
+      - "^gates:"
+      - "finding\\(s\\)"
+      - "^validate: (OK|FAILED)"
+    mutations:
+      - name: an unfilled template slot survives in the proposal
+        file: "delivery/changes/{change}/proposal.md"
+        append: "\n**Owner:** <named requirement owner>\n"
+        expects: "<named requirement owner>"
+
+  navi-skill-code-review:
+    unharnessable: >
+      Its two substantive checks read a live pull request's review threads through
+      `gh api graphql` — every blocking thread resolved, every review comment class-labelled.
+      Neither a fixture nor CI can supply an authenticated GitHub pull request, and stubbing
+      `gh` would leave the harness asserting the stub. The three local checks (the G5 review
+      record, TODOs without a tracker id, credential-shaped strings in the branch history) are
+      exercised indirectly by navi-skill-secure-coding and navi-skill-version-control-workflow,
+      which run the same greps against the same fixture.
+
+  navi-skill-commit-craft:
+    mutations:
+      - name: a Refs trailer names a task that is in no tasks.md
+        file: "delivery/changes/{change}/commits/TASK-006.msg"
+        replace: ["Refs: TASK-006", "Refs: TASK-906"]
+        expects: "Refs names TASK-906, which is in no tasks.md entry"
+      - name: one commit carries two reasons for changing
+        file: "delivery/changes/{change}/commits/TASK-006.msg"
+        replace:
+          - "TASK-006: fall back to the request header when the store is unreadable"
+          - "TASK-006: fall back to the request header and rename the settings route"
+        expects: "joins two changes with 'and'"
+
+  navi-skill-data-contracts:
+    mutations:
+      - name: a contract loses a mandatory section
+        file: "delivery/changes/{change}/specs/data/session-events/contract.md"
+        replace: ["## Not fit for\n", "## Unsuitable uses\n"]
+        expects: "missing section '## Not fit for'"
+
+  navi-skill-data-quality:
+    mutations:
+      - name: a check's On breach is outside fail/quarantine/warn
+        file: "delivery/changes/{change}/specs/data/session-events/checks.md"
+        replace: ["- **On breach:** `quarantine` — rows to", "- **On breach:** `escalate` — rows to"]
+        expects: "'On breach' is not one of fail/quarantine/warn"
+
+  navi-skill-decision-records:
+    mutations:
+      - name: an ADR that accepts a risk names nobody who accepted it
+        file: delivery/decisions/ADR-009.md
+        replace: ["## Accepted-by\n", "## Signed\n"]
+        expects: "ADR-009.md"
+
+  navi-skill-dependency-vulnerabilities:
+    mutations:
+      - name: a finding row carries no disposition
+        file: "delivery/changes/{change}/evidence/g6-dependencies.md"
+        replace: ["| 4.3.6 | not-applicable |", "| 4.3.6 | n/a |"]
+        expects: "| n/a |"
+
+  navi-skill-drift-monitoring:
+    mutations:
+      - name: a monitor's threshold loses its consecutive-window count
+        file: "delivery/ops/models/{model}/monitors.md"
+        replace: ["PSI >= 0.18 for 3 consecutive 24-hour windows.", "PSI >= 0.18."]
+        expects: "threshold has no consecutive-window count"
+
+  navi-skill-evaluation-design:
+    mutations:
+      - name: an EVAL loses the uncertainty its number needs
+        file: "delivery/changes/{change}/specs/models/{model}/evaluation.md"
+        replace: ["- **Uncertainty:** bootstrap,", "- **Spread:** bootstrap,"]
+        expects: "missing Uncertainty"
+
+  navi-skill-handoff-protocol:
+    informational:
+      - "^handoff envelopes OK$"
+      - "^navi-agent-[a-z-]+$"
+    mutations:
+      - name: an envelope drops one of the eight base fields
+        file: "delivery/changes/{change}/handoffs.md"
+        replace: ["  skills_used: [navi-skill-spec-authoring, navi-skill-acceptance-criteria, navi-skill-traceability]\n", ""]
+        expects: "missing ['skills_used']"
+
+  navi-skill-human-checkpoints:
+    informational:
+      # The first fence lists every blocked_on / decision / escalated_to line for
+      # the reader; the pairing check that follows it is the mechanical one.
+      - "^[0-9]+: +(blocked_on|escalated_to|decision):"
+    mutations:
+      - name: a checkpoint is requested and never answered
+        file: "delivery/changes/{change}/handoffs.md"
+        replace: ["  decision: approved\n", "  verdict: approved\n"]
+        expects: "was requested and never answered"
+
+  navi-skill-incident-response:
+    mutations:
+      - name: an insight loses the target nobody then owns
+        file: "delivery/ops/postmortems/{change}.md"
+        replace: ["  - Target: CAND-041,", "  - Destination note: CAND-041,"]
+        expects: "no Target line"
+
+  navi-skill-interface-contracts:
+    mutations:
+      - name: a contract stops answering one of the four failure classes
+        file: "delivery/changes/{change}/design.md"
+        replace: ["  - duplicate → the call is a read;", "  - repeated → the call is a read;"]
+        expects: "no behaviour stated for 'duplicate'"
+
+  navi-skill-knowledge-publishing:
+    mutations:
+      - name: an Accepted decision record is published nowhere
+        file: "delivery/published.md"
+        delete_line: "ADR-014"
+        expects: "delivery/decisions/ADR-014.md is Accepted and no row"
+      - name: two sources are published onto one page
+        file: "delivery/published.md"
+        replace: ["| 884736002 |", "| 884736001 |"]
+        expects: "publishes two different sources onto one page"
+      - name: a page outlives the artefact it was published from
+        file: "delivery/published.md"
+        replace:
+          - "delivery/ops/postmortems/theme-persistence.md"
+          - "delivery/ops/postmortems/theme-ranker.md"
+        expects: "which this repository does not have"
+      - name: a publication names a commit this repository has never had
+        file: "delivery/published.md"
+        append: "| delivery/decisions/ADR-009.md | ENG/Archive/ADR-009 | 884736099 | 1 | `0000000` | 2026-09-29 |\n"
+        expects: "published from 0000000, which is not a commit in this repository"
+      - name: a Confluence page is addressed by something that is not a version number
+        file: "delivery/published.md"
+        replace: ["| 884736020 | 7 |", "| 884736020 | latest |"]
+        expects: "records version 'latest'"
+      - name: a credential is written into the register
+        file: "delivery/published.md"
+        append: "\n**Token:** ATATT3xFfGF0abcdef1234567890zz\n"
+        expects: "carries a credential"
+
+  navi-skill-lane-selection:
+    informational:
+      - "^(change|lane|phase):"
+      - "^  G[1-9] +(pass|fail|waived|pending)"
+      # The last fence is a demonstration of the CLI refusing, not a check. With
+      # a change already active the refusal it demonstrates is the
+      # one-active-change rule rather than the unknown-lane one.
+      - "is already active — archive it first"
+    mutations:
+      - name: proposal.md's gate set disagrees with the lane the CLI recorded
+        file: "delivery/changes/{change}/proposal.md"
+        replace: ["gates: G1 · G2 · G3 · G4 · G5 · G6 · G7 · G8 · G9", "gates: G2 · G6 · G7"]
+        expects: "and the lane enforces"
+
+  navi-skill-merge-conflicts:
+    mutations:
+      - name: a lockfile is left to git's line merge
+        file: ".gitattributes"
+        delete_line: "package-lock.json"
+        expects: "package-lock.json has no merge=binary in .gitattributes"
+      - name: a path is set to resolve by discarding one side
+        file: ".gitattributes"
+        replace: ["yarn.lock           merge=binary", "yarn.lock           merge=ours"]
+        expects: "resolves a path by discarding one side"
+      - name: the conflict markers stop showing the common ancestor
+        file: ".git/config"
+        replace: ["conflictStyle = zdiff3", "conflictStyle = merge"]
+        expects: "merge.conflictStyle is neither diff3 nor zdiff3"
+      - name: resolutions are no longer remembered between rebases
+        file: ".git/config"
+        replace: ["enabled = true", "enabled = false"]
+        expects: "rerere.enabled is not true"
+      - name: rerere is allowed to stage a replayed resolution unseen
+        file: ".git/config"
+        replace: ["autoupdate = false", "autoupdate = true"]
+        expects: "rerere.autoupdate is true"
+      - name: a conflict marker survives into a tracked artefact
+        file: "delivery/changes/{change}/tasks.md"
+        append: "\n<<<<<<< ours\n- [ ] **TASK-099** keep the header precedence\n=======\n- [ ] **TASK-099** keep the session fallback\n>>>>>>> theirs\n"
+        expects: "conflict marker left in tracked content"
+
+  navi-skill-model-cards:
+    mutations:
+      - name: a slice the evaluation reports is missing from the card
+        file: "delivery/changes/{change}/specs/models/{model}/model-card.md"
+        replace: ["SLICE-003", "SLICE-903"]
+        expects: "which the card omits"
+
+  navi-skill-model-registry-and-promotion:
+    mutations:
+      - name: two versions sit at production at once
+        file: "delivery/ops/models/{model}/registry.md"
+        replace: ["- **Stage:** retired (2026-10-02)", "- **Stage:** production (2026-10-02)"]
+        expects: "versions are at stage production"
+
+  navi-skill-non-functional-requirements:
+    mutations:
+      - name: a non-functional category drops out of the pass
+        file: "delivery/changes/{change}/specs/theme-preference/spec.md"
+        replace: ["| Capacity and growth |", "| Capacity |"]
+        expects: "category 'Capacity and growth' is not in the non-functional pass"
+
+  navi-skill-agent-observability:
+    mutations:
+      - name: a span is given a kind the backend was never seen to render
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| SPAN-002 | llm:plan | SPAN-001 | llm |", "| SPAN-002 | llm:plan | SPAN-001 | generation |"]
+        expects: "SPAN-002 has kind 'generation'"
+      - name: a tool span is parented to the llm span that asked for the call
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| SPAN-003 | tool:read_preference | SPAN-001 |", "| SPAN-003 | tool:read_preference | SPAN-002 |"]
+        expects: "SPAN-003 is parented to SPAN-002, an llm span"
+      - name: an llm span loses the model its cost is computed from
+        file: delivery/ops/agent-telemetry.md
+        replace: ["gen_ai.request.model, gen_ai.response.model, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, navi.recommendation_id", "gen_ai.request.model, gen_ai.usage.input_tokens, gen_ai.usage.output_tokens, navi.recommendation_id"]
+        expects: "SPAN-005 is an llm span without gen_ai.response.model"
+      - name: service.name becomes the per-run agent id
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| theme-advisor | the agent that answers", "| agent-run-7f3a91c4e85b | the agent that answers"]
+        expects: "is run-scoped"
+      - name: a failure is recorded by not emitting the span
+        file: delivery/ops/agent-telemetry.md
+        replace: ["navi.tool_outcome=timeout or error; emitted for every attempt", "the span is not emitted and the run returns early"]
+        expects: "SPAN-003 records a failure by omitting the span"
+      - name: the arrival record loses the count that matters
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| 2026-09-29 | agentobs | 9d3f05a1c8b74e2069af31d5e7c04b68 | 5 | 5 |", "| 2026-09-29 | agentobs | 9d3f05a1c8b74e2069af31d5e7c04b68 | 5 | 0 |"]
+        expects: "sent 5 span(s) and rendered none"
+      - name: an SLI is bound to telemetry that slo.md does not define
+        file: delivery/ops/agent-telemetry.md
+        replace: ["| SLI-004 | SPAN-005 |", "| SLI-909 | SPAN-005 |"]
+        expects: "SLI-909 is bound to agent telemetry here but is not defined"
+      - name: the emitter sends nanosecond times as JSON numbers
+        file: src/agent/telemetry.ts
+        replace: ["const nanos = (ms: number) => String(BigInt(Math.trunc(ms)) * 1000000n);", "const nanos = (ms: number) => Number(BigInt(Math.trunc(ms)) * 1000000n);"]
+        expects: "emits startTimeUnixNano as a JSON number"
+
+  navi-skill-observability:
+    mutations:
+      - name: an SLI's objective loses its rolling window
+        file: delivery/ops/slo.md
+        replace: ["- **Objective:** at or above 0.985 over a rolling 28 days", "- **Objective:** at or above 0.985"]
+        expects: "objective has no rolling window"
+
+  navi-skill-outcome-and-kpi-definition:
+    mutations:
+      - name: a KPI's By when is not a date
+        file: "delivery/changes/{change}/proposal.md"
+        replace: ["- **By when:** 2026-12-31", "- **By when:** end of next quarter"]
+        expects: "'By when' is not a date"
+
+  navi-skill-phase-gate-protocol:
+    informational:
+      - "^(change|lane|phase):"
+      - "^  G[1-9] +(pass|fail|waived|pending)"
+      - "finding\\(s\\)"
+      - "^validate: (OK|FAILED)"
+      - '^\{"ts":'
+    mutations:
+      - name: an artifact is left stale, which validate must refuse
+        file: delivery/.adlc/state.json
+        replace: ['"stale": []', '"stale": ["gate:G6"]']
+        expects: "stale artifact(s) — resolve rework before validating"
+
+  navi-skill-pipeline-automation:
+    mutations:
+      - name: a pipeline step suppresses its own failure
+        file: .github/workflows/ci.yml
+        replace: ["      - run: npm test", "      - run: npm test || true"]
+        expects: "a pipeline step suppresses its own failure"
+
+  navi-skill-pipeline-design:
+    mutations:
+      - name: a pipeline's rerun test does not exist
+        file: "delivery/changes/{change}/pipeline.md"
+        replace: ["test/pipelines/pipe-004-rerun-idempotent.spec.py", "test/pipelines/pipe-004-rerun.spec.py"]
+        expects: "rerun test not found"
+
+  navi-skill-problem-framing:
+    mutations:
+      - name: the framing quotes an outcome the proposal does not contain
+        file: "delivery/changes/{change}/specs/models/{model}/framing.md"
+        replace: ["reduce first-session theme switches by 30%", "reduce first-session theme switches by 80%"]
+        expects: "framing quotes an outcome that is not in proposal.md"
+
+  navi-skill-progressive-delivery:
+    mutations:
+      - name: a wave's halt condition names no measured quantity
+        file: "delivery/changes/{change}/rollout.md"
+        replace: ["- **Halt when:** SLI-004 below 0.76 over any rolling 6-hour window,", "- **Stop if:** SLI-004 below 0.76 over any rolling 6-hour window,"]
+        expects: "missing Halt when"
+
+  navi-skill-pull-requests:
+    mutations:
+      - name: the description sends the reviewer to a path that is not on the branch
+        file: "delivery/changes/{change}/pull-request.md"
+        replace:
+          - "- `src/preferences/store.ts` — the render path"
+          - "- `src/preferences/stores.ts` — the render path"
+        expects: "points the reviewer at src/preferences/stores.ts, which is not in the tree"
+      - name: the one section a diff cannot replace is renamed away
+        file: "delivery/changes/{change}/pull-request.md"
+        replace: ["## What the diff does not show\n", "## Notes\n"]
+        expects: "pull-request.md has no '## What the diff does not show' section"
+
+  navi-skill-quality-attributes:
+    mutations:
+      # This is the mechanical form of the rule whose check could not fail: the
+      # original wrote `grep -n '**Measure:**' | grep -v '[0-9]'`, and grep -n's
+      # own line-number prefix satisfied the digit filter on every line.
+      - name: a Measure carries no figure of its own
+        file: "delivery/changes/{change}/design.md"
+        # Deliberately carries no word from the adjective check's own list: with
+        # one, that second check would report the line too and the assertion
+        # would pass even with the digit filter broken again.
+        replace: ["- **Measure:** AC-004 — p95 time-to-first-paint under 1200ms over a 5-minute window at 500 rps", "- **Measure:** AC-004 — time-to-first-paint under the agreed bound over the agreed window"]
+        expects: "under the agreed bound over the agreed window"
+
+  navi-skill-release-readiness:
+    group: qa
+    mutations:
+      - name: a criterion the spec states appears in none of the three sections
+        file: "delivery/changes/{change}/evidence/g6-quality.md"
+        replace: ["| AC-013 |", "| AC-913 |"]
+        expects: "AC-013 appears in 0 of the three sections"
+
+  navi-skill-requirements-elicitation:
+    mutations:
+      - name: an assumption states nothing that would falsify it
+        file: "delivery/changes/{change}/specs/theme-preference/elicitation.md"
+        replace: ["- **Falsified by:** a measurable rate of users who change the theme", "- **Checked by:** a measurable rate of users who change the theme"]
+        expects: "no 'Falsified by' line"
+
+  navi-skill-secure-coding:
+    informational:
+      # The skill's own designed output when semgrep is absent. It is the
+      # repaired form of the defect that made this block run a 517-byte npm
+      # placeholder and report success; asserting the message appears is the
+      # point, so it is declared rather than silenced.
+      - "^static analysis did not run: semgrep is not installed"
+    mutations:
+      - name: identity is read from the request rather than the session
+        file: src/preferences/store.ts
+        append: "export const who = (req) => req.body.user_id;\n"
+        expects: "req.body.user_id"
+
+  navi-skill-spec-authoring:
+    informational:
+      - "finding\\(s\\)"
+      - "^validate: (OK|FAILED)"
+    mutations:
+      - name: a requirement is written without a priority
+        file: "delivery/changes/{change}/specs/theme-preference/spec.md"
+        replace: ["### REQ-002 — Absent preference falls back to the system scheme\n**Priority:** Must\n", "### REQ-002 — Absent preference falls back to the system scheme\n"]
+        expects: "'**Priority:**' line(s) — every requirement carries one"
+
+  navi-skill-task-decomposition:
+    informational:
+      - "finding\\(s\\)"
+      - "^validate: (OK|FAILED)"
+      - "^[0-9]+$"
+      - "task\\(s\\), no dependency cycle$"
+    mutations:
+      - name: a task loses the requirement it implements
+        file: "delivery/changes/{change}/tasks.md"
+        replace: ["  - Implements: REQ-002\n", ""]
+        expects: "has no 'Implements: REQ-###' line"
+
+  navi-skill-test-design:
+    group: qa
+    mutations:
+      - name: a case's Automated by does not name the criterion it derives from
+        file: "delivery/changes/{change}/test-design.md"
+        replace: ["- **Automated by:** `test/integration/stored.spec.ts::AC-011 a stored preference wins over the header`", "- **Automated by:** `test/integration/stored.spec.ts::a stored preference wins over the header`"]
+        expects: "'Automated by' does not name AC-011"
+
+  navi-skill-test-driven-development:
+    informational:
+      - "traceability finding\\(s\\)$"
+      - "^> "
+    mutations:
+      - name: a criterion in the spec is named by no test
+        file: "delivery/changes/{change}/specs/theme-preference/spec.md"
+        append: "\n### REQ-099 — A criterion with no test\n**Priority:** Won't\n\n#### AC-099\nGiven nothing, when nothing, then nothing.\nImplements: REQ-099\n"
+        expects: "AC-099: no test references it"
+
+  navi-skill-test-strategy:
+    group: qa
+    mutations:
+      - name: a risk's likelihood is a rating rather than an observation
+        file: "delivery/changes/{change}/test-strategy.md"
+        replace: ["- **Level:** unit — the resolver is a pure function", "- **Tier:** unit — the resolver is a pure function"]
+        expects: "RISK-002: missing Level"
+
+  navi-skill-threat-modelling:
+    mutations:
+      - name: a threat's disposition is outside the three permitted words
+        file: "delivery/changes/{change}/threat-model.md"
+        replace: ["- **Disposition:** accepted — ADR-009", "- **Disposition:** tolerated — ADR-009"]
+        expects: "Disposition:** tolerated"
+
+  navi-skill-traceability:
+    informational:
+      - "finding\\(s\\)"
+      - "^validate: (OK|FAILED)"
+      # The last fence lists every requirement heading for the reader to check
+      # each `Implements:` id against.
+      - "spec.md:[0-9]+:#+.*REQ-[0-9]{3,}"
+    mutations:
+      - name: a task implements a requirement that does not exist
+        file: "delivery/changes/{change}/tasks.md"
+        replace: ["  - Implements: REQ-003\n", "  - Implements: REQ-993\n"]
+        expects: "implements unknown REQ-993"
+
+  navi-skill-version-control-workflow:
+    informational:
+      # `git rev-list --count HEAD..origin/main`; the block says to expect 0.
+      - "^0$"
+    mutations:
+      - name: a flag in the code has no removal task
+        file: src/flags/index.ts
+        append: "export const DARK_MODE_ROLLOUT = \"dark-mode-rollout\";\n"
+        expects: "flag with no removal task: DARK_MODE_ROLLOUT"
+
+  navi-skill-waivers-and-deferrals:
+    informational:
+      - "^(change|lane|phase):"
+      - "^  G[1-9] +(pass|fail|waived|pending)"
+      # `cat delivery/.adlc/waivers.md` — the block prints the register to read.
+      - "^# Waivers$"
+      - "^Every waived gate is recorded here"
+      - "^without an expiry is invalid"
+      - "^\\| (Date|-|[0-9]{4}-)"
+      - "^\\|------"
+      - "live waiver problem\\(s\\)$"
+    mutations:
+      - name: a waiver row is malformed and silently shifts its columns
+        file: delivery/.adlc/waivers.md
+        replace: ["| 2026-09-28 | theme-persistence | G6 |", "| 2026-09-28 | theme-persistence |"]
+        expects: "malformed waiver row"
+
+  navi-skill-work-item-sync:
+    mutations:
+      - name: a task is added and never reaches the board
+        file: "delivery/changes/{change}/tasks.md"
+        append: "\n- [ ] **TASK-099** Backfill the preference for dormant accounts\n  - Implements: REQ-001\n"
+        expects: "task carries no work item — TASK-099"
+      - name: a work item is recorded against a task that does not exist
+        file: "delivery/changes/{change}/work-items.md"
+        replace: ["| TASK-022 | #4422", "| TASK-099 | #4422"]
+        expects: "work item recorded against a task tasks.md does not have — TASK-099"
+      - name: an id from another platform is recorded under this tracker
+        file: "delivery/changes/{change}/work-items.md"
+        replace: ["| TASK-003 | #4413", "| TASK-003 | SHELL-4413"]
+        expects: "is not a github issue reference"
+      - name: one work item is recorded against two tasks
+        file: "delivery/changes/{change}/work-items.md"
+        replace: ["| TASK-004 | #4414", "| TASK-004 | #4413"]
+        expects: "one work item is recorded against two tasks"
+      - name: a task is ticked while its work item is still open
+        file: "delivery/changes/{change}/tasks.md"
+        replace: ["- [ ] **TASK-001**", "- [x] **TASK-001**"]
+        expects: "is ticked in tasks.md while its work item is not closed"
+      - name: a credential is pasted into the register
+        file: "delivery/changes/{change}/work-items.md"
+        append: "\n**Token:** glpat-s3cr3tV4lu3AbCdEf12\n"
+        expects: "carries a credential"

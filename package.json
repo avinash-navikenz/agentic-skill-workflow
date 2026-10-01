@@ -1,0 +1,10 @@
+{
+  "name": "navi-delivery",
+  "version": "0.1.0",
+  "description": "Agentic SDLC framework — plan to monitor, in any harness",
+  "bin": { "navi-delivery": "cli/index.js" },
+  "scripts": { "test": "node --test tests/cli/*.test.js tests/cron/*.test.js" },
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=20" }
+}

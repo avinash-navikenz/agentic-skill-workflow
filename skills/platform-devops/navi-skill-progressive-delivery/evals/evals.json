@@ -1,0 +1,73 @@
+{
+  "skill": "navi-skill-progressive-delivery",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "theme-persistence is ready to ship. Work out how much of the population sees it first and what would stop the ramp.",
+      "expect": [
+        "rollout.md",
+        "ROLL-",
+        "Blast radius",
+        "count",
+        "Soak",
+        "Halt when",
+        "kill switch"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G7 wants the blast radius stated: who is affected if this fails, and how many. What do we have to write down?",
+      "expect": [
+        "count",
+        "who they are",
+        "percentage alone",
+        "SLI-",
+        "propagation",
+        "Wave observations"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The model's input distribution has drifted 0.22 PSI against training for four days running. Decide what the monitor should do about it.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Pin the base image and move the production deploy off the laptop script into the same stage staging uses.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Canary at 1% for 15 minutes, then straight to 100% if the dashboard looks fine.",
+      "expect": [
+        "Soak",
+        "event rate",
+        "effect size",
+        "observed nothing",
+        "SLI-",
+        "threshold",
+        "window",
+        "automatically"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Add the flag and delete the old code path in the same pull request so we don't have two branches to maintain.",
+      "expect": [
+        "old path",
+        "until the last",
+        "soak",
+        "its own",
+        "merge",
+        "navi-skill-version-control-workflow",
+        "tasks.md"
+      ]
+    }
+  ]
+}

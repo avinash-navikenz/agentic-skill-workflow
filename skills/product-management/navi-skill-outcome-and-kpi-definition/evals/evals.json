@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-outcome-and-kpi-definition",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The proposal says the benefit is 'users get a better experience'. Make it something we can check in three months.",
+      "expect": [
+        "KPI-",
+        "Baseline",
+        "Target",
+        "By when",
+        "Counter-metric",
+        "Owner",
+        "proposal.md"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G9 wants the predicted outcome compared with the measured one. Set it up so that comparison is possible.",
+      "expect": [
+        "KPI vs actual",
+        "gap",
+        "attribution",
+        "holdout",
+        "What would mean this did not work",
+        "window"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Define the objective and the error budget for first render, and the burn-rate alert that fires before the budget is spent.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "We have nine things people want next quarter and capacity for three. Put them in order and say why.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Success is shipping the feature this quarter and closing the 14 tickets in the theme epic.",
+      "expect": [
+        "activity",
+        "work happened",
+        "behaviour",
+        "difference",
+        "decline"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The number came in at 0.93. Look up what it was before and write up the improvement.",
+      "expect": [
+        "baseline",
+        "before the change is built",
+        "chosen",
+        "level",
+        "cannot be attributed"
+      ]
+    }
+  ]
+}

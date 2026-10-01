@@ -1,0 +1,94 @@
+# DevOps Engineer
+
+`navi-agent-devops-engineer` · agent · discipline `platform-devops` · ADLC phases 7, 8 · owns G7, G8 · model `sonnet` · draft v0.1.0
+
+Make releasing boring and reversible, and make what happens afterwards visible enough that we learn from it before a customer tells us.
+
+## When it fires
+
+Use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, SLOs and secrets posture. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates.
+
+## What it produces
+
+Writes `ops/slo.md`, `ops/runbooks/`, `handoffs.md`, `.adlc/waivers.md`.
+
+Reads `design.md`, `tasks.md`, `ops/slo.md`, `ops/runbooks/`, `changes/<name>/specs/<capability>/spec.md`.
+
+## Phases and gates it owns
+
+- ADLC phases: 7, 8
+- Gates: `G7`, `G8`
+
+## Skills it holds (19)
+
+It loads these rather than working from memory, and records which it used in the handoff envelope:
+
+- [Traceability](../../skills/lifecycle-method/navi-skill-traceability/README.md) — `lifecycle-method`
+- [Phase gate protocol](../../skills/lifecycle-method/navi-skill-phase-gate-protocol/README.md) — `lifecycle-method`
+- [Human checkpoints](../../skills/lifecycle-method/navi-skill-human-checkpoints/README.md) — `lifecycle-method`
+- [Waivers and deferrals](../../skills/lifecycle-method/navi-skill-waivers-and-deferrals/README.md) — `lifecycle-method`
+- [Handoff protocol](../../skills/lifecycle-method/navi-skill-handoff-protocol/README.md) — `lifecycle-method`
+- [Version control workflow](../../skills/software-development/navi-skill-version-control-workflow/README.md) — `software-development`
+- [Branching](../../skills/software-development/navi-skill-branching/README.md) — `software-development`
+- [Merge conflicts](../../skills/software-development/navi-skill-merge-conflicts/README.md) — `software-development`
+- [Dependency vulnerabilities](../../skills/security/navi-skill-dependency-vulnerabilities/README.md) — `security`
+- [Pipeline automation](../../skills/platform-devops/navi-skill-pipeline-automation/README.md) — `platform-devops`
+- [Azure pipelines](../../skills/platform-devops/navi-skill-azure-pipelines/README.md) — `platform-devops`
+- [Azure landing zone](../../skills/platform-devops/navi-skill-azure-landing-zone/README.md) — `platform-devops`
+- [Azure identity and secrets](../../skills/platform-devops/navi-skill-azure-identity-and-secrets/README.md) — `platform-devops`
+- [Azure deployment safety](../../skills/platform-devops/navi-skill-azure-deployment-safety/README.md) — `platform-devops`
+- [Progressive delivery](../../skills/platform-devops/navi-skill-progressive-delivery/README.md) — `platform-devops`
+- [Observability](../../skills/platform-devops/navi-skill-observability/README.md) — `platform-devops`
+- [Incident response](../../skills/platform-devops/navi-skill-incident-response/README.md) — `platform-devops`
+- [Knowledge publishing](../../skills/integration/navi-skill-knowledge-publishing/README.md) — `integration`
+- [Release readiness](../../skills/quality-engineering/navi-skill-release-readiness/README.md) — `quality-engineering`
+
+## When it stops and asks a human
+
+- A release would exceed the blast radius the change was approved at
+- The error budget for an affected service is exhausted and a release is still being requested
+- A secret has been exposed, or a credential's owner cannot be identified
+- Rolling back would leave data written by the new version unreadable by the old one
+- Production differs from the environment this change was verified in — in version, data shape, scale or configuration — and the difference touches the path this change alters
+
+## Hands off to
+
+MLOps Engineer, Fullstack Developer, QA Engineer, Product Owner, Orchestrator.
+
+## Install
+
+### This agent on its own
+
+```sh
+python3 scripts/build_adapters.py .
+cp adapters/claude-code/agents/navi-agent-devops-engineer.md ~/.claude/agents/
+```
+
+Installed on its own, this agent arrives **without the skills it holds**. It is written to load them rather than work from memory, so on its own it will reach for files that are not there. Useful for reading its judgment — not how the framework is meant to run.
+
+### The whole framework
+
+`adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.
+
+```sh
+python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first
+./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude
+```
+
+`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else.
+
+## Where the rules live
+
+This README is a summary and carries no rules. [navi-agent-devops-engineer.agent.md](navi-agent-devops-engineer.agent.md) is the authority — it holds its mission, mental model, how it decides, its definition of good, its working agreement and its skill-invocation plan. Nothing from it is repeated here, so the two cannot disagree.
+
+## Notes
+
+<!-- BEGIN NOTES -->
+
+_Nothing hand-written yet. Anything between the NOTES markers survives regeneration; everything outside them is overwritten._
+
+<!-- END NOTES -->
+
+---
+
+Generated by `python3 scripts/build_catalogue.py . --readmes` from this item's frontmatter and section headings. Edit the source file, not this one — except inside the NOTES block, which regeneration preserves.

@@ -1,0 +1,62 @@
+{
+  "skill": "navi-skill-quality-attributes",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The spec says the shell must be fast and highly available. Turn that into something the design can be judged against.",
+      "expect": [
+        "QAS-",
+        "Measure",
+        "percentile",
+        "Environment",
+        "Serves: REQ-"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Our design.md lists four quality attributes and calls all of them critical. Sort this out before G3.",
+      "expect": [
+        "total order with no ties",
+        "Ranking",
+        "Costs:",
+        "ADR-"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Write the quality checklist for the office move — attributes like desk space and parking, scored out of five.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Rewrite AC-004 into Given/When/Then form and give it an Implements line.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Add a quality attribute for 'the codebase should feel pleasant to work in'. Nobody measures that and nobody is going to.",
+      "expect": [
+        "no instrument",
+        "Q-",
+        "open question",
+        "do not write the scenario"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "The spec's AC-004 says p95 under 200ms but design.md already says 250ms. Pick one and move on.",
+      "expect": [
+        "the spec wins",
+        "state the threshold exactly once",
+        "cite the AC-",
+        "do not restate the figure"
+      ]
+    }
+  ]
+}

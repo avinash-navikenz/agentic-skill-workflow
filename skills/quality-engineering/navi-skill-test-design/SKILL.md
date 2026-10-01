@@ -1,0 +1,400 @@
+---
+name: navi-skill-test-design
+description: >
+  Use when turning an acceptance criterion into the actual test cases, or when a suite passes
+  and the defect reached production anyway. Defines the case file, the TC-### entry, the
+  six-technique pass recorded even where it yields nothing, the three-case boundary rule, the
+  absent-value class that is distinct from empty and default, the observable-outcome rule, and
+  the requirement that every automated test names the AC-### it proves.
+  Trigger phrases include: test cases, test design, boundary values, equivalence partitioning,
+  decision table testing, state transition testing, negative tests, edge cases, empty state,
+  null handling, pairwise, test data, fixtures, deterministic tests, which cases do we need.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: quality-engineering
+  lifecycle_phases: [5, 6]
+  used_by_agents: [navi-agent-qa-engineer, navi-agent-fullstack-developer]
+  owner: avinash.negi@navikenz.com
+  tags: "quality, testing, test-cases, boundaries, negative-testing, fixtures, g5, g6"
+  model: sonnet
+---
+
+## When to use
+
+An `AC-###` has to become tests; a suite is green and a defect reached production; a test is
+flaky and the input turns out to be the clock; or G5 is about to be recorded and every criterion
+needs an automated test that names it.
+
+## Rules
+
+1. Write the cases at `delivery/changes/<name>/test-design.md`, beside the strategy, and link
+   it from `test-strategy.md`. It is not a design-time artifact, so it does not take a row in
+   `design.md`'s `## Linked artifacts` table — the strategy decides the level, this file
+   decides the cases, and the strategy is what the design links to.
+2. Number cases `TC-###`, sequential within the change. Give every case six fields:
+   `Derives from`, `Technique`, `Input`, `Expected observable`, `Level`, `Automated by`. All
+   six, on every case.
+3. Run the six-technique pass against every `AC-###`, recording each technique that yields
+   nothing as `none` with the reason: **equivalence partitioning** (one case per class of input
+   treated the same), **boundary values**, **absent or empty value**, **decision table** (where
+   the criterion has more than one condition), **state transition** (where the order of events
+   changes the outcome), **error and timeout**. A technique left unmentioned cannot be told
+   apart from a technique nobody applied.
+4. Derive three cases at every numeric or ordered boundary — the boundary value, one below, one
+   above — in the type's own units. For an integer-millisecond clock and a 400ms bound that is
+   399, 400 and 401; for a date bound it is the day before, the day, and the day after. A
+   single case at the boundary proves the comparison exists, not that it points the right way.
+5. Treat absent, empty and default as three different inputs. A field that is not present, a
+   field present and empty, and a field absent with a default applied reach different code and
+   fail differently. A suite covering a field's defined values has not covered the field — an
+   absent optional header is a distinct input class, not a variation of the header.
+6. Write `Expected observable` as what an observer outside the system sees. A case asserting
+   that a row was written passes while the user sees nothing, and it fails the day the storage
+   changes without the behaviour changing — see `navi-skill-acceptance-criteria`, which makes
+   the same rule about the criterion this case derives from.
+7. Name the `AC-###` in the automated test's own name, so a search from the criterion finds the
+   test. `references/gates.md`'s G5 exit criterion requires every acceptance criterion to have
+   at least one automated test referencing it, and `Automated by` in this file records the
+   test's path and name.
+8. Assert one subject per case. A case that asserts five things reports the first failure and
+   conceals the other four, so each fix is followed by a re-run that reveals the next.
+9. Derive cases from the criterion and the technique, never from the implementation. A case
+   read off the code asserts what was built, which makes the suite a description of the
+   current behaviour and unable to detect that the behaviour is wrong.
+10. Make every input deterministic. No `now()`, no unseeded randomness, no dependence on
+    execution order, no reliance on a record another case created. A case whose result depends
+    on the clock is a flaky test with a delayed fuse, and it will be quarantined on the day the
+    suite is least able to spare it.
+11. Assert the specific failure in a negative case — the error type and the field, or the
+    status and the body's error code. An assertion that "an error is raised" passes when the
+    code raises the wrong one, which is the failure mode negative testing exists to catch.
+12. Cover the concurrent case wherever two actors can reach the same state, and record `none`
+    with the reason where they cannot. Two tabs, a retry racing its original, and a consumer
+    reading mid-write are the three that appear in production and in no suite.
+13. Build each case's fixture from the smallest input that exhibits the case, and never share a
+    mutable fixture between cases. A shared fixture makes the suite order-dependent, which
+    surfaces as flakiness attributed to the code.
+14. Record a case that cannot be automated in `test-strategy.md`'s `## Verified manually`, with
+    the reason and the person. This file carries no manual-only case without that entry.
+15. Turn every production defect into a case before its fix merges, with the incident or defect
+    id in `Derives from`. A fix with no case is a fix that can be reverted by the next refactor
+    with nothing turning red.
+16. Re-derive when the criterion changes. A `TC-###` whose criterion moves keeps its id and
+    gains a dated row in `## History`; a case that is retired is marked `retired` with a date
+    rather than deleted, so a reader of an old run can still find what the id meant.
+
+## Decision table
+
+| Observed condition | Required action |
+|---|---|
+| A criterion has one case | Run the six-technique pass; record `none` with a reason for each technique that yields nothing |
+| A numeric bound has one case | Add the value below and the value above, in the type's own units |
+| Only the field's defined values are covered | Add the absent case, and the empty case, as separate inputs |
+| The expected outcome is a database row | Rewrite as what an observer outside the system sees |
+| A test's name does not contain its `AC-###` | Rename it; G5's criterion is a test that references the criterion |
+| A case asserts five things | Split it; the first failure hides the rest |
+| The case was written by reading the code | Discard and re-derive from the criterion |
+| An input is `now()` or an unseeded random value | Freeze it; a clock-dependent case is a delayed flake |
+| A case depends on another case having run | Give it its own fixture; shared mutable state makes the suite order-dependent |
+| A negative case asserts "an error" | Assert the type and the field, or the status and the error code |
+| Two actors can reach the same state | Add the concurrent case, or record `none` with the reason |
+| A case cannot be automated | Record it in the strategy's `## Verified manually` with a reason and a person |
+| A defect reached production | Write the case first, with the incident id in `Derives from`, then merge the fix |
+| The criterion changed | Re-derive; keep the id and add a `## History` row |
+
+## Template
+
+Copy into `delivery/changes/<name>/test-design.md`, and link it from `test-strategy.md`:
+
+```markdown
+# Test design — theme-persistence
+
+Levels are set by `test-strategy.md`; this file decides the cases at those levels.
+
+## Technique pass
+
+| AC | Equivalence | Boundary | Absent/empty | Decision table | State transition | Error/timeout |
+|---|---|---|---|---|---|---|
+| AC-011 | TC-001 | none — the stored value is an enum with no order | none — an absent stored preference is AC-013's | none — one condition | TC-005 | none — the store's failure is AC-015's |
+| AC-013 | TC-007 | none — enum | TC-003, TC-008, TC-016 | none — one condition | none — single render, no ordering | none — AC-015 owns the store's failure |
+| AC-015 | none — one input class: the store does not answer within its budget | none — the budget bound itself is AC-016's | none — the store is unavailable, not absent | none — one condition | none | TC-011 |
+| AC-016 | none — the criterion is a latency bound, not a value class | TC-012, TC-013, TC-014 | none — the request always has a duration | none — one condition | none | none — the timeout path is AC-015's |
+
+Every `TC-###` named above has an entry below, and every entry is named above. An id in one and
+not the other is the inconsistency this table exists to make visible.
+
+## Cases
+
+### TC-001 — A stored preference is applied
+
+- **Derives from:** AC-011
+- **Technique:** equivalence partitioning. `light` and `dark` are one class: the resolver passes
+  a stored value through unchanged, so a second value tests the same path.
+- **Input:** a returning session whose stored preference is `dark`, with the header set to
+  `light` so that a pass-through failure is visible rather than masked by agreement
+- **Expected observable:** the rendered document's `<html data-theme>` attribute is `dark`
+- **Level:** integration
+- **Automated by:** `test/integration/stored.spec.ts::AC-011 a stored preference wins over the header`
+
+### TC-007 — The header's value is applied when nothing is stored
+
+- **Derives from:** AC-013
+- **Technique:** equivalence partitioning. The two defined header values are one class.
+- **Input:** a first render with no stored preference and `Sec-CH-Prefers-Color-Scheme: dark`
+- **Expected observable:** `data-theme` is `dark`
+- **Level:** unit
+- **Automated by:** `test/resolve.spec.ts::AC-013 header value is applied when nothing is stored`
+
+### TC-003 — `prefers-color-scheme` is absent
+
+- **Derives from:** AC-013
+- **Technique:** absent value. The header is optional, so "not present" is its own input class
+  and is not a variation of `light` or `dark`.
+- **Input:** a first-render request with no `Sec-CH-Prefers-Color-Scheme` header and no stored
+  preference. Not an empty header — TC-008 is that case.
+- **Expected observable:** the rendered document's `<html data-theme>` attribute is `light`, and
+  the first paint is not delayed
+- **Level:** unit
+- **Automated by:** `test/resolve.spec.ts::AC-013 absent prefers-color-scheme resolves to light`
+
+### TC-008 — `prefers-color-scheme` is present and empty
+
+- **Derives from:** AC-013
+- **Technique:** empty value
+- **Input:** the header present with an empty value
+- **Expected observable:** `data-theme` is `light`, as for the absent case — the criterion
+  treats them the same, and this case is what proves the two paths agree rather than assuming it
+- **Level:** unit
+- **Automated by:** `test/resolve.spec.ts::AC-013 empty prefers-color-scheme resolves to light`
+
+### TC-012 — First render at the 400ms bound
+
+- **Derives from:** AC-016
+- **Technique:** boundary value
+- **Input:** synthetic load at 1.2x peak against staging, measuring `loadEventEnd - startTime`;
+  the assertion is on the measured p95 against 400
+- **Expected observable:** p95 is at or below 400ms, measured by `k6 run perf/first-render.js`
+  under QAS-002's stated conditions
+- **Level:** measurement
+- **Automated by:** `perf/first-render.js::AC-016 p95 at the 400ms bound`
+
+### TC-013 — First render one unit below the bound
+
+- **Derives from:** AC-016
+- **Technique:** boundary value. 399ms — the clock is integer milliseconds, so this is the
+  adjacent value and not a rounded-down approximation.
+- **Input:** a recorded trace replayed with the navigation duration fixed at 399ms
+- **Expected observable:** the criterion is reported as met
+- **Level:** unit, against the evaluator rather than the system
+- **Automated by:** `test/sli.spec.ts::AC-016 399ms is within the bound`
+
+### TC-014 — First render one unit above the bound
+
+- **Derives from:** AC-016
+- **Technique:** boundary value. 401ms.
+- **Input:** as TC-013, duration fixed at 401ms
+- **Expected observable:** the criterion is reported as **not** met. This is the case that
+  proves the comparison points the right way; TC-012 alone passes with `>=` written for `<=`.
+- **Level:** unit
+- **Automated by:** `test/sli.spec.ts::AC-016 401ms is outside the bound`
+
+### TC-011 — The preference store times out
+
+- **Derives from:** AC-015
+- **Technique:** error and timeout
+- **Input:** the store faulted to exceed its 50ms budget, with the header set to `dark`
+- **Expected observable:** `data-theme` is `dark` from the header within the render budget, and
+  the response carries `x-theme-source: header`. Not merely "no exception": the observable is
+  the fallback having been taken, which is what `design.md` `## Failure modes` specifies.
+- **Level:** integration, with the dependency faulted
+- **Automated by:** `test/integration/store-timeout.spec.ts::AC-015 store timeout falls back to the header`
+
+### TC-005 — Preference written in one tab is read in another
+
+- **Derives from:** AC-011
+- **Technique:** state transition, concurrent actors
+- **Input:** two sessions for the same user; tab A writes `dark`, then tab B performs a first
+  render. Ordering is forced by awaiting the write's acknowledgement, not by a sleep.
+- **Expected observable:** tab B renders `dark`
+- **Level:** integration
+- **Automated by:** `test/integration/two-tab.spec.ts::AC-011 second tab reads the first tab's write`
+
+### TC-016 — Regression: theme resolver null dereference (INC-2291)
+
+- **Derives from:** AC-013, INC-2291
+- **Technique:** absent value, from the incident rather than from the pass
+- **Input:** the exact request recorded in the incident's captured traces — no header, no stored
+  preference, kiosk user agent
+- **Expected observable:** `data-theme` is `light` and the response status is 200. Before the
+  fix this case fails; it was written and seen to fail before the fix merged.
+- **Level:** unit
+- **Automated by:** `test/resolve.spec.ts::AC-013 INC-2291 kiosk request with no header`
+
+## History
+
+| Date | Case | Change |
+|---|---|---|
+| 2026-09-30 | TC-016 | Added from INC-2291 before the fix merged |
+```
+
+Finding the tests for a criterion, which is what G5 reads:
+
+```bash
+# Every AC-### in the spec has at least one automated test naming it
+for ac in $(grep -o 'AC-[0-9]\{3,\}' delivery/changes/<name>/specs/*/spec.md | grep -o 'AC-[0-9]*' | sort -u); do
+  grep -rq "$ac" test/ perf/ 2>/dev/null || echo "$ac: no automated test names it"
+done
+```
+
+## Checklist
+
+- [ ] `test-design.md` exists and `test-strategy.md` links it
+- [ ] Every `TC-###` carries all six fields
+- [ ] The technique pass covers all six techniques per `AC-###`, with `none` and a reason where empty
+- [ ] Every numeric or ordered bound has three cases in the type's own units
+- [ ] Absent, empty and default are three separate inputs wherever the field is optional
+- [ ] Every `Expected observable` is what an observer outside the system sees
+- [ ] Every automated test's name contains the `AC-###` it proves
+- [ ] Every case asserts one subject
+- [ ] No case was derived by reading the implementation
+- [ ] No case depends on the clock, on unseeded randomness, or on another case
+- [ ] Every negative case asserts the specific failure, not "an error"
+- [ ] The concurrent case is covered, or recorded `none` with the reason
+- [ ] No fixture is mutable and shared
+- [ ] Every manual-only case has an entry in `test-strategy.md`'s `## Verified manually`
+- [ ] Every production defect has a case carrying its incident id, written before the fix merged
+- [ ] Every re-derived case kept its id and gained a `## History` row
+
+## Anti-patterns
+
+**One case per criterion.** `AC-013 is covered` by a single test with the header set to `dark`.
+The absent case, the empty case and the unknown value all reach the same untested branch. Run
+the six-technique pass and record what each yields.
+
+**The boundary tested once.** A single assertion at 400ms. It passes whether the comparison is
+`<=` or `>=`, because 400 satisfies both. Three cases: 399, 400, 401.
+
+**Absent folded into empty.** The suite sets the header to `""` and calls it the missing case.
+Production sends no header at all, which reaches a different branch, and that branch throws.
+Absent, empty and default are three inputs.
+
+**The test that asserts the table.** `expect(db.query('select theme from prefs')).toBe('dark')`.
+It passes while the user sees light, and it fails when the column is renamed without the
+behaviour changing. Assert what an observer sees.
+
+**The test named after the function.** `describe('resolveTheme')`. The criterion cannot be
+searched to its test, so G5's mapping is done by hand and is wrong within two sprints. Put the
+`AC-###` in the name.
+
+**The five-assertion case.** One test asserts the theme, the status, the header, the timing and
+the log line. It fails on the first, the other four are unknown, and each fix is followed by
+another surprise. One subject per case.
+
+**Cases written from the diff.** The tests were derived by reading the implementation, so they
+encode every branch the code happens to have — including the wrong one. The suite now proves the
+code does what it does. Derive from the criterion.
+
+**`now()` in the fixture.** The case passes for eleven months and fails on the last day of
+February. It is quarantined as flaky, and the underlying date arithmetic is never examined.
+Freeze the clock.
+
+**`expect(() => f()).toThrow()`.** The code throws a `TypeError` from a null dereference instead
+of the `ValidationError` the criterion specifies. The test passes. Assert the type and the field.
+
+**The fix with no failing case.** The defect is fixed, the suite is green, and nothing in it was
+red before the fix. Six weeks later a refactor restores the bug silently. Write the case, watch
+it fail, then merge.
+
+## Validation
+
+```bash
+CHANGE=<name>
+D=delivery/changes/$CHANGE/test-design.md
+SPEC=$(find delivery/changes/$CHANGE/specs -name spec.md 2>/dev/null | head -1)
+CODE="test perf src"      # the directories holding your automated tests
+
+test -f "$D" || echo "no test-design.md"
+grep -q 'test-design.md' delivery/changes/$CHANGE/test-strategy.md 2>/dev/null \
+  || echo "test-strategy.md does not link test-design.md"
+
+# Every case carries all six fields
+for id in $(grep -o 'TC-[0-9]\{3,\}' "$D" | sort -u); do
+  body=$(awk -v id="$id" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$D")
+  [ -n "$body" ] || { echo "$id: named in the file but has no '### $id — …' entry"; continue; }
+  for k in "Derives from" Technique Input "Expected observable" Level "Automated by"; do
+    printf '%s\n' "$body" | grep -q "\*\*$k:\*\*" || echo "$id: missing $k"
+  done
+  # Automated by names a test whose name carries the AC it derives from
+  ac=$(printf '%s\n' "$body" | grep '\*\*Derives from:\*\*' | grep -o 'AC-[0-9]\{3,\}' | head -1)
+  aut=$(printf '%s\n' "$body" | grep '\*\*Automated by:\*\*')
+  # Written as if/elif, not `[ -n "$ac" ] && … || echo`: that form falls through to the echo
+  # whenever $ac is empty and reports the wrong defect, with an empty id in the message.
+  if [ -n "$ac" ]; then
+    printf '%s\n' "$aut" | grep -q "$ac" \
+      || echo "$id: 'Automated by' does not name $ac in the test's own name"
+  elif ! printf '%s\n' "$body" | grep -q '\*\*Derives from:\*\*.*INC-'; then
+    echo "$id: 'Derives from' names neither an AC-### nor an incident id"
+  fi
+done
+
+# The technique pass names all six techniques
+for t in Equivalence Boundary 'Absent/empty' 'Decision table' 'State transition' 'Error/timeout'; do
+  awk '/^## Technique pass$/{on=1;next} /^## /{on=0} on' "$D" | grep -qF "$t" \
+    || echo "technique '$t' is not a column in the technique pass"
+done
+
+# Every AC in the spec appears in the technique pass
+if [ -n "$SPEC" ]; then
+  for ac in $(grep -o 'AC-[0-9]\{3,\}' "$SPEC" | sort -u); do
+    awk '/^## Technique pass$/{on=1;next} /^## /{on=0} on' "$D" | grep -q "^| $ac " \
+      || echo "$ac has no row in the technique pass"
+  done
+fi
+
+# Every AC has at least one automated test naming it, which is what G5 reads
+if [ -n "$SPEC" ]; then
+  for ac in $(grep -o 'AC-[0-9]\{3,\}' "$SPEC" | sort -u); do
+    grep -rqs "$ac" $CODE || echo "$ac: no automated test names it"
+  done
+fi
+
+# Every AC with a boundary case has at least three of them: the value, one below, one above
+python3 - "$D" <<'BOUNDS'
+import sys, pathlib, re
+text = pathlib.Path(sys.argv[1]).read_text()
+parts = re.split(r"^### (TC-\d{3,})", text, flags=re.M)[1:]
+counts = {}
+for tc, body in zip(parts[0::2], parts[1::2]):
+    if not re.search(r"\*\*Technique:\*\* *boundary value", body):
+        continue
+    head = body.split("**Technique:**")[0]
+    for ac in set(re.findall(r"AC-\d{3,}", head)):
+        counts.setdefault(ac, set()).add(tc)
+for ac, tcs in sorted(counts.items()):
+    if len(tcs) < 3:
+        print(ac + " has " + str(len(tcs)) + " boundary case(s) (" + ", ".join(sorted(tcs))
+              + "); a bound needs the value, one below and one above")
+BOUNDS
+
+# No case depends on the clock or on unseeded randomness
+grep -rns -e 'new Date()' -e 'Date.now()' -e 'datetime.now()' -e 'time.time()' \
+          -e 'Math.random()' -e 'random.random()' $CODE 2>/dev/null \
+  && echo "a test uses a live clock or unseeded randomness"
+
+# No negative case asserts merely that something was raised
+grep -rns -e 'toThrow()' -e 'assertRaises(Exception)' -e 'pytest.raises(Exception)' $CODE 2>/dev/null \
+  && echo "a negative test asserts only that an error occurred; assert the type and the field"
+
+# Every manual-only case is recorded in the strategy
+awk '/^### TC-/{id=$2} /\*\*Level:\*\* *manual/{print id}' "$D" | while read -r tc; do
+  grep -q "$tc" delivery/changes/$CHANGE/test-strategy.md 2>/dev/null \
+    || echo "$tc is manual-only and has no entry in test-strategy.md's Verified manually"
+done
+```
+
+Each command prints nothing when the rule holds. The `Automated by` check is the one to run
+before G5: it is the only mechanical link between a criterion and a test that will turn red
+when the criterion stops holding.

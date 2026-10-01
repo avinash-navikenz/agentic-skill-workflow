@@ -1,0 +1,95 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    # The team works on macOS and CI ran only on ubuntu, so every macOS-only
+    # defect had to be found by hand. Three were, during the v1 build: two
+    # GNU-only `\<`/`\>` word boundaries that BSD awk never matches, and a
+    # `grep -n` whose line-number prefix defeated the filter reading its own
+    # output. Skill Validation blocks are shell, so they are exactly the thing
+    # a second platform catches and a second Linux distribution would not.
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # One platform failing must not cancel the other: when a step is
+      # platform-dependent, the useful signal is which platforms it failed on.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The golden path and the Validation harness both build git
+          # repositories of their own in temp directories; this checkout is
+          # only the source tree, and a shallow one is enough.
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements-dev.txt
+
+      # The `test` script is `node --test tests/cli/*.test.js`. The glob is
+      # deliberately unquoted: Node 20's test runner takes already-expanded
+      # paths, and quoting it hands Node the literal pattern, which it cannot
+      # resolve. Do not "fix" the quoting in package.json.
+      - name: node test suite
+        run: npm test
+
+      - name: python test suite
+        run: python3 -m unittest discover -s tests/lint -v
+
+      - name: frontmatter, naming and referential integrity
+        run: python3 scripts/validate_manifests.py .
+
+      - name: separation of judgment from rules
+        run: python3 scripts/lint_separation.py .
+
+      # Every skill's own ## Validation block, run against its own ## Template,
+      # and then against a mutation that violates a rule the block claims to
+      # check. A check that stays silent on the violation fails here. A skill
+      # missing from scripts/skill_harness.yaml fails here too, so a new skill
+      # cannot arrive with unexercised checks.
+      #
+      # This is the step the macOS leg exists for: the blocks are shell, and
+      # awk, grep and sed differ between BSD and GNU userland.
+      - name: skill Validation blocks
+        run: python3 scripts/validate_skill_checks.py
+
+      # The MCP connection files are inputs a team edits and installs, so the
+      # failure they invite is a credential pasted where a ${NAME} reference
+      # belongs — and then committed. This step is what refuses that commit.
+      - name: MCP connection files carry no credentials
+        run: python3 scripts/validate_mcp_configs.py .
+
+      - name: golden path across all four lanes
+        run: python3 scripts/golden_path.py
+
+      # adapters/ and templates/delivery/AGENTS.md are generated. Generation is
+      # deterministic and already tested, so a diff here means someone edited
+      # generated output by hand; the fix is to change the generator or its
+      # source, never the artifact.
+      #
+      # Run on both platforms: a generator that emits different bytes on macOS
+      # than on Linux is a real defect, and this is what would surface it.
+      - name: adapters are up to date
+        run: |
+          python3 scripts/build_adapters.py .
+          git diff --exit-code adapters templates/delivery/AGENTS.md
+
+      # docs/index.html and every README.md beside a SKILL.md / *.agent.md are
+      # generated from the same tree. Adding a skill or an agent therefore needs
+      # no edit to either — but it does need this regeneration to have been run,
+      # and this step is what fails if it was not.
+      - name: field guide and READMEs are up to date
+        run: |
+          python3 scripts/build_catalogue.py . --readmes --inject
+          git diff --exit-code docs/index.html skills agents

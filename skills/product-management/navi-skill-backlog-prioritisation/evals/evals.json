@@ -1,0 +1,70 @@
+{
+  "skill": "navi-skill-backlog-prioritisation",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Nine things are wanted next quarter and we have capacity for about three. Put them in order and say why that order.",
+      "expect": [
+        "delivery/backlog.md",
+        "CAND-",
+        "total order",
+        "Cost of delay",
+        "Value evidence",
+        "Effort",
+        "ordering rule"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "The postmortem routed INSIGHT-003 to the product backlog. Where does it actually go?",
+      "expect": [
+        "CAND-",
+        "exactly one",
+        "Serves",
+        "INSIGHT-",
+        "backlog.md"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Every REQ in the delta spec needs a MoSCoW priority before G2. Assign them.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Decide the baseline, the target and the counter-metric for the outcome this change commits to.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Mark the top eleven as P1 and the rest as P2, and note the migration to the new framework as high value because engineering wants it.",
+      "expect": [
+        "buckets",
+        "total order",
+        "outcome",
+        "never as a solution",
+        "assumed",
+        "cheapest observation"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "We said no to the settings rewrite last quarter, so delete it from the list and start the next one alongside the change we already have in flight.",
+      "expect": [
+        "declined",
+        "reason",
+        "date",
+        "Never delete it",
+        "re-argued",
+        "propose",
+        "refuses a second"
+      ]
+    }
+  ]
+}

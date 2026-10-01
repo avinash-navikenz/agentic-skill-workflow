@@ -1,0 +1,397 @@
+---
+name: navi-skill-observability
+description: >
+  Use when a shipped capability has nothing watching it, when G8 asks for an SLI with an
+  objective, an error budget and an alert that fires before the budget burns, or when an alert
+  is firing and nobody has agreed what to do about it. Defines delivery/ops/slo.md, the SLI-###
+  entry, the ALERT-### entry, the user-side measurement rule, the burn-rate alert, the runbook
+  every paging alert needs, and the proof that telemetry is arriving rather than configured.
+  Trigger phrases include: observability, SLI, SLO, error budget, burn rate, alerting,
+  monitoring, dashboards, telemetry, instrumentation, golden signals, p99 latency, availability
+  target, alert fatigue, runbook, on-call, G8 operate.
+allowed-tools: Read Write Edit Grep Bash
+metadata:
+  version: "0.1.0"
+  maturity: draft
+  kind: skill
+  discipline: platform-devops
+  lifecycle_phases: [7, 8]
+  used_by_agents: [navi-agent-devops-engineer, navi-agent-mlops-engineer]
+  owner: avinash.negi@navikenz.com
+  tags: "devops, observability, sli, slo, error-budget, alerting, runbooks, g8"
+  model: sonnet
+---
+
+## When to use
+
+A capability is about to go live with nothing watching it; G8 is about to be recorded; an alert
+is firing and the runbook does not exist; an alert has been muted; or an error budget is being
+cited in an argument about whether to ship.
+
+## Rules
+
+1. Define every SLI in `delivery/ops/slo.md`. `navi-delivery init` scaffolds that file; G8's
+   first exit criterion names it by path, so it is where the gate's reader looks and no other
+   location satisfies it.
+2. Give every shipped capability at least one `SLI-###`, and record the capabilities that have
+   none in `## Capability coverage` as `none` with the reason. A capability left out of the
+   table cannot be told apart from one nobody considered.
+3. Give every `SLI-###` five fields: `Measures`, `Objective`, `Error budget`,
+   `Alerts before the budget burns`, `Runbook`. All five, on every SLI.
+4. Write `Measures` as a ratio of good events to valid events, with both numerator and
+   denominator named, and say where each is read from. `Availability` is not a measure;
+   `the share of first renders that complete within 400ms, from the browser's own timing API`
+   is one, because two people computing it get the same number.
+5. Measure from the user's side of the boundary. A server-side success rate reports 100% while
+   every request times out at the edge, because the requests that never arrived are not in the
+   denominator. Where only a server-side signal exists, say so in `Measures` and name what it
+   cannot see.
+6. Write `Objective` as a number, a unit and a rolling window. A target with no window is
+   unfalsifiable: any breach can be absorbed by widening the period after the fact.
+7. Derive every objective and record the derivation: the measured current value over a named
+   period, the contractual commitment in `project.md` `## Constraints`, or the `AC-###` the
+   spec already carries. `99.9%` chosen because it has three nines is a number with no source,
+   and the first breach becomes an argument about whether it ever mattered.
+8. State the error budget as a quantity of failure over the objective's window, in the same
+   units as the SLI, with the arithmetic shown. `0.1% of 43,200 requests per day is 43 failed
+   requests a day, 1,296 a month` is a budget someone can spend; `99.9%` is a target someone
+   can only miss.
+9. Alert on burn rate, not on a single breach. State the multiple of the budget's normal
+   consumption rate that fires, the window it is measured over, and how much of the window the
+   alert leaves. A page that fires the moment one request fails trains the recipient to mute
+   the channel, and a muted alert is worse than no alert because the dashboard still shows it
+   configured.
+10. Number alerts `ALERT-###` and give each five fields: `Fires when`, `Serves`, `Pages or
+    notifies`, `Owner`, `Runbook`. An alert that pages names a person and a rota reachable at
+    the hour it can fire; a team alias with no rota pages nobody.
+11. Write a runbook at `delivery/ops/runbooks/<alert>.md` for every alert that can page a
+    human — `references/gates.md`'s G8 criterion requires one. Each runbook names what fired,
+    the first three checks in order, who decides, and the exact rollback command copied from
+    `delivery/ops/delivery-pipeline.md`. A runbook that says `investigate the issue` is a title.
+12. Delete or downgrade any alert that corresponds to no decision. An alert whose only correct
+    response is to acknowledge it is a notification; route it accordingly and record that it
+    does not page.
+13. Confirm telemetry arriving, not configured. G8's criterion is explicit: the evidence is a
+    query output carrying a timestamp inside the last window, not a screenshot of a dashboard
+    definition. An exporter that was never deployed produces a perfectly healthy-looking
+    dashboard with no data behind it.
+14. Instrument the failure paths, not only the success paths. A request that is rejected before
+    the handler runs, a timeout the client abandoned, and a retry that eventually succeeded are
+    the three events most likely to be absent from the metric and present in the complaint.
+15. Keep the SLI stable across a rollout. An SLI whose definition changes mid-ramp makes the
+    before and after incomparable, which is the one comparison the ramp exists to make — see
+    `navi-skill-progressive-delivery`, whose halt conditions bind to these ids.
+16. Bind model monitors to SLIs rather than duplicating them. `navi-skill-drift-monitoring`'s
+    `MON-###` entries carry `Serves: SLI-###`; this file defines those SLIs, and a monitor
+    serving an SLI defined nowhere has an objective nobody agreed.
+17. State the cardinality bound of every label set an SLI depends on. An unbounded label — a
+    user id, a URL path with ids in it, a trace id — turns one metric into millions of series,
+    and the first symptom is the monitoring bill rather than a missing signal.
+18. Pass G8 with one file. `navi-delivery gate` accepts exactly one `--evidence` value and
+    checks only that the path resolves, while G8's evidence list names `slo.md`, the runbook
+    paths and the telemetry output. Write
+    `delivery/changes/<name>/evidence/g8-operate.md` as an index linking all three, and pass
+    that path.
+
+## Decision table
+
+| Observed condition | Required action |
+|---|---|
+| A shipped capability has no SLI | Add one, or record `none` with the reason in `## Capability coverage` |
+| `Measures` names a quality rather than a ratio | Rewrite as good events over valid events, naming both and their source |
+| The only signal is server-side | Say so in `Measures` and name what it cannot see |
+| The objective has no window | Add the rolling window; without one any breach can be absorbed |
+| The objective has no stated derivation | Derive it from a measured period, a `project.md` constraint or an `AC-###` |
+| The error budget is a restatement of the objective | Convert it to a quantity of failure with the arithmetic shown |
+| The alert fires on a single breach | Replace with a burn-rate condition, its window and the time it leaves |
+| An alert pages a channel with no rota | Name the person and the rota covering the firing hours |
+| A paging alert has no runbook | Write it before G8; the criterion is unsatisfied without it |
+| A runbook says `investigate` | Replace with the first three checks in order and the rollback command |
+| An alert has no correct response but acknowledgement | Downgrade it to a notification and record that it does not page |
+| Telemetry is configured but no data has arrived | G8 is unmet — show a query output with a timestamp in the last window |
+| The metric counts only handled requests | Instrument the rejected, timed-out and retried paths too |
+| An SLI definition is being changed mid-rollout | Hold it; the ramp's comparison depends on it |
+| A monitor names an SLI that is not in `slo.md` | Define the SLI here, or the monitor's objective is invented |
+| A label set is unbounded | State and enforce a cardinality bound |
+| G8 is being recorded | Pass `evidence/g8-operate.md`, the index — not `slo.md` |
+
+## Template
+
+`navi-delivery init` scaffolds `delivery/ops/slo.md`. Fill it; do not create a second copy:
+
+```markdown
+# Service level objectives
+
+## SLIs
+
+### SLI-001 — First render completes
+
+- **Measures:** the share of first renders that complete within 400ms, measured from the
+  browser's `PerformanceNavigationTiming` beacon. Numerator: beacons with
+  `loadEventEnd - startTime <= 400`. Denominator: beacons received for a navigation whose
+  document request returned any status. Measured at the client, so a request that never
+  reached the origin is counted as a failure rather than being absent — which is the failure
+  a server-side rate cannot see.
+- **Objective:** at or above 0.985 over a rolling 28 days
+- **Error budget:** 0.015 of first renders over 28 days. At 820,000 sessions a day that is
+  12,300 slow renders a day and 344,400 over the window. Spending 30,000 in one day is 8.7%
+  of the window's budget.
+- **Alerts before the budget burns:** ALERT-001 fires at 14.4x the normal burn rate over 1
+  hour, which consumes 2% of a 28-day budget in that hour and leaves 27 days if the condition
+  persists. ALERT-002 fires at 6x over 6 hours for the slower failure.
+- **Runbook:** `delivery/ops/runbooks/alert-001.md`, `delivery/ops/runbooks/alert-002.md`
+- **Derivation:** 0.985 is the measured 28-day value for the 90 days to 2026-09-20 (mean
+  0.991, worst day 0.982) rounded down to the worst observed non-incident day. It is not a
+  contractual figure; `project.md` `## Constraints` commits to nothing here.
+- **Cardinality:** labelled by `region` (12) and `device_class` (3) only. `session_id` and the
+  URL path are deliberately excluded — the path contains ids and would be unbounded.
+
+### SLI-004 — Default theme accepted on first render
+
+- **Measures:** the share of first renders whose chosen default the user does not override
+  within 24 hours. Numerator: first renders with no subsequent manual theme switch.
+  Denominator: first renders that resolved a theme at all. Read from the `theme_events`
+  table, which is written by the client.
+- **Objective:** at or above 0.76 over a rolling 28 days
+- **Error budget:** 0.24 of first renders may be overridden over 28 days — 196,800 overrides
+  a day at current volume, 5.5 million over the window.
+- **Alerts before the budget burns:** ALERT-004 fires at 4x the normal burn rate over 6 hours,
+  which at the observed rate is about 11 days before a 28-day breach
+- **Runbook:** `delivery/ops/runbooks/alert-004.md`
+- **Derivation:** AC-014 in `delivery/specs/theme/spec.md` states 0.76; this is a citation of
+  that criterion, not a second source of truth.
+- **Cardinality:** labelled by `region` (12) and `prefers_color_scheme` (3).
+
+## Alerts
+
+### ALERT-001 — First render budget burning fast
+
+- **Fires when:** the 1-hour failure ratio for SLI-001 exceeds 14.4x the budget's normal
+  consumption rate — that is, above 0.216 — for 5 consecutive minutes
+- **Serves:** SLI-001
+- **Pages or notifies:** pages
+- **Owner:** Ana Costa, primary on the `#platform` rota; Dan Okafor secondary. The rota covers
+  00:00–24:00 UTC, which is required because this alert can fire at any hour.
+- **Runbook:** `delivery/ops/runbooks/alert-001.md`
+
+### ALERT-002 — First render budget burning slowly
+
+- **Fires when:** the 6-hour failure ratio for SLI-001 exceeds 6x the budget's normal
+  consumption rate — above 0.09 — for 2 consecutive 30-minute windows. This is the partner to
+  ALERT-001: a degradation too slow to trip a 1-hour window still exhausts a 28-day budget in
+  under five days.
+- **Serves:** SLI-001
+- **Pages or notifies:** pages
+- **Owner:** Ana Costa, primary on the `#platform` rota; Dan Okafor secondary. The rota covers
+  00:00–24:00 UTC.
+- **Runbook:** `delivery/ops/runbooks/alert-002.md`
+
+### ALERT-004 — Theme acceptance degrading
+
+- **Fires when:** the 6-hour override ratio for SLI-004 exceeds 4x normal consumption — above
+  0.96 — for 2 consecutive 30-minute windows
+- **Serves:** SLI-004
+- **Pages or notifies:** notifies `#platform`; does not page. The correct response is an
+  investigation the next working day, and an alert whose only correct response is
+  acknowledgement is not a page.
+- **Owner:** Ana Costa
+- **Runbook:** `delivery/ops/runbooks/alert-004.md`
+
+## Capability coverage
+
+| Capability | SLIs | If none, why |
+|---|---|---|
+| theme | SLI-001, SLI-004 | — |
+| admin-export | none | Internal, used by 4 people, no availability commitment. Failure is reported by the user the same hour and costs a re-run. Revisit when it is offered to customers. |
+
+## History
+
+| Date | SLI | Change |
+|---|---|---|
+| 2026-09-22 | SLI-001 | Objective lowered 0.99 → 0.985 after re-deriving over the 90 days to 2026-09-20; the previous figure had no recorded derivation |
+```
+
+A runbook, at `delivery/ops/runbooks/alert-001.md`:
+
+```markdown
+# ALERT-001 — First render budget burning fast
+
+**What fired:** the 1-hour failure ratio for SLI-001 is above 0.216, meaning 14.4x normal
+budget consumption. At this rate the 28-day budget is exhausted in about 47 hours.
+
+**First three checks, in order**
+
+1. Is a rollout ramping? `cat delivery/changes/*/rollout.md` and check `## Wave observations`.
+   A wave that widened in the last hour is the first suspect and the cheapest to undo.
+2. Is the origin healthy, or is this an edge fault? Compare the client-side ratio with the
+   origin's own 5xx rate. Client-side degraded with the origin clean means the edge, the CDN
+   or DNS — the origin dashboard will look fine and is not evidence.
+3. Did a deploy land? `git log --oneline -5 origin/main` and the release record in
+   `delivery/changes/*/evidence/g7-release.md`. Compare the running digest with the one
+   recorded there.
+
+**Who decides:** the incident commander. Rollback during an incident is a human decision — see
+`navi-skill-human-checkpoints`.
+
+**Rollback command** (copied from `STAGE-005` of `delivery/ops/delivery-pipeline.md`;
+measured time-to-restore 3m 41s at the 2026-09-24 rehearsal):
+
+    ./deploy.sh --env production --digest "$PREVIOUS_DIGEST"
+
+For a behavioural fault inside the flagged path, the faster route is the kill switch in
+`delivery/changes/<name>/rollout.md` — propagation under 30 seconds.
+```
+
+Confirming telemetry is arriving, not configured:
+
+The shape below is Prometheus; run your own store's equivalent. What G8 accepts is not this
+command but its output — a value carrying a timestamp inside the last window:
+
+```bash
+# A point with a timestamp inside the last window is the evidence G8 accepts
+curl -sG http://prometheus:9090/api/v1/query \
+  --data-urlencode 'query=count by (__name__) ({__name__=~"first_render_.*"})' \
+  | python3 -m json.tool
+# Paste the output, with its timestamps, into evidence/g8-operate.md.
+# A metric absent from this output is configured and not arriving.
+```
+
+Then the gate:
+
+```bash
+navi-delivery gate G8 --pass --evidence delivery/changes/theme-persistence/evidence/g8-operate.md
+# => G8 pass (evidence: delivery/changes/theme-persistence/evidence/g8-operate.md)
+```
+
+## Checklist
+
+- [ ] Every SLI is in `delivery/ops/slo.md`, the path G8 names
+- [ ] `## Capability coverage` lists every shipped capability, with `none` and a reason where empty
+- [ ] Every `SLI-###` carries all five fields
+- [ ] Every `Measures` names a numerator, a denominator and where each is read from
+- [ ] Every SLI is measured user-side, or says what the server-side signal cannot see
+- [ ] Every `Objective` has a number, a unit and a rolling window
+- [ ] Every objective states its derivation — a measured period, a constraint, or an `AC-###`
+- [ ] Every `Error budget` is a quantity of failure with the arithmetic shown
+- [ ] Every alert fires on a burn rate with a window, not on a single breach
+- [ ] Every `ALERT-###` carries all five fields
+- [ ] Every paging alert names a person and a rota covering the hours it can fire
+- [ ] Every paging alert has a runbook with the first three checks and the rollback command
+- [ ] No alert pages where acknowledgement is the only correct response
+- [ ] The failure paths are instrumented, not only the success paths
+- [ ] Every label set has a stated cardinality bound
+- [ ] Telemetry is shown arriving, with a timestamp inside the last window
+- [ ] `evidence/g8-operate.md` exists and links `slo.md`, the runbooks and the telemetry output
+
+## Anti-patterns
+
+**The server-side 100%.** The dashboard has shown 100% success for a week while a
+misconfigured edge rule returned 502 to a third of users. The failed requests never reached
+the handler, so they were never in the denominator. Measure where the user is.
+
+**Three nines because three nines.** `99.9%` with no derivation. The service has never
+measured better than 99.4%, so the objective has been breached since the day it was written
+and everyone has learned to ignore it. Derive from what is measured or from what was promised.
+
+**The objective with no budget.** `99.9% availability` and nothing else. Nobody can say whether
+today's incident spent a lot or a little, so the argument about shipping is decided by who is
+more insistent. Convert it to a count of failures and show the arithmetic.
+
+**The single-breach page.** The alert fires when one request exceeds the latency bound. It
+fires nine times a night. Within a month the channel is muted and the dashboard still shows the
+alert as configured. Alert on burn rate, over a window.
+
+**The alias on-call.** `Owner: #platform.` Sixty members, no rota, and the page arrives at
+04:00. Name the person and the rota that covers the hours the alert can fire.
+
+**The runbook that says investigate.** `1. Investigate the root cause. 2. Fix it.` The person
+paged at 04:00 now reads the source. Name the first three checks in order and paste the exact
+rollback command.
+
+**Configured, not arriving.** The dashboard exists, the panels are defined, and the exporter
+was never deployed. G8 was recorded on a screenshot of the definition. Show a query output with
+a timestamp inside the last window.
+
+**The unbounded label.** The latency histogram is labelled with the request path, which
+contains order ids. Two million series, a monitoring bill larger than the service's, and the
+query that would have answered the question times out. State the cardinality bound.
+
+**The SLI redefined mid-ramp.** Halfway through the canary the denominator changes from all
+navigations to successful navigations. The before and after are now incomparable, which is the
+only comparison the ramp existed to make. Freeze the definition for the duration.
+
+## Validation
+
+```bash
+CHANGE=<name>
+S=delivery/ops/slo.md
+
+test -f "$S" || echo "no delivery/ops/slo.md — G8 names it by path"
+
+# Every SLI carries all five fields
+for id in $(grep -o 'SLI-[0-9]\{3,\}' "$S" | sort -u); do
+  body=$(awk -v id="$id" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$S")
+  [ -n "$body" ] || { echo "$id: named in the file but has no '### $id — …' entry"; continue; }
+  for k in Measures Objective "Error budget" "Alerts before the budget burns" Runbook; do
+    printf '%s\n' "$body" | grep -q "\*\*$k:\*\*" || echo "$id: missing $k"
+  done
+  # The objective carries a number and a window
+  obj=$(printf '%s\n' "$body" | awk '/\*\*Objective:\*\*/{on=1} /\*\*Error budget:\*\*/{on=0} on')
+  printf '%s\n' "$obj" | grep -q '[0-9]' || echo "$id: objective has no number"
+  printf '%s\n' "$obj" | grep -qiE 'rolling|over .*(day|hour|week|month)' \
+    || echo "$id: objective has no rolling window"
+  # The derivation is stated
+  printf '%s\n' "$body" | grep -q '\*\*Derivation:\*\*' || echo "$id: no stated derivation"
+  # The error budget shows a counted quantity, not just the objective restated
+  printf '%s\n' "$body" | awk '/\*\*Error budget:\*\*/{on=1} /\*\*Alerts before/{on=0} on' \
+    | grep -qE '[0-9][0-9,]{2,}' || echo "$id: error budget shows no counted quantity"
+  # The cardinality bound is stated
+  printf '%s\n' "$body" | grep -q '\*\*Cardinality:\*\*' || echo "$id: no cardinality bound"
+done
+
+# Every alert carries all five fields, and every pager has a runbook that exists
+for id in $(grep -o 'ALERT-[0-9]\{3,\}' "$S" | sort -u); do
+  body=$(awk -v id="$id" '$0 ~ "^### " id " " {on=1; next} /^### /{on=0} on' "$S")
+  [ -n "$body" ] || { echo "$id: named in the file but has no '### $id — …' entry"; continue; }
+  for k in "Fires when" Serves "Pages or notifies" Owner Runbook; do
+    printf '%s\n' "$body" | grep -q "\*\*$k:\*\*" || echo "$id: missing $k"
+  done
+  # Burn rate, not a single breach
+  printf '%s\n' "$body" | awk '/\*\*Fires when:\*\*/{on=1} /\*\*Serves:\*\*/{on=0} on' \
+    | grep -qiE 'burn|consumption rate|consecutive|for [0-9]+ (minute|hour)' \
+    || echo "$id: fires on a single breach rather than a burn rate over a window"
+  # A paging alert names a person and has a runbook on disk. The test is that the
+  # value *starts* with 'pages' — matching the word anywhere also matches
+  # 'does not page', which is the opposite answer.
+  if printf '%s\n' "$body" | grep -qiE '^- \*\*Pages or notifies:\*\* *pages'; then
+    printf '%s\n' "$body" | grep '\*\*Owner:\*\*' | grep -qE '^- \*\*Owner:\*\* *[A-Z][a-z]+ [A-Z]' \
+      || echo "$id: paging alert's Owner does not begin with a person's name"
+    rb=$(printf '%s\n' "$body" | grep '\*\*Runbook:\*\*' | grep -o '`[^`]*`' | tr -d '`')
+    for f in $rb; do
+      test -f "$f" || echo "$id: runbook not found: $f"
+      grep -qi 'investigate the issue\|investigate the root cause' "$f" 2>/dev/null \
+        && echo "$id: runbook says 'investigate' rather than naming the first checks"
+    done
+  fi
+done
+
+# Every SLI a monitor serves is defined here
+for f in $(find delivery/ops/models -name monitors.md 2>/dev/null); do
+  for s in $(grep -o 'SLI-[0-9]\{3,\}' "$f" | sort -u); do
+    grep -q "^### $s " "$S" || echo "$s is served by $f but is not defined in $S"
+  done
+done
+
+# Capability coverage names every capability that has a spec
+for c in $(find delivery/specs -mindepth 1 -maxdepth 1 -type d 2>/dev/null); do
+  n=$(basename "$c")
+  awk '/^## Capability coverage$/{on=1;next} /^## /{on=0} on' "$S" | grep -q "^| $n " \
+    || echo "capability '$n' has a spec but no row in ## Capability coverage"
+done
+
+test -f delivery/changes/$CHANGE/evidence/g8-operate.md || echo "no G8 evidence index"
+```
+
+Each command prints nothing when the rule holds. The runbook-exists loop is the one to run
+before G8: it is the only mechanical link between an alert that can wake somebody and a page
+they can act on.

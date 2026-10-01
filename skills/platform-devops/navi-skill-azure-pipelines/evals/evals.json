@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-azure-pipelines",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Write the Azure DevOps YAML for web-shell: build the image once, promote it to staging and then to production with an approval in between, and give us a way back.",
+      "expect": [
+        ".azure/azure-pipelines.yml",
+        "pipeline-bindings.md",
+        "STAGE-",
+        "deployment:",
+        "environment:",
+        "dependsOn",
+        "digest"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Our ADO project has two approvers configured on the production environment, but releases are going out without anyone approving anything. The deploy runs in a job called deploy_prod.",
+      "expect": [
+        "deployment:",
+        "environment:",
+        "approvals",
+        "plain",
+        "job",
+        "pipeline-bindings.md"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our Azure Data Factory pipeline re-reads the whole orders table every night and the Trusted layer load takes four hours. Make the copy activity incremental on the watermark column.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "We deploy to an Azure Container App. If the new revision is bad, what does rolling back actually restore, and what does it not?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The rollback stage has condition: eq('$(Build.Reason)', 'Manual') and it has never once run, including during last Tuesday's incident.",
+      "expect": [
+        "condition",
+        "before macro expansion",
+        "variables['Build.Reason']",
+        "literal"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Production needs one extra flag on the deploy, so I'm adding templates/deploy-prod.yml next to deploy-stage.yml and pointing the production stage at it.",
+      "expect": [
+        "same",
+        "template",
+        "STAGE-",
+        "parameter",
+        "staging rehearsed",
+        "pipeline-bindings.md"
+      ]
+    }
+  ]
+}

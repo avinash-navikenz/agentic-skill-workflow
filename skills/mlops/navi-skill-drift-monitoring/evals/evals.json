@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-drift-monitoring",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "theme-ranker is about to serve traffic and nothing is watching it. Set up what we need before it goes live.",
+      "expect": [
+        "delivery/ops/models/",
+        "monitors.md",
+        "MON-",
+        "input drift",
+        "prediction drift",
+        "outcome decay",
+        "operational"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G8 asks for drift and decay monitors live with thresholds and an owner. What does the evidence actually have to show?",
+      "expect": [
+        "telemetry arriving",
+        "timestamp",
+        "not configured",
+        "runbook",
+        "SLI-",
+        "evidence/g8-operate.md"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Terraform state has drifted from what's actually deployed in the prod account — work out what changed out of band and reconcile it.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Decide whether version 8 goes to production, record who approved it and what it replaced.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Wire the PSI alert straight into the retraining job so the model keeps itself current without anyone having to look.",
+      "expect": [
+        "never",
+        "alert a human",
+        "hold the incumbent",
+        "encodes the shift",
+        "candidate"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "client_region went 40% null overnight and MON-002 is firing. Retrain on the new distribution.",
+      "expect": [
+        "CHK-",
+        "data-quality",
+        "precedence",
+        "pipeline defect until the check is clean",
+        "not drift"
+      ]
+    }
+  ]
+}

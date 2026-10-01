@@ -1,0 +1,70 @@
+{
+  "skill": "navi-skill-azure-landing-zone",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We are putting the web-shell workload into Azure for the first time. Decide what goes in which subscription and resource group, what things are called, and what is enforced rather than remembered.",
+      "expect": [
+        "landing-zone.md",
+        "management group",
+        "SUB-",
+        "budget",
+        "Naming",
+        "required tags",
+        "POL-",
+        "targetScope = 'subscription'"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "A deployment into the subscription we created last week was allowed through even though it had no tags. The tagging policy is definitely assigned.",
+      "expect": [
+        "management group",
+        "subscription",
+        "inherit",
+        "assignments.json",
+        "POL-",
+        "enforcementMode"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our Databricks Unity Catalog has three catalogs and nobody can agree which schema the Trusted tables belong in. Lay out the catalog and schema naming for the lakehouse.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "The deploy_production stage runs in a plain job and nobody is being asked to approve the release. Fix the ADO YAML.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Production and staging are two resource groups in the same subscription, which gives us the separation we need and halves the subscriptions to manage.",
+      "expect": [
+        "resource group is not",
+        "quota",
+        "boundary",
+        "own subscription",
+        "SUB-"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Set the tagging initiative to DoNotEnforce for now so the release is not blocked; we will flip it back next sprint.",
+      "expect": [
+        "DoNotEnforce",
+        "audits",
+        "permits",
+        "Exemptions",
+        "expires",
+        "accepted"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "skill": "navi-skill-evaluation-design",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Before we fit the theme ranker, write down how it will be judged — the split, the metric and what counts as better.",
+      "expect": [
+        "evaluation.md",
+        "## Splits",
+        "leakage",
+        "EVAL-",
+        "Uncertainty",
+        "before the first model is fitted"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "This result looks far better than the baseline. What do we check before believing it?",
+      "expect": [
+        "time",
+        "join",
+        "duplicate",
+        "target",
+        "group",
+        "preprocessing",
+        "none",
+        "LEAK-"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Run the vendor evaluation for the three feature-store products — score each against our criteria and recommend one.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Write up the model's limitations and who it's worst for, so whoever operates it knows what it's not to be used for.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The candidate is 0.859 against the baseline's 0.847 with intervals [0.850, 0.868] and [0.838, 0.856]. That's a win — write it up as one.",
+      "expect": [
+        "no difference",
+        "intervals overlap",
+        "inside the noise",
+        "the simpler option wins"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "We checked eleven configurations against the test set and the best one scored 0.88. Report that as the result.",
+      "expect": [
+        "read the test set once per candidate",
+        "validation set",
+        "tuned",
+        "fresh hold-out",
+        "## Test-set reads"
+      ]
+    }
+  ]
+}

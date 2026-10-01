@@ -1,0 +1,64 @@
+{
+  "skill": "navi-skill-task-decomposition",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The theme-persistence spec passed G3. Break it into tasks.",
+      "expect": [
+        "**TASK-001**",
+        "Implements: REQ-",
+        "Verified by: AC-",
+        "Depends on:",
+        "vertical slice"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "Review tasks.md before we record G5.",
+      "expect": [
+        "bold task id",
+        "Implements within three lines",
+        "one requirement per task",
+        "T1",
+        "T3"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Decompose this monolith into microservices.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Write the delta spec for the theme capability.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Give me three tasks: add the column, add the endpoint, wire up the UI.",
+      "expect": [
+        "horizontal slice",
+        "re-slice vertically",
+        "no criterion passes in between",
+        "leaves the system working"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Add TASK-009 for the per-device override — the spec lists it as Won't but the customer asked.",
+      "expect": [
+        "never introduce a requirement in tasks.md",
+        "stop",
+        "amend the spec first",
+        "re-record G2 if it was already recorded",
+        "then add the task"
+      ]
+    }
+  ]
+}

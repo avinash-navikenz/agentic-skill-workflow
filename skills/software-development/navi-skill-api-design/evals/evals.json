@@ -1,0 +1,63 @@
+{
+  "skill": "navi-skill-api-design",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "We're adding order endpoints to the public API. Lay out the surface — listing, creation, cancellation.",
+      "expect": [
+        "openapi",
+        "cursor",
+        "limit",
+        "Idempotency-Key",
+        "201",
+        "error shape"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "What should this endpoint return when the caller is authenticated but not allowed to see the record?",
+      "expect": [
+        "403",
+        "404",
+        "the existence of the resource is itself the secret",
+        "record which in the contract"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Design the API team's new onboarding process — who they meet in week one and what access they need.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Is dropping previous_theme from the event payload a breaking change, and who do we have to tell?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Just return 200 with {\"success\": false, \"error\": \"...\"} for everything — it keeps the client simple.",
+      "expect": [
+        "return the status code the condition maps to",
+        "one error shape",
+        "code",
+        "callers branch on"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "GET /v1/orders returns every order for the account. It's fine, nobody has more than a few hundred.",
+      "expect": [
+        "paginate every collection endpoint from its first release",
+        "cursor",
+        "default page size",
+        "maximum page size"
+      ]
+    }
+  ]
+}

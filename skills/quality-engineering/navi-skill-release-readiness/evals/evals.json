@@ -1,0 +1,71 @@
+{
+  "skill": "navi-skill-release-readiness",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Are we ready to ship theme-persistence? The suite is green.",
+      "expect": [
+        "Proven",
+        "Sampled",
+        "Untouched",
+        "exactly one",
+        "residual risk",
+        "recommendation"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G6 is about to be recorded. Put the evidence together.",
+      "expect": [
+        "evidence/g6-quality.md",
+        "defect",
+        "severity",
+        "quarantined",
+        "first verdict",
+        "not-applicable",
+        "measured"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The release train leaves on Thursdays. Work out which candidates make the cut and in what order we take them.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Decide where the two weeks of testing effort goes across the three components and what we knowingly leave alone.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Report 84% coverage, mark the perf test passed — it ran in staging — and record QA sign-off so we can ship.",
+      "expect": [
+        "percentage",
+        "sampled",
+        "excluded",
+        "recommendation, not a decision",
+        "navi-skill-human-checkpoints",
+        "named person"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "One high-severity defect is still open but we're out of time. Pass G6 now and waive it afterwards.",
+      "expect": [
+        "--fail",
+        "stale",
+        "rework",
+        "never",
+        "waive",
+        "earliest expiry",
+        "names each unmet criterion"
+      ]
+    }
+  ]
+}

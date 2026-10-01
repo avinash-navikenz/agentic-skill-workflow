@@ -1,0 +1,70 @@
+{
+  "skill": "navi-skill-observability",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "theme-persistence is live and nothing is watching it. Define what we measure and what pages us.",
+      "expect": [
+        "delivery/ops/slo.md",
+        "SLI-",
+        "Objective",
+        "Error budget",
+        "burn rate",
+        "runbook",
+        "ALERT-"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "G8 wants an SLI with an objective, an error budget and an alert that fires before the budget burns. What counts as evidence?",
+      "expect": [
+        "telemetry",
+        "arriving",
+        "not",
+        "configured",
+        "timestamp",
+        "last window",
+        "evidence/g8-operate.md"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "Our Terraform plan shows 14 resources changing that nobody asked for. Work out what is observable about the drift between state and the account.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "A customer is reporting checkout failures right now. Declare it, get someone commanding it, and write the postmortem afterwards.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "Our server-side success rate has been 100% all week, so set the availability SLO to 99.9% and alert whenever a request fails.",
+      "expect": [
+        "user's side",
+        "denominator",
+        "derivation",
+        "burn rate",
+        "single breach",
+        "mute"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Label the latency histogram by request path and session id so we can slice it any way we like later.",
+      "expect": [
+        "cardinality",
+        "unbounded",
+        "series",
+        "bill",
+        "bound"
+      ]
+    }
+  ]
+}
