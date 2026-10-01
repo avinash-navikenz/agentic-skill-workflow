@@ -445,6 +445,8 @@ stage:
   - { skill: navi-skill-azure-identity-and-secrets, fence: 0, path: "delivery/ops/azure/identity.md" }
   - { skill: navi-skill-azure-identity-and-secrets, fence: 1, path: "infra/azure/identity/main.bicep" }
   - { skill: navi-skill-azure-identity-and-secrets, fence: 2, path: ".azure/variable-groups.yml" }
+  - { skill: navi-skill-azure-deployment-safety, fence: 0, path: "delivery/ops/azure/deployment-safety.md" }
+  - { skill: navi-skill-azure-deployment-safety, fence: 1, path: "infra/azure/app/containerapp.bicep" }
   - { skill: navi-skill-backlog-prioritisation, fence: 0, path: "delivery/backlog.md" }
   - { skill: navi-skill-incident-response, fence: 0, path: "delivery/ops/postmortems/{change}.md" }
   - { skill: navi-skill-outcome-and-kpi-definition, fence: 1, path: "delivery/ops/postmortems/{change}.md", mode: append }
@@ -504,6 +506,51 @@ skills:
         file: openapi.yaml
         delete_line: "additionalProperties: false"
         expects: "forbid unlisted ones"
+
+  navi-skill-azure-deployment-safety:
+    mutations:
+      - name: the column every incident turns on is left blank
+        file: "delivery/ops/azure/deployment-safety.md"
+        replace:
+          - "| settings and connection strings marked `slotSetting: true`, which stay with the slot, and anything the new build wrote to shared storage |"
+          - "| — |"
+        expects: "says nothing for 'Rollback does not restore'"
+      - name: a wave in the rollout has no Azure operation behind it
+        file: "delivery/ops/azure/deployment-safety.md"
+        delete_line: "| ROLL-003 |"
+        expects: "ROLL-003 is a wave in"
+      - name: the container app is put in a revision mode that silently discards the traffic block
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["      activeRevisionsMode: 'Multiple'", "      activeRevisionsMode: 'Single'"]
+        expects: "activeRevisionsMode is 'Single'"
+      - name: the probe that decides exposure disappears
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["              type: 'Readiness'", "              type: 'Startup'"]
+        expects: "no Readiness probe"
+      - name: the rollback target is allowed to scale to zero
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["        minReplicas: 1", "        minReplicas: 0"]
+        expects: "minReplicas is 0"
+      - name: the two traffic weights become independently editable numbers
+        file: "infra/azure/app/containerapp.bicep"
+        replace: ["            weight: 100 - candidateWeight", "            weight: 95"]
+        expects: "does not derive the incumbent's weight"
+      - name: a secret is written into the resource definition
+        file: "infra/azure/app/containerapp.bicep"
+        replace:
+          - "          keyVaultUrl: '${vaultUri}/secrets/upstream-api-token'\n          identity: workloadIdentityResourceId\n"
+          - "          value: 'the-literal-value-nobody-should-be-able-to-read'\n"
+        expects: "a secret carries an inline value"
+      - name: a kill switch becomes a pipeline run
+        file: "delivery/ops/azure/deployment-safety.md"
+        replace: ["| set the incumbent's weight back to 100 |", "| redeploy the previous digest through the pipeline |"]
+        expects: "is a redeploy"
+      - name: an operation with no rollback loses the control that replaces it
+        file: "delivery/ops/azure/deployment-safety.md"
+        replace:
+          - "| expand and contract — add the new column, write both, migrate readers, and drop the old one in a separate change at least one release later |"
+          - "| — |"
+        expects: "has no replacement control"
 
   navi-skill-azure-identity-and-secrets:
     mutations:

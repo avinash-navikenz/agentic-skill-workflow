@@ -1,0 +1,72 @@
+{
+  "skill": "navi-skill-azure-deployment-safety",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "The rollout plan has four waves at 0%, 5%, 50% and 100%. Turn that into something somebody can actually run on our Azure Container App, and tell me what the way back is.",
+      "expect": [
+        "deployment-safety.md",
+        "ROLL-",
+        "activeRevisionsMode",
+        "Multiple",
+        "traffic",
+        "weight",
+        "kill switch",
+        "minReplicas"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "If the App Service swap goes wrong we just swap back, right? What exactly does that give us?",
+      "expect": [
+        "slotSetting",
+        "sticky",
+        "do not",
+        "Rollback does not restore",
+        "staging slot",
+        "rollback target"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The nightly Databricks job writes a new version of the Unified table every run and we want to roll back to yesterday's snapshot. Set up Delta time travel and the retention window.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Which resource group and subscription should the new workload's container registry live in, and what should it be called?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "We ship the migration that drops the legacy theme column in the same release as the code that stops reading it, and if it goes wrong we do a point-in-time restore.",
+      "expect": [
+        "new database",
+        "not",
+        "rollback",
+        "expand",
+        "contract",
+        "Not recoverable",
+        "separate change"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Set the container app to Single revision mode so we don't accumulate revisions, and put the canary at 5% in the traffic block.",
+      "expect": [
+        "Single",
+        "deactivates",
+        "previous revision",
+        "traffic block",
+        "ignored",
+        "Multiple"
+      ]
+    }
+  ]
+}
