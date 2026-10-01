@@ -155,7 +155,6 @@ function preview(argv, cwd, env, emit) {
   }
 
   const payloads = [];
-  const namedPreview = flagValue(argv, "--change").present;
   let empties = 0;
   for (const { change, folded } of built) {
     if (!folded) {
@@ -170,7 +169,15 @@ function preview(argv, cwd, env, emit) {
     });
     emit(`${change}: trace ${folded.traceId}, ${folded.spans.length} span(s)`);
   }
-  if (!payloads.length) return namedPreview || empties === 0 ? 1 : 0;
+  // Same rule as export, so the two agree and both match the documented table:
+  // --all finding nothing is an ordinary empty state; a change you NAMED that
+  // holds nothing is not. (A default run with no change in flight never gets
+  // this far — selectChanges reports that and returns null.) `preview --all`
+  // used to exit 1 on a quiet repository while `export --all` exited 0.
+  if (!payloads.length) {
+    if (argv.includes("--all")) { emit("nothing recorded yet — no trace to build"); return 0; }
+    return 1;
+  }
 
   if (out.present) {
     if (!out.value) { emit("--out needs a file path"); return 1; }

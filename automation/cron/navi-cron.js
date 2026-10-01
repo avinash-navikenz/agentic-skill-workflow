@@ -128,6 +128,27 @@ function shell(command, { cwd, env = {}, capture = true }) {
   return { status: r.status, stdout: r.stdout || "", stderr: r.stderr || "" };
 }
 
+// The remote's sha for a branch, or null when it has none. `ls-remote` asks the
+// remote directly, so no tracking ref — which this runner never refreshes for
+// `navi/*` — can make a stale answer look current.
+function remoteBranchSha(cfg, branch, repoRoot) {
+  const out = git(["ls-remote", "--heads", cfg.repo.remote, `refs/heads/${branch}`], repoRoot);
+  return out ? out.split(/\s+/)[0] : null;
+}
+
+// Trees, not commits: a retry of the same item builds the same content under a
+// later timestamp, so the commit shas differ and the trees do not.
+function sameTree(localSha, remoteSha, worktree, cfg, branch, repoRoot) {
+  try {
+    git(["fetch", "--quiet", cfg.repo.remote, `refs/heads/${branch}`], repoRoot);
+    const mine = git(["rev-parse", `${localSha}^{tree}`], worktree);
+    const theirs = git(["rev-parse", `${remoteSha}^{tree}`], repoRoot);
+    return mine === theirs;
+  } catch {
+    return false;             // cannot prove it is ours, so treat it as not ours
+  }
+}
+
 function itemEnv(item, extra = {}) {
   return {
     NAVI_ITEM_ID: item.id, NAVI_ITEM_TITLE: item.title, NAVI_ITEM_URL: item.url,
@@ -141,10 +162,29 @@ function itemEnv(item, extra = {}) {
 // config would otherwise have the runner writing wherever it pointed.
 function stateFileFor(repoRoot, cfg) {
   const resolved = path.resolve(repoRoot, cfg.stateFile);
-  const root = path.resolve(repoRoot);
-  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+  const root = fs.realpathSync(repoRoot);
+  // realpath, because path.resolve is pure string arithmetic: a symlink inside
+  // the checkout pointing out of it passed the check and then read and wrote
+  // outside the repository. The file itself may not exist yet, so its directory
+  // is what gets resolved.
+  let real;
+  try {
+    real = path.join(fs.realpathSync(path.dirname(resolved)), path.basename(resolved));
+    // lstat, not existsSync: a symlink pointing at a file that does not exist
+    // yet reports false from existsSync, so the link was never followed and a
+    // dangling link out of the repository passed the check.
+    const stat = fs.lstatSync(resolved, { throwIfNoEntry: false });
+    if (stat && stat.isSymbolicLink()) {
+      real = path.resolve(path.dirname(real), fs.readlinkSync(resolved));
+    } else if (stat) {
+      real = fs.realpathSync(resolved);
+    }
+  } catch {
+    real = resolved;           // an absent parent cannot be a symlink out
+  }
+  if (real !== root && !real.startsWith(root + path.sep)) {
     throw new Error(`stateFile ${JSON.stringify(cfg.stateFile)} resolves outside the repository ` +
-                    `(${resolved}) — it must sit beside the checkout`);
+                    `(${real}) — it must sit beside the checkout`);
   }
   return resolved;
 }
@@ -154,8 +194,14 @@ function readProcessed(repoRoot, cfg) {
   let raw;
   try {
     raw = fs.readFileSync(p, "utf8");
-  } catch {
-    return new Set();          // no file yet is the ordinary first run
+  } catch (e) {
+    // ONLY a missing file is "nothing processed yet". A file that exists and
+    // cannot be read — EACCES after a run under sudo, EISDIR, a bad mount — is
+    // the record being unavailable, and treating that as empty re-opens a
+    // duplicate branch and pull request for every item it holds.
+    if (e.code === "ENOENT") return new Set();
+    throw new Error(`${p} exists but cannot be read (${e.code}). Refusing to run: treating it as ` +
+                    "empty would re-propose every item it records.");
   }
   // A truncated or hand-edited file used to be indistinguishable from "nothing
   // processed yet", and the next run re-opened duplicate branches and pull
@@ -202,11 +248,16 @@ function processItem(item, cfg, ctx) {
   const worktree = fs.mkdtempSync(path.join(os.tmpdir(), "navi-cron-"));
 
   try {
+    // Detached, and it STAYS detached: no local branch is ever created. The
+    // commit is pushed straight to the remote ref by sha.
+    //
+    // This removes two failures at once rather than managing them. A named local
+    // branch had to be force-created (so a branch a person made with the same
+    // name was silently reset) and force-deleted afterwards (so their unpushed
+    // commits became dangling objects) — and a leftover one from a killed run
+    // wedged every later run. With no local branch there is nothing to reset,
+    // nothing to delete, and nothing to leave behind.
     git(["worktree", "add", "--detach", worktree, `${cfg.repo.remote}/${cfg.repo.base}`], repoRoot);
-    // -B, not -b: a branch left behind by an earlier interrupted run is reset
-    // rather than fatal. The content is regenerated scaffold, so there is
-    // nothing in it worth preserving over a fresh attempt.
-    git(["checkout", "-B", branch], worktree);
 
     const lane = item.lane || cfg.lane;
     const r = spawnSync(process.execPath, [cliPath, "propose", slug, "--lane", lane],
@@ -228,17 +279,37 @@ function processItem(item, cfg, ctx) {
       return { slug, branch, pushed: false };
     }
 
-    // --force-with-lease, because a previous run may have pushed this branch and
-    // then failed at the pull-request step: the item was not recorded, so it is
-    // retried, and the retry's commit has a different timestamp and so a
-    // different sha. The lease is what keeps that from overwriting a human who
-    // has since pushed work onto the branch — it refuses instead.
+    // Pushed by sha to an explicit refspec, from the repository root — which is
+    // why no local branch is needed, and why a remote configured as a relative
+    // path (`../origin.git`) resolves: it would otherwise be read from the
+    // worktree, which lives under the system temp directory.
     //
-    // Pushed from the repository root, not the worktree: a remote configured as
-    // a relative path (`../origin.git`) resolves against the directory git runs
-    // in, and the worktree is somewhere under the system temp directory. The
-    // branch ref lives in the common repository either way.
-    git(["push", "--force-with-lease", "-u", cfg.repo.remote, branch], repoRoot);
+    // NO force, and no lease. --force-with-lease reads the lease from the
+    // remote-tracking ref, and this runner only ever fetches the base — so the
+    // ref for a `navi/` branch stays stale and the lease holds, right up until
+    // somebody runs `git fetch` in the checkout. After that it is satisfied by
+    // the refreshed ref and the push overwrites whatever a person had put on
+    // that branch. A plain push is rejected instead, which is the correct
+    // outcome: this tool opens branches, it does not resolve conflicts on them.
+    const sha = git(["rev-parse", "HEAD"], worktree);
+    const remoteSha = remoteBranchSha(cfg, branch, repoRoot);
+
+    if (remoteSha === null) {
+      git(["push", cfg.repo.remote, `${sha}:refs/heads/${branch}`], repoRoot);
+    } else if (sameTree(sha, remoteSha, worktree, cfg, branch, repoRoot)) {
+      // Our own branch from an earlier run whose pull-request step failed: the
+      // item was not recorded, so it is being retried. The commit sha differs
+      // (a later timestamp) but the tree is identical, which is what says no
+      // human content is at stake. Nothing to push; go straight to the step
+      // that failed.
+      log(`  ${branch} is already on ${cfg.repo.remote} with identical content — reopening`);
+    } else {
+      // Different content under the same name. This is somebody's work, or an
+      // older proposal for a changed item, and it is not this tool's to resolve.
+      throw new Error(`${branch} already exists on ${cfg.repo.remote} with different content. ` +
+                      "An earlier proposal for this item, or somebody's own work. Finish or " +
+                      "delete that branch; this item is retried untouched until you do.");
+    }
     if (cfg.pr && cfg.pr.command) {
       const res = shell(cfg.pr.command, {
         cwd: worktree,
@@ -256,13 +327,8 @@ function processItem(item, cfg, ctx) {
   } finally {
     try { git(["worktree", "remove", "--force", worktree], repoRoot); } catch { /* best effort */ }
     fs.rmSync(worktree, { recursive: true, force: true });
-    // The local branch always goes, whatever happened. On success it lives on
-    // the remote and the local ref serves nothing; on failure it must not be
-    // there, or the next run dies at branch creation and reports a git error
-    // instead of the real one, for the life of that branch. Either way, "it
-    // never touches the checkout it runs in" includes the checkout's branch
-    // list — one ref per work item, accumulating forever, is touching it.
-    try { git(["branch", "-D", branch], repoRoot); } catch { /* may never have been created */ }
+    // Nothing else to undo: the run created no branch, so there is none to
+    // delete — and so no path on which this could delete somebody else's.
   }
 }
 
@@ -320,6 +386,27 @@ function main(argv) {
     process.stdout.write(USAGE);
     return configPath ? 0 : 2;
   }
+  // Argv is checked before anything is read from disk: a mistyped flag should be
+  // reported as a mistyped flag, not behind whatever the config complains about
+  // first.
+  //
+  // `value()` returns null both when a flag is absent and when it is present
+  // with nothing usable after it, so the two are told apart here — `--max` with
+  // no number is a typo, not a request for the configured default.
+  if (argv.includes("--max")) {
+    const given = value("--max");
+    if (given === null) {
+      process.stderr.write("navi-cron: --max needs a whole number after it\n");
+      return 2;
+    }
+    if (!/^[0-9]+$/.test(given)) {
+      // Number("abc") is NaN, slice(0, NaN) is empty, and the run reported a
+      // clean zero-item pass. A typo must not look like "nothing to do".
+      process.stderr.write(`navi-cron: --max must be a whole number, got ${JSON.stringify(given)}\n`);
+      return 2;
+    }
+  }
+
   const quiet = flag("--quiet");
   const log = (m) => { if (!quiet) process.stdout.write(m + "\n"); };
 
@@ -333,13 +420,6 @@ function main(argv) {
     return 2;
   }
 
-  const maxFlag = value("--max");
-  if (maxFlag !== null && !/^[0-9]+$/.test(maxFlag)) {
-    // Number("abc") is NaN, slice(0, NaN) is empty, and the run reported a
-    // clean zero-item pass. A typo must not look like "nothing to do".
-    process.stderr.write(`navi-cron: --max must be a whole number, got ${JSON.stringify(maxFlag)}\n`);
-    return 2;
-  }
   let result;
   try {
     result = run(cfg, {

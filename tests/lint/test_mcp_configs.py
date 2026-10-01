@@ -115,6 +115,29 @@ class TestMcpConfigs(unittest.TestCase):
         bad = {"mcpServers": {"x": {"command": "docker", "args": ["run", "--token", "hunter2-internal"]}}}
         self.assertIn("C4", rules(self.run_check(files={"a.mcp.json": bad})))
 
+    def test_C4_catches_the_joined_and_header_argument_forms(self):
+        """Both report no findings when only adjacent pairs are compared."""
+        joined = {"mcpServers": {"x": {"command": "docker",
+                                       "args": ["run", "--token=hunter2internal"]}}}
+        self.assertIn("C4", rules(self.run_check(files={"a.mcp.json": joined})))
+        # The standard mcp-remote shape: the credential is inside one argument,
+        # after a header name nothing else inspects.
+        header = {"mcpServers": {"x": {"command": "npx",
+                                       "args": ["mcp-remote", "--header",
+                                                "Authorization: Bearer hunter2internal"]}}}
+        self.assertIn("C4", rules(self.run_check(files={"a.mcp.json": header})))
+
+    def test_C4_accepts_a_reference_written_the_way_a_header_is(self):
+        ok = {"mcpServers": {"x": {"command": "npx",
+                                   "args": ["mcp-remote", "--header",
+                                            "Authorization: Bearer ${GITHUB_PERSONAL_ACCESS_TOKEN}"]}}}
+        self.assertEqual(self.run_check(files={"a.mcp.json": ok},
+                                        env="GITHUB_PERSONAL_ACCESS_TOKEN=\n"), [])
+
+    def test_C3_rejects_a_non_string_url_rather_than_crashing(self):
+        bad = {"mcpServers": {"x": {"type": "http", "url": 12345}}}
+        self.assertIn("C3", rules(self.run_check(files={"a.mcp.json": bad})))
+
     def test_C4_leaves_ordinary_arguments_alone(self):
         ok = {"mcpServers": {"x": {"command": "npx",
                                    "args": ["-y", "@azure-devops/mcp", "${ADO_ORGANIZATION}",

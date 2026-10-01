@@ -6,12 +6,15 @@ and committed. C4 is the rule that exists for that. The rest keep the set
 honest: a file that does not parse, a server shape no harness accepts, a
 variable the .env.example never mentions, a file the README never lists.
 
-C4 catches a credential three ways: by shape anywhere in the document, by the
-key it sits under, and by the flag it follows in an args array. What it still
-cannot catch is a bespoke internal credential passed as a bare positional
-argument — `["run", "<secret>"]` is indistinguishable from an ordinary
-argument, and guessing would reject the real ones. Review positional arguments
-by eye; everything with a name on it is checked here.
+C4 catches a credential four ways: by shape anywhere in the document, by the
+key it sits under, by the flag it follows or is joined to in an args array, and
+by the header name it is written after inside one argument.
+
+What it cannot catch is a bespoke internal credential carrying no name at all —
+`["run", "<secret>"]`, a positional argument indistinguishable from an ordinary
+one, where guessing would reject the real ones. Nor can it catch a credential
+of an unknown shape behind a flag no pattern here recognises. Review bare
+positional arguments by eye; everything written next to a name is checked.
 """
 import json
 import re
@@ -54,15 +57,38 @@ SECRET_KEY = re.compile(r"TOKEN|SECRET|PASSWORD|_KEY$|^KEY$|\bPAT\b|AUTHORIZATIO
 SECRET_FLAG = re.compile(r"^--?(?:[a-z-]*-)?(?:token|secret|password|passwd|pat|key|apikey|api-key|auth)$", re.I)
 
 
+# `--header "Authorization: Bearer <key>"` is the standard mcp-remote shape: the
+# credential is inside one argument, after a header name nothing else inspects.
+HEADER_ARG = re.compile(r"^([A-Za-z][A-Za-z0-9-]*)\s*:\s*(.+)$")
+
+
 def _flagged_args(server):
-    """Yield (index, value) for each arg that follows a credential-shaped flag."""
+    """Yield (label, value) for each argument carrying a named credential.
+
+    Three forms, because all three occur in real MCP configs: the flag and its
+    value as separate arguments, the two joined with `=`, and an HTTP header
+    written whole into one argument.
+    """
     args = server.get("args")
     if not isinstance(args, list):
         return
-    for i in range(len(args) - 1):
-        flag, value = args[i], args[i + 1]
-        if isinstance(flag, str) and isinstance(value, str) and SECRET_FLAG.fullmatch(flag):
-            yield i + 1, value
+    for i, arg in enumerate(args):
+        if not isinstance(arg, str):
+            continue
+        # `--token=<value>` — one argument, not two. _flagged_args only compared
+        # adjacent pairs, so this form passed clean.
+        if "=" in arg and arg.startswith("-"):
+            flag, _, value = arg.partition("=")
+            if SECRET_FLAG.fullmatch(flag) and value:
+                yield f"args[{i}] (after {flag})", value
+                continue
+        # `Authorization: Bearer …` as a single argument.
+        header = HEADER_ARG.match(arg)
+        if header and SECRET_KEY.search(header.group(1)):
+            yield f"args[{i}] (the {header.group(1)} header)", header.group(2).strip()
+            continue
+        if i + 1 < len(args) and isinstance(args[i + 1], str) and SECRET_FLAG.fullmatch(arg):
+            yield f"args[{i + 1}] (after {arg})", args[i + 1]
 
 
 def _strings(node, trail=""):
@@ -97,6 +123,9 @@ def _check_server(name, server, path):
             out.append(Finding("C3", path, f"{where} has a non-list 'args'"))
     elif has_url:
         url = server["url"]
+        if not isinstance(url, str):
+            out.append(Finding("C3", path, f"{where} has a non-string 'url'"))
+            return out
         if not url.startswith("https://"):
             out.append(Finding("C3", path, f"{where} has a non-https url: {url!r}"))
         if server.get("type") not in ("http", "sse"):
@@ -148,22 +177,22 @@ def check(root: Path):
                 out.append(Finding("C3", rel, f"server '{name}' is not an object"))
                 continue
             out.extend(_check_server(name, server, rel))
-            for index, value in _flagged_args(server):
-                if value and not VAR.fullmatch(value):
-                    out.append(Finding("C4", rel, f"server '{name}' args[{index}] is a literal "
-                                                  f"following {server['args'][index - 1]!r}. Only a "
-                                                  "${NAME} reference belongs after a credential flag"))
+            for label, value in _flagged_args(server):
+                # `Bearer ${TOKEN}` is a reference with a scheme in front of it,
+                # which is how a header is actually written.
+                bare = re.sub(r"^(?:Bearer|Basic|Token)\s+", "", value, flags=re.I).strip()
+                if bare and not VAR.fullmatch(bare):
+                    out.append(Finding("C4", rel, f"server '{name}' {label} is a literal. Only a "
+                                                  "${NAME} reference belongs where a credential goes"))
 
         for trail, value in _strings(doc):
             for pattern, what in SECRET_SHAPES:
                 if pattern.search(value):
                     out.append(Finding("C4", rel, f"{trail} looks like {what}. Replace it with a "
                                                   "${NAME} reference and document NAME in .env.example"))
-            # `env.JIRA_API_TOKEN` -> JIRA_API_TOKEN, but `args[3]` used to
-            # yield `args[3]`, which matches nothing — so the key rule could
-            # never fire on an array element, and `args` is exactly where this
-            # file set puts values (`["-y", "@azure-devops/mcp", "${ADO_ORG}"]`).
-            # Strip the index and use the array's own name.
+            # `env.JIRA_API_TOKEN` -> JIRA_API_TOKEN. An array element yields
+            # the array's own name (`args`), which matches no credential-shaped
+            # key — array coverage comes from _flagged_args, not from here.
             key = re.sub(r"\[\d+\]$", "", trail).rsplit(".", 1)[-1]
             if SECRET_KEY.search(key) and value and not VAR.fullmatch(value):
                 out.append(Finding("C4", rel, f"{trail} is a literal under a credential-shaped key. "

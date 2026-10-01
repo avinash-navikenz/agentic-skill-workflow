@@ -71,12 +71,15 @@ function parseHeaders(raw) {
     if (!trimmed) continue;
     const eq = trimmed.indexOf("=");
     if (eq <= 0) {
-      // The leading token up to the first delimiter is a header name, not a
-      // value, so it is safe to show and is the only thing that identifies
-      // which entry to fix.
-      const name = trimmed.split(/[:=\s]/, 1)[0] || "(empty)";
-      throw new Error(`NAVI_OTLP_HEADERS entry ${i + 1} (starting "${name}") is not key=value — ` +
-                      "write it as Name=value, with no colon. The value is not shown here.");
+      // NOTHING from the entry is shown. Showing the leading token looked safe —
+      // it is a header name in the `Name: value` case this message exists for —
+      // but an entry with no delimiter at all IS the token, so pasting a bare
+      // key printed the key, and a value containing a comma printed its tail as
+      // the next "entry". The position is enough: the reader wrote the string.
+      throw new Error(`NAVI_OTLP_HEADERS entry ${i + 1} of ${entries.length} is not key=value. ` +
+                      "Write each as Name=value, separated by commas — a colon after the name is " +
+                      "the usual cause. No part of the entry is shown here, because it may be a " +
+                      "credential.");
     }
     out[trimmed.slice(0, eq).trim()] = trimmed.slice(eq + 1).trim();
   }
@@ -143,7 +146,8 @@ function redactUrl(url) {
   try {
     parsed = new URL(url);
   } catch {
-    return url;
+    // Unparseable, but it may still carry userinfo — redact what can be seen.
+    return url.replace(/(^|\/\/)[^/\s@:]+:[^/\s@]+@/, "$1<redacted>@");
   }
   let out = url;
   if (parsed.username || parsed.password) {
@@ -151,6 +155,11 @@ function redactUrl(url) {
     parsed.password = "";
     out = parsed.toString().replace("://", "://<redacted>@");
   }
+  // A belt for the parser's braces: `user:pass@host/x` with no scheme parses as
+  // protocol `user:` with no username at all, so the branch above never fires
+  // and the credential went through untouched. This matches the userinfo form
+  // wherever it appears, parsed or not.
+  out = out.replace(/(^|\/\/)[^/\s@:]+:[^/\s@]+@/, "$1<redacted>@");
   // Built by hand rather than through `parsed.search`, which percent-encodes the
   // marker into `%3Credacted%3E` and makes the redaction look like a value.
   const q = out.indexOf("?");

@@ -44,8 +44,9 @@ an error.
 
 Every credential comes from the environment. Nothing is read from a file in the
 repository, nothing is printed, and nothing reaches the sidecar. A malformed
-`NAVI_OTLP_HEADERS` entry is reported by its position and its leading header name — never
-by echoing the entry, because the half after the delimiter is the credential. A value
+`NAVI_OTLP_HEADERS` entry is reported by its position alone — no part of the entry is shown,
+because an entry with no delimiter in it is the credential, and a value containing a comma
+becomes the next "entry". A value
 carrying a stray carriage return (a `.env` saved with CRLF endings) is refused by the name
 of the variable that holds it, rather than by the internal header name Node would name.
 

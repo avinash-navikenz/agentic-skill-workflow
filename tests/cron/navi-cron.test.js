@@ -158,11 +158,15 @@ test("a failed item is not recorded, and the NEXT run fails the same way, not wo
                "the retry reported a different failure — the first run left something behind");
 });
 
-test("a failed item leaves no branch behind in the checkout", () => {
+test("no run of any kind creates a local branch", () => {
   const { work } = fixture();
   items(work, [{ id: "PROJ-13", title: "Breaks" }]);
-  cron.run(config(work, { pr: { command: "exit 3" } }), ctx(work));
-  assert.strictEqual(git(["branch", "--list", "navi/proj-13-breaks"], work), "");
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+  cron.run(config(work, { pr: { command: "exit 3" } }), ctx(work));   // fails
+  assert.strictEqual(git(["branch", "--list", "navi/*"], work), "");
+  items(work, [{ id: "PROJ-19", title: "Works" }]);
+  cron.run(config(work), ctx(work));                                  // succeeds
+  assert.strictEqual(git(["branch", "--list", "navi/*"], work), "");
 });
 
 test("a run without --push records nothing, so the first real run still opens it", () => {
@@ -197,23 +201,78 @@ test("a remote configured as a relative path still pushes", () => {
   assert.match(git(["branch", "--list", "navi/proj-17-relative-remote"], origin), /proj-17/);
 });
 
-test("a branch left behind by an interrupted run does not wedge the next one", () => {
+test("a local branch of the same name is neither used nor touched", () => {
+  // It used to be force-reset by `checkout -B` and then force-deleted in the
+  // finally — so a branch a person had made, carrying a commit that existed
+  // nowhere else, was silently destroyed by a successful run.
   const { work, origin } = fixture();
   items(work, [{ id: "PROJ-15", title: "Interrupted" }]);
   process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
-  git(["branch", "navi/proj-15-interrupted"], work);        // the leftover
+
+  git(["branch", "navi/proj-15-interrupted"], work);
+  git(["checkout", "-q", "navi/proj-15-interrupted"], work);
+  fs.writeFileSync(path.join(work, "theirs.txt"), "a commit that exists nowhere else");
+  git(["add", "theirs.txt"], work);          // not -A: items.json must stay untracked
+  git(["commit", "-q", "-m", "HUMAN: work in progress"], work);
+  const theirs = git(["rev-parse", "navi/proj-15-interrupted"], work);
+  git(["checkout", "-q", "main"], work);
+
   const result = cron.run(config(work), ctx(work));
   assert.strictEqual(result.failed.length, 0, JSON.stringify(result.failed));
+  assert.strictEqual(git(["rev-parse", "navi/proj-15-interrupted"], work), theirs,
+                     "the run moved or deleted a branch it did not create");
   assert.match(git(["branch", "--list", "navi/proj-15-interrupted"], origin), /proj-15/);
 });
 
-test("a corrupt state file stops the run rather than re-proposing everything", () => {
+test("a remote branch this run cannot fast-forward is never overwritten", () => {
+  // --force-with-lease used to guard this, but the lease reads a tracking ref
+  // this runner never refreshes — so one `git fetch` by anybody made the force
+  // succeed and a person's commits disappeared from the remote.
+  const { work, origin } = fixture();
+  items(work, [{ id: "PROJ-18", title: "Contested" }]);
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+  const branch = "navi/proj-18-contested";
+
+  // Somebody else's branch, already on the remote, unrelated to our base.
+  git(["checkout", "-q", "-b", "theirs"], work);
+  fs.writeFileSync(path.join(work, "theirs.txt"), "their work");
+  git(["add", "theirs.txt"], work);          // not -A: items.json must stay untracked
+  git(["commit", "-q", "-m", "HUMAN: wrote the proposal"], work);
+  git(["push", "-q", "origin", `HEAD:refs/heads/${branch}`], work);
+  const theirs = git(["rev-parse", "HEAD"], work);
+  git(["checkout", "-q", "main"], work);
+  git(["fetch", "-q", "origin"], work);        // the step that defeated the lease
+
+  const result = cron.run(config(work), ctx(work));
+  assert.strictEqual(result.failed.length, 1);
+  assert.match(result.failed[0].message, /already exists on origin/);
+  assert.strictEqual(git(["rev-parse", branch], origin), theirs,
+                     "the run overwrote a branch somebody else had pushed");
+});
+
+test("a state file that cannot be read or parsed stops the run", () => {
   const { work } = fixture();
   const cfg = config(work);
-  fs.writeFileSync(path.join(work, cfg.stateFile), "{truncated");
+  const state = path.join(work, cfg.stateFile);
+
+  fs.writeFileSync(state, "{truncated");
   assert.throws(() => cron.run(cfg, ctx(work)), /not valid JSON[\s\S]*Refusing to run/);
-  fs.writeFileSync(path.join(work, cfg.stateFile), JSON.stringify({ done: [] }));
+
+  fs.writeFileSync(state, JSON.stringify({ done: [] }));
   assert.throws(() => cron.run(cfg, ctx(work)), /no 'processed' array/);
+
+  // Unreadable is not the same as absent. Only ENOENT means "nothing yet";
+  // anything else used to fall through to an empty set and re-propose the lot.
+  fs.writeFileSync(state, JSON.stringify({ processed: ["PROJ-30"] }));
+  fs.chmodSync(state, 0o000);
+  try {
+    assert.throws(() => cron.run(cfg, ctx(work)), /cannot be read \(EACCES\)/);
+  } finally {
+    fs.chmodSync(state, 0o644);
+  }
+  fs.rmSync(state);
+  fs.mkdirSync(state);
+  assert.throws(() => cron.run(cfg, ctx(work)), /cannot be read \(EISDIR\)/);
 });
 
 test("a stateFile pointing outside the repository is refused", () => {
@@ -223,6 +282,14 @@ test("a stateFile pointing outside the repository is refused", () => {
                 /resolves outside the repository/);
   assert.throws(() => cron.run(config(work, { stateFile: "/tmp/escaped.json" }), ctx(work)),
                 /resolves outside the repository/);
+
+  // A symlink inside the checkout pointing out of it: path arithmetic alone
+  // said this was contained, and the run then read and wrote outside the repo.
+  const outside = path.join(path.dirname(work), "outside.json");
+  fs.symlinkSync(outside, path.join(work, "state-link.json"));
+  assert.throws(() => cron.run(config(work, { stateFile: "state-link.json" }), ctx(work)),
+                /resolves outside the repository/);
+  assert.strictEqual(fs.existsSync(outside), false, "the run wrote outside the repository");
 });
 
 test("the checkout cron runs in is left on its own branch, clean", () => {
@@ -254,4 +321,21 @@ test("a fetch command that fails stops the run with its stderr", () => {
   const { work } = fixture();
   assert.throws(() => cron.run(config(work, { source: { fetch: "echo nope >&2; exit 4" } }), ctx(work)),
                 /source\.fetch failed \(4\): nope/);
+});
+
+test("--max refuses anything that is not a whole number", () => {
+  // Number("abc") is NaN and slice(0, NaN) is empty, so a typo used to report a
+  // clean zero-item run. `--max` with nothing after it fell back to the config.
+  const err = [];
+  const write = process.stderr.write.bind(process.stderr);
+  process.stderr.write = (s) => { err.push(String(s)); return true; };
+  try {
+    assert.strictEqual(cron.main(["--config", "nonsuch.json", "--max", "abc"]), 2);
+    assert.match(err.join(""), /--max must be a whole number/);
+    err.length = 0;
+    assert.strictEqual(cron.main(["--config", "nonsuch.json", "--max"]), 2);
+    assert.match(err.join(""), /--max needs a whole number/);
+  } finally {
+    process.stderr.write = write;
+  }
 });

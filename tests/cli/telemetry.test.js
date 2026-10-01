@@ -367,21 +367,60 @@ test("preview rejects a backend name export would reject", () => {
 
 // --------------------------------------------- regressions found in review
 
-test("a malformed NAVI_OTLP_HEADERS entry never echoes the value", () => {
-  const secret = "sk-live-TOPSECRET-9f3a";
-  assert.throws(() => parseHeaders(`a=1, Authorization: Bearer ${secret}`), (e) => {
-    assert.ok(!e.message.includes(secret), `the error printed the credential: ${e.message}`);
-    assert.match(e.message, /entry 2 \(starting "Authorization"\)/);
-    return true;
-  });
+test("a malformed NAVI_OTLP_HEADERS entry never echoes any part of itself", () => {
+  // Three shapes, because showing "just the leading token" was safe for the
+  // first and a straight credential leak for the other two: an entry with no
+  // delimiter IS the token, and a value containing a comma becomes the next
+  // "entry". The message now carries the position and nothing else.
+  const cases = [
+    ["a=1, Authorization: Bearer sk-live-TOPSECRET-9f3a", "sk-live-TOPSECRET-9f3a"],
+    ["sk-ant-api03-REALKEYVALUE", "sk-ant-api03-REALKEYVALUE"],
+    ["Authorization=Bearer abc,defmoresecret", "defmoresecret"],
+  ];
+  for (const [raw, secret] of cases) {
+    assert.throws(() => parseHeaders(raw), (e) => {
+      assert.ok(!e.message.includes(secret), `the error printed the credential: ${e.message}`);
+      assert.match(e.message, /NAVI_OTLP_HEADERS entry \d+ of \d+ is not key=value/);
+      return true;
+    }, `expected ${JSON.stringify(raw)} to be refused`);
+  }
 });
 
 test("export reports a malformed header variable without printing it", async () => {
-  const secret = "sk-live-TOPSECRET-9f3a";
+  for (const raw of ["Authorization: Bearer sk-live-TOPSECRET-9f3a", "sk-ant-api03-REALKEYVALUE"]) {
+    const { lines, emit } = capture();
+    const env = { NAVI_OTLP_ENDPOINT: "https://c/v1/traces", NAVI_OTLP_HEADERS: raw };
+    assert.strictEqual(await telemetry.run(["export", "--backend", "otlp"], repo(), emit, env), 1);
+    const text = lines.join("\n");
+    assert.ok(!text.includes("TOPSECRET") && !text.includes("REALKEYVALUE"),
+              `the credential reached stdout: ${text}`);
+  }
+});
+
+test("the sidecar records a redacted url, not the one with the credential in it", async () => {
+  // The earlier redaction test only ran --dry-run, which returns before the
+  // sidecar is written — so reverting the redaction left the suite green while
+  // the credential went into a committed file.
+  const root = repo();
+  const { s, url } = await server((req, res) => { res.writeHead(200); res.end("{}"); });
+  const credentialed = url.replace("http://", "http://user:S3cr3tP4ss@") + "?api-key=alsosecret";
   const { lines, emit } = capture();
-  const env = { NAVI_OTLP_ENDPOINT: "https://c/v1/traces", NAVI_OTLP_HEADERS: `Authorization: Bearer ${secret}` };
-  assert.strictEqual(await telemetry.run(["export", "--backend", "otlp"], repo(), emit, env), 1);
-  assert.ok(!lines.join("\n").includes(secret), "the credential reached stdout");
+  await telemetry.run(["export", "--backend", "otlp"], root, emit,
+                      { NAVI_OTLP_ENDPOINT: credentialed, NAVI_OTLP_TRACE_NAMESPACE: "ns" });
+  s.close();
+
+  const raw = fs.readFileSync(telemetry.sidecarPath(root), "utf8");
+  assert.ok(!raw.includes("S3cr3tP4ss"), `userinfo reached the sidecar: ${raw}`);
+  assert.ok(!raw.includes("alsosecret"), `a query-string key reached the sidecar: ${raw}`);
+  assert.match(raw, /<redacted>/);
+  assert.ok(!lines.join("\n").includes("S3cr3tP4ss"), "userinfo reached stdout");
+});
+
+test("a scheme-less endpoint carrying userinfo is still redacted", () => {
+  // `new URL` reads `user:` as the scheme, so the parsed-userinfo branch never
+  // fired and the credential went through untouched.
+  assert.strictEqual(redactUrl("user:S3cr3tP4ss@collector.internal/v1/traces"),
+                     "<redacted>@collector.internal/v1/traces");
 });
 
 test("doctor survives a variable it cannot parse, and still lists the rest", () => {
