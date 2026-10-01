@@ -16,8 +16,13 @@ the thinking.
 
 **It never touches the checkout it runs in.** Every change happens in a git worktree it
 creates and removes, and **no local branch is ever created**: the commit is pushed straight
-to the remote ref by sha. So there is no branch of yours it can reset, none of its own to
-leave behind, and no ref accumulating per work item.
+to the remote ref by sha. So there is no branch of yours it can reset and none of its own to
+leave behind.
+
+One ref does appear per pushed item, and it is not the runner's doing: git writes a
+remote-tracking ref (`refs/remotes/origin/navi/<slug>`) for any branch it pushes, exactly as
+it would for a push you typed. `git remote prune origin` clears them once the branches are
+merged and gone.
 
 **Tracker text never reaches a shell as code.** In most organisations anyone can file a
 ticket, so a summary of `"; rm -rf ~; #` is a thing that can arrive. Configured commands
@@ -79,11 +84,17 @@ cron does not read your shell profile, so the scheduled line sources
 recorded only once its pull request opens — a failure halfway, or a run without `--push`, is
 retried on the next run rather than silently dropped.
 
-A retry whose branch is already on the remote is not an error: the runner compares the tree
-it just built against the one up there, and if they match, the branch is its own from an
-earlier run whose pull-request step failed, so it skips the push and reopens. If the trees
-differ, somebody else's work is under that name and the item is refused until a person
+A retry whose branch is already on the remote is not an error. Every commit the runner makes
+carries a `Navi-Cron-Item: <id>` trailer, and on a retry it checks the commits that branch
+adds to the base: if they all carry this item's trailer, the branch is its own from an
+earlier run whose pull-request step failed, so it reopens without pushing anything over it.
+A commit without the trailer is somebody's own work, and the item is refused until a person
 decides.
+
+The trailer is what makes this survive an ordinary week. Comparing content instead would
+mean the branch stopped being recognisable the moment anybody merged to the base — the
+rebuilt scaffold would differ, and the runner would accuse a person of work it had done
+itself.
 
 Delete a line from the state file to make it propose an item again. If the file cannot be
 read or parsed the run **stops** rather than treating it as empty: a missing file means

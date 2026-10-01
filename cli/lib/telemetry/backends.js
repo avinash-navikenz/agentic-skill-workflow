@@ -6,7 +6,7 @@
 // what is missing by VARIABLE NAME, which is the one thing worth saying out loud
 // about a credential.
 
-const { URL } = require("node:url");
+const { redactUrl } = require("./redact");
 
 const NO_NETWORK_HINT = "set it and run `navi-delivery telemetry doctor` again";
 
@@ -134,36 +134,6 @@ function resolve(name, env) {
     ready: missing.length === 0 && problems.length === 0,
     hint: missing.length ? NO_NETWORK_HINT : null,
   };
-}
-
-// An OTLP endpoint is ordinarily not a secret, but two ordinary forms carry one:
-// userinfo (`https://user:token@host/...`) and a query-string key. The sidecar is
-// a file in the repository and `delivery/.adlc/` is committed, so the url is
-// redacted before it is recorded or printed.
-function redactUrl(url) {
-  if (typeof url !== "string" || !url) return url;
-  let parsed;
-  try {
-    parsed = new URL(url);
-  } catch {
-    // Unparseable, but it may still carry userinfo — redact what can be seen.
-    return url.replace(/(^|\/\/)[^/\s@:]+:[^/\s@]+@/, "$1<redacted>@");
-  }
-  let out = url;
-  if (parsed.username || parsed.password) {
-    parsed.username = "";
-    parsed.password = "";
-    out = parsed.toString().replace("://", "://<redacted>@");
-  }
-  // A belt for the parser's braces: `user:pass@host/x` with no scheme parses as
-  // protocol `user:` with no username at all, so the branch above never fires
-  // and the credential went through untouched. This matches the userinfo form
-  // wherever it appears, parsed or not.
-  out = out.replace(/(^|\/\/)[^/\s@:]+:[^/\s@]+@/, "$1<redacted>@");
-  // Built by hand rather than through `parsed.search`, which percent-encodes the
-  // marker into `%3Credacted%3E` and makes the redaction look like a value.
-  const q = out.indexOf("?");
-  return q === -1 ? out : `${out.slice(0, q)}?<redacted>`;
 }
 
 module.exports = { BACKENDS, resolve, parseHeaders, redactUrl };

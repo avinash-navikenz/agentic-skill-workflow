@@ -128,6 +128,10 @@ function shell(command, { cwd, env = {}, capture = true }) {
   return { status: r.status, stdout: r.stdout || "", stderr: r.stderr || "" };
 }
 
+// The marker that makes a branch identifiable as this tool's work. It goes in
+// the commit message, so it travels with the commit to the remote and back.
+const TRAILER = "Navi-Cron-Item";
+
 // The remote's sha for a branch, or null when it has none. `ls-remote` asks the
 // remote directly, so no tracking ref — which this runner never refreshes for
 // `navi/*` — can make a stale answer look current.
@@ -136,16 +140,30 @@ function remoteBranchSha(cfg, branch, repoRoot) {
   return out ? out.split(/\s+/)[0] : null;
 }
 
-// Trees, not commits: a retry of the same item builds the same content under a
-// later timestamp, so the commit shas differ and the trees do not.
-function sameTree(localSha, remoteSha, worktree, cfg, branch, repoRoot) {
+// Is every commit on that remote branch one of ours, for this item?
+//
+// Comparing trees instead looked equivalent and was not: the worktree is cut
+// from the current base, so the moment anybody merges to the base our rebuilt
+// tree differs from the one we pushed — and the runner then declared its OWN
+// branch to be somebody else's and refused the item permanently. Bases move
+// constantly; that made the retry path a one-shot. An editable title did it too.
+//
+// The trailer does not move when the base does. A commit without it is somebody
+// else's work, which is the only question being asked here.
+function remoteBranchIsOurs(cfg, branch, item, repoRoot) {
   try {
     git(["fetch", "--quiet", cfg.repo.remote, `refs/heads/${branch}`], repoRoot);
-    const mine = git(["rev-parse", `${localSha}^{tree}`], worktree);
-    const theirs = git(["rev-parse", `${remoteSha}^{tree}`], repoRoot);
-    return mine === theirs;
+    const range = `FETCH_HEAD --not ${cfg.repo.remote}/${cfg.repo.base}`;
+    const commits = git(["rev-list", ...range.split(" ")], repoRoot).split("\n").filter(Boolean);
+    if (!commits.length) return false;      // nothing of ours distinguishes it
+    return commits.every((sha) => {
+      const message = git(["show", "-s", "--format=%B", sha], repoRoot);
+      return message.includes(`${TRAILER}: ${item.id}`);
+    });
   } catch {
-    return false;             // cannot prove it is ours, so treat it as not ours
+    // Cannot prove it is ours — a fetch that failed, a ref that moved. Refusing
+    // for this run is the safe answer; the next run asks again.
+    return false;
   }
 }
 
@@ -170,14 +188,15 @@ function stateFileFor(repoRoot, cfg) {
   let real;
   try {
     real = path.join(fs.realpathSync(path.dirname(resolved)), path.basename(resolved));
-    // lstat, not existsSync: a symlink pointing at a file that does not exist
-    // yet reports false from existsSync, so the link was never followed and a
-    // dangling link out of the repository passed the check.
-    const stat = fs.lstatSync(resolved, { throwIfNoEntry: false });
-    if (stat && stat.isSymbolicLink()) {
-      real = path.resolve(path.dirname(real), fs.readlinkSync(resolved));
-    } else if (stat) {
-      real = fs.realpathSync(resolved);
+    // The whole chain, not one hop. readlinkSync resolves a single link, so a
+    // first link landing inside the repository passed the check while the write
+    // followed the chain the rest of the way out. lstat rather than existsSync,
+    // because a link whose target does not exist yet reports false from
+    // existsSync and so was never followed at all.
+    for (let hop = 0; hop < 20; hop += 1) {
+      const stat = fs.lstatSync(real, { throwIfNoEntry: false });
+      if (!stat || !stat.isSymbolicLink()) break;
+      real = path.resolve(path.dirname(real), fs.readlinkSync(real));
     }
   } catch {
     real = resolved;           // an absent parent cannot be a symlink out
@@ -271,7 +290,9 @@ function processItem(item, cfg, ctx) {
 
     git(["add", "-A"], worktree);
     git(["commit", "-q", "-m",
-         `chore(delivery): propose ${slug} from ${item.id}\n\nOpened by navi-cron. Nothing in this branch has been reviewed by a person.`],
+         `chore(delivery): propose ${slug} from ${item.id}\n\n` +
+         "Opened by navi-cron. Nothing in this branch has been reviewed by a person.\n\n" +
+         `${TRAILER}: ${item.id}`],
         worktree);
 
     if (!push) {
@@ -296,19 +317,18 @@ function processItem(item, cfg, ctx) {
 
     if (remoteSha === null) {
       git(["push", cfg.repo.remote, `${sha}:refs/heads/${branch}`], repoRoot);
-    } else if (sameTree(sha, remoteSha, worktree, cfg, branch, repoRoot)) {
+    } else if (remoteBranchIsOurs(cfg, branch, item, repoRoot)) {
       // Our own branch from an earlier run whose pull-request step failed: the
-      // item was not recorded, so it is being retried. The commit sha differs
-      // (a later timestamp) but the tree is identical, which is what says no
-      // human content is at stake. Nothing to push; go straight to the step
-      // that failed.
-      log(`  ${branch} is already on ${cfg.repo.remote} with identical content — reopening`);
+      // item was not recorded, so it is being retried. Nothing is pushed over
+      // it — the scaffold already up there is as good as the one just built —
+      // and the run goes straight to the step that failed.
+      log(`  ${branch} is already on ${cfg.repo.remote} and is this item's — reopening`);
     } else {
-      // Different content under the same name. This is somebody's work, or an
-      // older proposal for a changed item, and it is not this tool's to resolve.
-      throw new Error(`${branch} already exists on ${cfg.repo.remote} with different content. ` +
-                      "An earlier proposal for this item, or somebody's own work. Finish or " +
-                      "delete that branch; this item is retried untouched until you do.");
+      // Somebody else's commits are on that branch, or the check could not be
+      // completed. Either way it is not this tool's to resolve.
+      throw new Error(`${branch} on ${cfg.repo.remote} carries commits this run did not make. ` +
+                      "Somebody's own work, or a branch it could not verify. Finish or delete " +
+                      "it; this item is retried untouched until you do.");
     }
     if (cfg.pr && cfg.pr.command) {
       const res = shell(cfg.pr.command, {
@@ -420,6 +440,11 @@ function main(argv) {
     return 2;
   }
 
+  // Read here, validated at the top of main. Moving the validation above
+  // loadConfig took this binding with it and left the reference below, so every
+  // real run died with `maxFlag is not defined` — inside main's try, so it was
+  // reported as though the config were at fault.
+  const maxFlag = value("--max");
   let result;
   try {
     result = run(cfg, {

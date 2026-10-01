@@ -158,14 +158,22 @@ test("a failed item is not recorded, and the NEXT run fails the same way, not wo
                "the retry reported a different failure — the first run left something behind");
 });
 
-test("no run of any kind creates a local branch", () => {
+test("no local branch exists at any point during a run, not merely after it", () => {
+  // Checking only after the run passed under the old model too, which created
+  // the branch and deleted it in its `finally`. The pull-request command runs
+  // mid-flight — after the point a branch would have been created — so it is
+  // what can see the difference.
   const { work } = fixture();
-  items(work, [{ id: "PROJ-13", title: "Breaks" }]);
-  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
-  cron.run(config(work, { pr: { command: "exit 3" } }), ctx(work));   // fails
-  assert.strictEqual(git(["branch", "--list", "navi/*"], work), "");
-  items(work, [{ id: "PROJ-19", title: "Works" }]);
-  cron.run(config(work), ctx(work));                                  // succeeds
+  items(work, [{ id: "PROJ-19", title: "Mid flight" }]);
+  const seen = path.join(work, "branches-during-run.txt");
+  const cfg = config(work, {
+    pr: { command: `git -C "${work}" branch --list 'navi/*' > "${seen}"` },
+  });
+
+  const result = cron.run(cfg, ctx(work));
+  assert.strictEqual(result.failed.length, 0, JSON.stringify(result.failed));
+  assert.strictEqual(fs.readFileSync(seen, "utf8").trim(), "",
+                     "a local branch existed while the run was in flight");
   assert.strictEqual(git(["branch", "--list", "navi/*"], work), "");
 });
 
@@ -245,9 +253,39 @@ test("a remote branch this run cannot fast-forward is never overwritten", () => 
 
   const result = cron.run(config(work), ctx(work));
   assert.strictEqual(result.failed.length, 1);
-  assert.match(result.failed[0].message, /already exists on origin/);
+  assert.match(result.failed[0].message, /carries commits this run did not make/);
   assert.strictEqual(git(["rev-parse", branch], origin), theirs,
                      "the run overwrote a branch somebody else had pushed");
+});
+
+test("a retry still recognises its own branch after the base has moved", () => {
+  // The tree comparison this replaced was computed against the CURRENT base, so
+  // the moment anybody merged to main the rebuilt tree differed from the pushed
+  // one and the runner declared its own branch to be somebody else's — refusing
+  // the item permanently. Bases move constantly, which made the retry path a
+  // one-shot.
+  const { work, origin } = fixture();
+  items(work, [{ id: "PROJ-41", title: "Retry me" }]);
+  process.env.NAVI_PR_LOG = path.join(work, "pr.txt");
+
+  // Run 1: the pull-request step fails after the branch is pushed.
+  const first = cron.run(config(work, { pr: { command: "exit 3" } }), ctx(work));
+  assert.strictEqual(first.failed.length, 1);
+  const pushed = git(["rev-parse", "navi/proj-41-retry-me"], origin);
+
+  // Somebody merges to the base.
+  fs.writeFileSync(path.join(work, "moved.txt"), "someone else's merge");
+  git(["add", "moved.txt"], work);
+  git(["commit", "-q", "-m", "someone else's merge"], work);
+  git(["push", "-q", "origin", "main"], work);
+
+  // Run 2: the documented retry. It must reopen, not accuse a person.
+  const second = cron.run(config(work), ctx(work));
+  assert.strictEqual(second.failed.length, 0, JSON.stringify(second.failed));
+  assert.strictEqual(second.proposed[0].pushed, true);
+  assert.strictEqual(git(["rev-parse", "navi/proj-41-retry-me"], origin), pushed,
+                     "the retry rewrote a branch it only needed to reopen");
+  assert.ok(cron.readProcessed(work, config(work)).has("PROJ-41"));
 });
 
 test("a state file that cannot be read or parsed stops the run", () => {
@@ -290,6 +328,14 @@ test("a stateFile pointing outside the repository is refused", () => {
   assert.throws(() => cron.run(config(work, { stateFile: "state-link.json" }), ctx(work)),
                 /resolves outside the repository/);
   assert.strictEqual(fs.existsSync(outside), false, "the run wrote outside the repository");
+
+  // Two hops: resolving only the first one landed inside the repository and
+  // passed, while the write followed the chain the rest of the way out.
+  fs.symlinkSync("hop2.json", path.join(work, "hop1.json"));
+  fs.symlinkSync(path.join("..", "outside.json"), path.join(work, "hop2.json"));
+  assert.throws(() => cron.run(config(work, { stateFile: "hop1.json" }), ctx(work)),
+                /resolves outside the repository/);
+  assert.strictEqual(fs.existsSync(outside), false, "a two-hop link wrote outside the repository");
 });
 
 test("the checkout cron runs in is left on its own branch, clean", () => {
@@ -338,4 +384,38 @@ test("--max refuses anything that is not a whole number", () => {
   } finally {
     process.stderr.write = write;
   }
+});
+
+test("main() runs end to end — the entry point every cron line actually calls", () => {
+  // The suite exercised run() directly and called main() only on paths that
+  // return before doing work, so a ReferenceError in main left 191 tests green
+  // while every real invocation died. This drives the whole entry point.
+  const { work, origin } = fixture();
+  items(work, [{ id: "PROJ-40", title: "End to end" }]);
+  const cfgPath = path.join(work, "cfg.json");
+  fs.writeFileSync(cfgPath, JSON.stringify({
+    source: { name: "t", fetch: `cat ${path.join(work, "items.json")}` },
+    repo: { base: "main", remote: "origin", branchPrefix: "navi/" },
+    lane: "express", maxPerRun: 3, stateFile: ".navi-cron-state.json",
+    pr: { command: "true" },
+  }));
+
+  const cwd = process.cwd();
+  const out = [];
+  const write = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (s) => { out.push(String(s)); return true; };
+  let code;
+  try {
+    process.chdir(work);
+    code = cron.main(["--config", cfgPath, "--push"]);
+  } finally {
+    process.stdout.write = write;
+    process.chdir(cwd);
+  }
+
+  assert.strictEqual(code, 0, out.join(""));
+  assert.match(out.join(""), /1 proposed, 0 failed/);
+  assert.match(git(["branch", "--list", "navi/proj-40-end-to-end"], origin), /proj-40/);
+  assert.strictEqual(JSON.parse(fs.readFileSync(path.join(work, ".navi-cron-state.json"), "utf8")).processed[0],
+                     "PROJ-40");
 });

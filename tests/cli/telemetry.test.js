@@ -467,3 +467,14 @@ test("an endpoint carrying a credential is redacted everywhere it is written", a
   assert.strictEqual(redactUrl("https://h/v1/traces"), "https://h/v1/traces");
   assert.strictEqual(redactUrl("not a url"), "not a url");
 });
+
+test("preview and export agree on an --all run that finds nothing", () => {
+  // preview --all exited 1 on a quiet repository while export --all exited 0,
+  // against a table in docs/CLI.md that says 0. Neither had a test.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nd-quiet-"));
+  init.run([], root, () => {});
+  propose.run(["c", "--lane", "express"], root, () => {});
+  const { lines, emit } = capture();
+  assert.strictEqual(telemetry.run(["preview", "--all"], root, emit, {}), 0);
+  assert.match(lines.join("\n"), /nothing recorded yet/);
+});

@@ -8,6 +8,7 @@
 const https = require("node:https");
 const http = require("node:http");
 const { URL } = require("node:url");
+const { redactUrl, redactText } = require("./redact");
 
 // 401 and 403 are not retried: a wrong or revoked key will be just as wrong on
 // the third attempt, and retrying it only delays the message that says so.
@@ -19,7 +20,10 @@ function once(url, headers, body, timeoutMs) {
     try {
       target = new URL(url);
     } catch {
-      resolve({ status: 0, body: "", error: `not a URL: ${url}` });
+      // Redacted: this message is printed AND written to the sidecar, and an
+      // endpoint that fails to parse is exactly the one carrying a typo next
+      // to a credential.
+      resolve({ status: 0, body: "", error: `not a URL: ${redactUrl(url)}` });
       return;
     }
     const lib = target.protocol === "http:" ? http : https;
@@ -41,16 +45,16 @@ function once(url, headers, body, timeoutMs) {
         res.on("end", () => resolve({ status: res.statusCode, body: chunks, error: null }));
       });
     } catch (e) {
-      resolve({ status: 0, body: "", error: `request could not be built: ${e.message}` });
+      resolve({ status: 0, body: "", error: redactText(`request could not be built: ${e.message}`) });
       return;
     }
     req.on("timeout", () => { req.destroy(new Error(`no response in ${timeoutMs}ms`)); });
-    req.on("error", (e) => resolve({ status: 0, body: "", error: e.message }));
+    req.on("error", (e) => resolve({ status: 0, body: "", error: redactText(e.message) }));
     try {
       req.write(body);
       req.end();
     } catch (e) {
-      resolve({ status: 0, body: "", error: `request could not be sent: ${e.message}` });
+      resolve({ status: 0, body: "", error: redactText(`request could not be sent: ${e.message}`) });
     }
   });
 }
@@ -78,7 +82,7 @@ async function post(url, headers, payload, opts = {}) {
     bytes: body.length,
     // The response body is the only place a vendor says WHY it refused, so it
     // is carried through rather than reduced to the status code.
-    error: last.error || `HTTP ${last.status}${last.body ? `: ${last.body.slice(0, 400)}` : ""}`,
+    error: redactText(last.error || `HTTP ${last.status}${last.body ? `: ${last.body.slice(0, 400)}` : ""}`),
   };
 }
 
