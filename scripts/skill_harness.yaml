@@ -431,6 +431,14 @@ stage:
   - { skill: navi-skill-pipeline-automation, fence: 0, path: "delivery/ops/delivery-pipeline.md" }
   - { skill: navi-skill-pipeline-automation, fence: 1, path: "delivery/changes/{change}/evidence/g7-release.md" }
   - { skill: navi-skill-progressive-delivery, fence: 0, path: "delivery/changes/{change}/rollout.md" }
+  # --- the Azure cluster -----------------------------------------------------
+  # These four skills' artefacts are files in the repository — an ADO pipeline
+  # definition, Bicep, a policy assignment set, and the registers that bind them
+  # to the platform-neutral ops/ files. Nothing here reaches a subscription:
+  # `az` is not available to the harness and the blocks never call it.
+  - { skill: navi-skill-azure-pipelines, fence: 0, path: ".azure/azure-pipelines.yml" }
+  - { skill: navi-skill-azure-pipelines, fence: 1, path: ".azure/templates/deploy-stage.yml" }
+  - { skill: navi-skill-azure-pipelines, fence: 2, path: "delivery/ops/azure/pipeline-bindings.md" }
   - { skill: navi-skill-backlog-prioritisation, fence: 0, path: "delivery/backlog.md" }
   - { skill: navi-skill-incident-response, fence: 0, path: "delivery/ops/postmortems/{change}.md" }
   - { skill: navi-skill-outcome-and-kpi-definition, fence: 1, path: "delivery/ops/postmortems/{change}.md", mode: append }
@@ -490,6 +498,37 @@ skills:
         file: openapi.yaml
         delete_line: "additionalProperties: false"
         expects: "forbid unlisted ones"
+
+  navi-skill-azure-pipelines:
+    mutations:
+      - name: a deployment job loses the environment every approval hangs off
+        file: ".azure/azure-pipelines.yml"
+        replace: ["        environment: web-shell-prod\n        pool:\n          vmImage: ubuntu-22.04\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - template: templates/deploy-stage.yml\n                  parameters:\n                    serviceConnection: sc-web-shell-prod\n                    resourceGroup: rg-webshell-prd-weu\n                    appName: ca-webshell-prd-weu\n                    imageDigest: $(imageDigest)\n", "        pool:\n          vmImage: ubuntu-22.04\n        strategy:\n          runOnce:\n            deploy:\n              steps:\n                - template: templates/deploy-stage.yml\n                  parameters:\n                    serviceConnection: sc-web-shell-prod\n                    resourceGroup: rg-webshell-prd-weu\n                    appName: ca-webshell-prd-weu\n                    imageDigest: $(imageDigest)\n"]
+        expects: "deployment job that names no environment"
+      - name: an ADO stage is bound to a STAGE-### the pipeline of record does not define
+        file: "delivery/ops/azure/pipeline-bindings.md"
+        replace: ["| rollback_production | STAGE-005 |", "| rollback_production | STAGE-009 |"]
+        expects: "STAGE-009 is named in pipeline-bindings.md but not defined"
+      - name: a task reference loses its pinned major version
+        file: ".azure/azure-pipelines.yml"
+        replace: ["          - task: AzureCLI@2\n            name: publish", "          - task: AzureCLI\n            name: publish"]
+        expects: "task reference with no pinned major version"
+      - name: a variable group is linked that nothing records
+        file: ".azure/azure-pipelines.yml"
+        replace: ["  - group: web-shell-common", "  - group: web-shell-prod-secrets"]
+        expects: "variable group 'web-shell-prod-secrets', which has no row"
+      - name: a condition is written in macro syntax, which is evaluated too late to matter
+        file: ".azure/azure-pipelines.yml"
+        replace: ["    condition: succeeded()", "    condition: and(succeeded(), eq('$(Build.Reason)', 'IndividualCI'))"]
+        expects: "macro syntax in a condition"
+      - name: production is given a deploy template staging never rehearsed
+        file: "delivery/ops/azure/pipeline-bindings.md"
+        replace: ["| deploy_production | STAGE-004 | templates/deploy-stage.yml |", "| deploy_production | STAGE-004 | templates/deploy-prod.yml |"]
+        expects: "bound to 2 different deploy templates"
+      - name: a stage that deploys drops its exclusive lock
+        file: ".azure/azure-pipelines.yml"
+        replace: ["    dependsOn: deploy_staging\n    condition: succeeded()\n    lockBehavior: sequential\n", "    dependsOn: deploy_staging\n    condition: succeeded()\n"]
+        expects: "no `lockBehavior: sequential`"
 
   navi-skill-backlog-prioritisation:
     mutations:
