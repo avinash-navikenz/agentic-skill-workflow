@@ -48,7 +48,7 @@ Use when a change touches a dataset, a schema, a pipeline or a feature — decid
 Use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, SLOs and secrets posture. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates.
 
 - Owns gates: G7, G8
-- Skills: navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-version-control-workflow, navi-skill-branching, navi-skill-merge-conflicts, navi-skill-dependency-vulnerabilities, navi-skill-pipeline-automation, navi-skill-progressive-delivery, navi-skill-observability, navi-skill-incident-response, navi-skill-knowledge-publishing, navi-skill-release-readiness
+- Skills: navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-version-control-workflow, navi-skill-branching, navi-skill-merge-conflicts, navi-skill-dependency-vulnerabilities, navi-skill-pipeline-automation, navi-skill-azure-pipelines, navi-skill-azure-landing-zone, navi-skill-azure-identity-and-secrets, navi-skill-azure-deployment-safety, navi-skill-progressive-delivery, navi-skill-observability, navi-skill-incident-response, navi-skill-knowledge-publishing, navi-skill-release-readiness
 
 ### navi-agent-fullstack-developer (software-development)
 
@@ -97,5 +97,5 @@ Use when deciding what to test, how much, and whether a change is safe to releas
 Use when a change could be turned against us — who can reach what, where data crosses a trust boundary, what an attacker would gain, and whether a known weakness is one we can live with. Owns ADLC Phases 3 and 6 alongside the Architect and the QA Engineer, and co-owns the G3-DESIGN and G6-QUALITY gates.
 
 - Owns gates: G3, G6
-- Skills: navi-skill-spec-authoring, navi-skill-lane-selection, navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-threat-modelling, navi-skill-decision-records, navi-skill-secure-coding, navi-skill-dependency-vulnerabilities
+- Skills: navi-skill-spec-authoring, navi-skill-lane-selection, navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-threat-modelling, navi-skill-decision-records, navi-skill-secure-coding, navi-skill-dependency-vulnerabilities, navi-skill-azure-identity-and-secrets
 

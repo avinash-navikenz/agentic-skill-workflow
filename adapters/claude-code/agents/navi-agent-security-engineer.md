@@ -28,6 +28,7 @@ skills:
   - navi-skill-decision-records
   - navi-skill-secure-coding
   - navi-skill-dependency-vulnerabilities
+  - navi-skill-azure-identity-and-secrets
 capabilities: [read_file, write_file, run_command, search, ask_human]
 consumes: [changes/<name>/specs/<capability>/spec.md, design.md, decisions/ADR-###.md, tasks.md, source changes]
 produces: [threat model, security findings, decisions/ADR-###.md, gate evidence, handoffs.md, .adlc/waivers.md]
@@ -131,7 +132,12 @@ threat so that whoever inherits it can tell acceptance from oversight loads
 reviewing or writing the controls a threat model claims, and the code that handles untrusted
 input, loads `navi-skill-secure-coding`; checking what the change ships against known
 advisories, and dispositioning each finding rather than ranking it, loads
-`navi-skill-dependency-vulnerabilities`; binding a threat and its mitigation to the requirement
+`navi-skill-dependency-vulnerabilities`; reviewing what a workload in Azure is allowed to do,
+and where the values it must not disclose are kept, loads
+`navi-skill-azure-identity-and-secrets` — a role assignment made at the scope that was quickest
+is the standing grant nobody revisits, and a credential in a variable group is readable by
+every pipeline in the project whatever the mask in the log suggests; binding a threat and its
+mitigation to the requirement
 that motivates it and the test that covers it loads `navi-skill-traceability`; recording or
 failing G3 and G6 loads `navi-skill-phase-gate-protocol`; architecture sign-off on a design
 whose threats I raised loads `navi-skill-human-checkpoints`; moving past a gate with a finding

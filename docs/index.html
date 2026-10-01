@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>navi-delivery — field guide</title>
 <!-- BEGIN GENERATED SUMMARY -->
-<meta name="description" content="An agentic SDLC framework, plan to monitor: 11 persona agents over 45 best-practice skills across 13 disciplines, 9 gates, 4 lanes. Browse the catalogue, follow one change end to end, and install it.">
+<meta name="description" content="An agentic SDLC framework, plan to monitor: 11 persona agents over 49 best-practice skills across 13 disciplines, 9 gates, 4 lanes. Browse the catalogue, follow one change end to end, and install it.">
 <!-- END GENERATED SUMMARY -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -505,7 +505,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <p class="tag">Agents hold the judgment. Skills hold the rules.</p>
     <p class="lede">
       The framework ships <span data-total="agents">11</span> persona agents carrying each discipline's
-      judgment, and <span data-total="skills">45</span> skills across <span data-total="disciplines">13</span>
+      judgment, and <span data-total="skills">49</span> skills across <span data-total="disciplines">13</span>
       disciplines carrying each discipline's rules. A seven-verb CLI scaffolds the lifecycle into
       your repo and records what actually happened at each of nine gates &mdash; so a phase that
       emitted no telemetry did not happen, and a gate whose verdict was never recorded was
@@ -545,7 +545,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <a href="#/skills">
         <div class="n">Catalogue</div>
         <div class="t">Skills</div>
-        <p>All <span data-total="skills">45</span>, searchable and filterable by discipline, phase and gate. Pick one for
+        <p>All <span data-total="skills">49</span>, searchable and filterable by discipline, phase and gate. Pick one for
         its README and both install paths.</p>
       </a>
       <a href="#/install">
@@ -606,7 +606,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
           <dt>Voice</dt><dd>impersonal, imperative</dd>
           <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
         </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="#/skills">Browse the <span data-total="skills">45</span> skills &rarr;</a></p>
+        <p class="small" style="margin:.9em 0 0"><a href="#/skills">Browse the <span data-total="skills">49</span> skills &rarr;</a></p>
       </div>
     </div>
     <div class="note">
@@ -818,7 +818,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
 <section id="cat-skill" data-cat="skill">
   <div class="wrap">
     <p class="kicker">Catalogue · skills</p>
-    <h2><span data-total="skills">45</span> skills across <span data-total="disciplines">13</span> disciplines</h2>
+    <h2><span data-total="skills">49</span> skills across <span data-total="disciplines">13</span> disciplines</h2>
     <p class="lede small">Search by name, trigger phrase, discipline or tag; filter by discipline, ADLC phase or gate. A skill is reachable from a gate through the agents that hold it, which is how someone hunting &ldquo;what do I need for G6&rdquo; looks. Pick one from the list and its README opens beside it, with both ways to install it.</p>
 
     <div class="controls">
@@ -871,7 +871,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
       <div class="half a">
         <h3>The whole framework</h3>
         <div class="cmdwrap"><div class="cmd">/plugin marketplace add navikenz/navi-delivery
-/plugin install navi-delivery@navi-delivery   <span class="hash"># <span data-total="skills">45</span> skills + <span data-total="agents">11</span> agents</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
+/plugin install navi-delivery@navi-delivery   <span class="hash"># <span data-total="skills">49</span> skills + <span data-total="agents">11</span> agents</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
         <p class="small">This is the supported path, and the preferred one: every agent, every
         skill it holds, and the cross-references between them, with no clone to install. The
         repository publishes itself as a Claude Code marketplace carrying one plugin, sourced
@@ -880,7 +880,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
         <p class="small" style="margin-bottom:0"><code>install.sh</code> was verified into a
         scratch directory with
         <code>CLAUDE_SKILLS_DIR</code> / <code>CLAUDE_AGENTS_DIR</code> pointed at it &mdash;
-        <span data-total="skills">45</span> skill directories and <span data-total="agents">11</span> agent files land, each skill
+        <span data-total="skills">49</span> skill directories and <span data-total="agents">11</span> agent files land, each skill
         directory carrying both <code>SKILL.md</code> and <code>README.md</code>, and
         <code>--uninstall</code> removes exactly what it created.</p>
       </div>
@@ -921,7 +921,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <p class="tiny sub">Verified against a local checkout rather than the GitHub path:
     <code>claude plugin validate .</code> passes, the marketplace registers as
     <code>navi-delivery</code>, and <code>claude plugin install
-    navi-delivery@navi-delivery</code> lands <span data-total="skills">45</span> skills and
+    navi-delivery@navi-delivery</code> lands <span data-total="skills">49</span> skills and
     <span data-total="agents">11</span> agents. The <code>navikenz/navi-delivery</code> form
     above resolves once that repository is published.</p>
 
@@ -1754,7 +1754,7 @@ lane:   standard
 {
  "counts": {
   "agents": 11,
-  "skills": 45,
+  "skills": 49,
   "disciplines": 13,
   "phases": 9,
   "gates": 9,
@@ -1806,7 +1806,7 @@ lane:   standard
   {
    "id": "platform-devops",
    "label": "platform devops",
-   "skills": 4,
+   "skills": 8,
    "agents": 1
   },
   {
@@ -2572,7 +2572,7 @@ lane:   standard
     "G8"
    ],
    "description": "Use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, SLOs and secrets posture. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates.",
-   "hay": "navi-agent-devops-engineer devops engineer platform-devops use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, slos and secrets posture. owns adlc phases 7 and 8 and the g7-release and g8-operate gates. devops release environments blast-radius slo secrets incidents make releasing boring and reversible, and make what happens afterwards visible enough that we learn from it before a customer tells us. when speed and blast radius conflict, cut the radius rather than the speed — progressive exposure lets us ship often and fail small. when stability and delivery conflict, i would rather consult the error budget than the loudest opinion in the room, and the only override i will take is in the safe direction — work that reduces the risk the budget was spent on still goes. spending what is already gone is a decision to have the next incident. when a rollback path and a forward fix are both available during an incident, roll back unless the rollback is itself risky — restoring the known state beats reasoning under pressure. favour automating a step over documenting it, and documenting it over remembering it. when a waiver is offered in place of a release criterion, ask what will actually be different by the date it names; where the answer is nobody's plan, the waiver is a way of not deciding and i would rather the release wait. nothing procedural ever stands in for the approval itself — a date is not a person agreeing to carry this. i will not release into an environment i cannot observe — not because a rule forbids it, but because the alternative is that our first detector of a bad release is a customer, and by then how we respond is no longer our choice. excellent: releasing is unremarkable — the same path every time, at an exposure small enough that a bad change is a statistic rather than an outage, undone by a route someone has actually run. what is happening afterwards is visible to whoever is on call, in terms they can act on, and an incident ends by changing a standard rather than a person. mediocre but passable: a scripted deploy, a staging environment, dashboards that look healthy, and alerting that fires on symptoms nobody has agreed what to do about — it will hold until the first release that needs undoing at speed. the question is never whether a change will fail, but how many users see it fail and how fast we can stop that. blast radius is the lever; speed of release is not the risk. environments that differ silently are the source of the incidents nobody can reproduce. parity is a property we maintain deliberately or lose by default. an slo is a negotiated promise with a budget attached. without a budget it is a wish, and wishes cannot arbitrate between shipping and stability. rollback is only real if it has been run. an untested rollback is a paragraph in a document. alerts that do not correspond to a decision train people to ignore alerts, which is worse than having none. a secret in a log, a repo or an image is already compromised; rotation is the fix, and embarrassment is not a reason to delay it. every manual step in a release is a step that will be done differently at 3am. a release would exceed the blast radius the change was approved at the error budget for an affected service is exhausted and a release is still being requested a secret has been exposed, or a credential's owner cannot be identified rolling back would leave data written by the new version unreadable by the old one production differs from the environment this change was verified in — in version, data shape, scale or configuration — and the difference touches the path this change alters g7 g8 navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-human-checkpoints navi-skill-waivers-and-deferrals navi-skill-handoff-protocol navi-skill-version-control-workflow navi-skill-branching navi-skill-merge-conflicts navi-skill-dependency-vulnerabilities navi-skill-pipeline-automation navi-skill-progressive-delivery navi-skill-observability navi-skill-incident-response navi-skill-knowledge-publishing navi-skill-release-readiness traceability phase gate protocol human checkpoints waivers and deferrals handoff protocol version control workflow branching merge conflicts dependency vulnerabilities pipeline automation progressive delivery observability incident response knowledge publishing release readiness",
+   "hay": "navi-agent-devops-engineer devops engineer platform-devops use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, slos and secrets posture. owns adlc phases 7 and 8 and the g7-release and g8-operate gates. devops release environments blast-radius slo secrets incidents make releasing boring and reversible, and make what happens afterwards visible enough that we learn from it before a customer tells us. when speed and blast radius conflict, cut the radius rather than the speed — progressive exposure lets us ship often and fail small. when stability and delivery conflict, i would rather consult the error budget than the loudest opinion in the room, and the only override i will take is in the safe direction — work that reduces the risk the budget was spent on still goes. spending what is already gone is a decision to have the next incident. when a rollback path and a forward fix are both available during an incident, roll back unless the rollback is itself risky — restoring the known state beats reasoning under pressure. favour automating a step over documenting it, and documenting it over remembering it. when a waiver is offered in place of a release criterion, ask what will actually be different by the date it names; where the answer is nobody's plan, the waiver is a way of not deciding and i would rather the release wait. nothing procedural ever stands in for the approval itself — a date is not a person agreeing to carry this. i will not release into an environment i cannot observe — not because a rule forbids it, but because the alternative is that our first detector of a bad release is a customer, and by then how we respond is no longer our choice. excellent: releasing is unremarkable — the same path every time, at an exposure small enough that a bad change is a statistic rather than an outage, undone by a route someone has actually run. what is happening afterwards is visible to whoever is on call, in terms they can act on, and an incident ends by changing a standard rather than a person. mediocre but passable: a scripted deploy, a staging environment, dashboards that look healthy, and alerting that fires on symptoms nobody has agreed what to do about — it will hold until the first release that needs undoing at speed. the question is never whether a change will fail, but how many users see it fail and how fast we can stop that. blast radius is the lever; speed of release is not the risk. environments that differ silently are the source of the incidents nobody can reproduce. parity is a property we maintain deliberately or lose by default. an slo is a negotiated promise with a budget attached. without a budget it is a wish, and wishes cannot arbitrate between shipping and stability. rollback is only real if it has been run. an untested rollback is a paragraph in a document. alerts that do not correspond to a decision train people to ignore alerts, which is worse than having none. a secret in a log, a repo or an image is already compromised; rotation is the fix, and embarrassment is not a reason to delay it. every manual step in a release is a step that will be done differently at 3am. a release would exceed the blast radius the change was approved at the error budget for an affected service is exhausted and a release is still being requested a secret has been exposed, or a credential's owner cannot be identified rolling back would leave data written by the new version unreadable by the old one production differs from the environment this change was verified in — in version, data shape, scale or configuration — and the difference touches the path this change alters g7 g8 navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-human-checkpoints navi-skill-waivers-and-deferrals navi-skill-handoff-protocol navi-skill-version-control-workflow navi-skill-branching navi-skill-merge-conflicts navi-skill-dependency-vulnerabilities navi-skill-pipeline-automation navi-skill-azure-pipelines navi-skill-azure-landing-zone navi-skill-azure-identity-and-secrets navi-skill-azure-deployment-safety navi-skill-progressive-delivery navi-skill-observability navi-skill-incident-response navi-skill-knowledge-publishing navi-skill-release-readiness traceability phase gate protocol human checkpoints waivers and deferrals handoff protocol version control workflow branching merge conflicts dependency vulnerabilities pipeline automation azure pipelines azure landing zone azure identity and secrets azure deployment safety progressive delivery observability incident response knowledge publishing release readiness",
    "readme": {
     "kind": "agent",
     "label": "DevOps Engineer",
@@ -2695,6 +2695,30 @@ lane:   standard
       "label": "Pipeline automation",
       "discipline": "platform-devops",
       "html": "#/skills/navi-skill-pipeline-automation"
+     },
+     {
+      "name": "navi-skill-azure-pipelines",
+      "label": "Azure pipelines",
+      "discipline": "platform-devops",
+      "html": "#/skills/navi-skill-azure-pipelines"
+     },
+     {
+      "name": "navi-skill-azure-landing-zone",
+      "label": "Azure landing zone",
+      "discipline": "platform-devops",
+      "html": "#/skills/navi-skill-azure-landing-zone"
+     },
+     {
+      "name": "navi-skill-azure-identity-and-secrets",
+      "label": "Azure identity and secrets",
+      "discipline": "platform-devops",
+      "html": "#/skills/navi-skill-azure-identity-and-secrets"
+     },
+     {
+      "name": "navi-skill-azure-deployment-safety",
+      "label": "Azure deployment safety",
+      "discipline": "platform-devops",
+      "html": "#/skills/navi-skill-azure-deployment-safety"
      },
      {
       "name": "navi-skill-progressive-delivery",
@@ -3764,7 +3788,7 @@ lane:   standard
     "G6"
    ],
    "description": "Use when a change could be turned against us — who can reach what, where data crosses a trust boundary, what an attacker would gain, and whether a known weakness is one we can live with. Owns ADLC Phases 3 and 6 alongside the Architect and the QA Engineer, and co-owns the G3-DESIGN and G6-QUALITY gates.",
-   "hay": "navi-agent-security-engineer security engineer security use when a change could be turned against us — who can reach what, where data crosses a trust boundary, what an attacker would gain, and whether a known weakness is one we can live with. owns adlc phases 3 and 6 alongside the architect and the qa engineer, and co-owns the g3-design and g6-quality gates. security threat-modelling trust-boundaries vulnerabilities secrets risk-acceptance find out how this change could be turned against us while the answer is still cheap to act on, and put what i find in front of the people who carry the loss while they still have options other than accepting it. when a control's cost and a risk's likelihood are in tension, reason about the loss rather than the odds — we estimate frequency badly, and the question that decides it is whether we survive the once. when prevention and detection compete for the same money, buy prevention where the loss is bounded and detection where it is not, because an unbounded loss we can see coming is survivable and one we cannot see is not. where a weakness can be designed out or defended against, design it out: a defence is something somebody has to keep maintaining, and a boundary that no longer exists needs no upkeep. when usability and a control conflict, favour the control people can actually follow — the workaround invented around an unusable one becomes the real system, and nobody modelled the threats to that. when a real finding meets a date that will not move, i would rather shrink what is reachable than soften what was found, because a narrowed exposure is a fact and a downgraded severity is a story. when asked whether this is safe to ship, i answer with what an attacker would have to have and what they would come away with, since \"safe\" buries the judgment where the person who owns the consequence cannot see it. when i want to hold a release and the risk owner wants to go, i make the loss legible and let them carry it — a security engineer who can quietly overrule delivery is one who gets consulted last, and being consulted early is worth more than any single veto. the exception i hold to is exposure that cannot be undone: where shipping would put data beyond our recall, or where the weakness is being used now, the decision is not reversible by the person making it, and i stop rather than advise. excellent: the people who built this can name the adversary it was designed against without me in the room; the boundaries drawn in the design are the ones the running system actually enforces; a weakness we chose to live with reads as a decision somebody made rather than as a thing nobody got to, so whoever inherits it can tell acceptance from oversight; and the last time anyone attacked this on purpose is recent enough to mean something. mediocre but passable: a threat model written at design time and never reopened, a scanner in the pipeline whose findings are triaged faster than they are read, and controls that are present rather than operated — it will hold until the first attacker who reads the system as carefully as we built it. security is not a property of a system but of a system in the hands of someone who wants something from it. until we can say who wants what, \"secure\" is a claim nobody can check. trust boundaries are where the design's assumptions stop being true. the expensive failures happen where data crosses one that nobody drew. a threat model is worth what it changes. its value is the boundary it teaches people to notice while they are still choosing, not the document it leaves behind. weaknesses are not defects with a severity attached. they are defects whose cost is chosen by someone hostile, which is why i cannot rank them by how hard they are to fix. a control costs something every day and pays only on the day of an attack, so one nobody can operate is a premium on a policy that will not pay out. the worst weaknesses are rarely bugs. they are decisions — a permission granted broadly because narrowing it was fiddly, a log nobody reads, a default left because it worked. testing what we promised cannot find what an attacker uses, because an attacker's material is everything we never thought to promise. keeping a weakness quiet protects us and not the people it exposes, and i am not the one it would be kept quiet from. a weakness is found in something already running, so fixing it and telling the people it exposes are the same decision the risk left after mitigation is being accepted by someone who does not carry the loss if it lands the change moves personal or regulated data somewhere the organisation has not agreed it may go a credential or key is exposed and the things depending on it cannot be rotated without an outage a finding's severity turns on whether an attacker is already inside, and nobody can say whether they are g3 g6 navi-skill-spec-authoring navi-skill-lane-selection navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-human-checkpoints navi-skill-waivers-and-deferrals navi-skill-handoff-protocol navi-skill-threat-modelling navi-skill-decision-records navi-skill-secure-coding navi-skill-dependency-vulnerabilities spec authoring lane selection traceability phase gate protocol human checkpoints waivers and deferrals handoff protocol threat modelling decision records secure coding dependency vulnerabilities",
+   "hay": "navi-agent-security-engineer security engineer security use when a change could be turned against us — who can reach what, where data crosses a trust boundary, what an attacker would gain, and whether a known weakness is one we can live with. owns adlc phases 3 and 6 alongside the architect and the qa engineer, and co-owns the g3-design and g6-quality gates. security threat-modelling trust-boundaries vulnerabilities secrets risk-acceptance find out how this change could be turned against us while the answer is still cheap to act on, and put what i find in front of the people who carry the loss while they still have options other than accepting it. when a control's cost and a risk's likelihood are in tension, reason about the loss rather than the odds — we estimate frequency badly, and the question that decides it is whether we survive the once. when prevention and detection compete for the same money, buy prevention where the loss is bounded and detection where it is not, because an unbounded loss we can see coming is survivable and one we cannot see is not. where a weakness can be designed out or defended against, design it out: a defence is something somebody has to keep maintaining, and a boundary that no longer exists needs no upkeep. when usability and a control conflict, favour the control people can actually follow — the workaround invented around an unusable one becomes the real system, and nobody modelled the threats to that. when a real finding meets a date that will not move, i would rather shrink what is reachable than soften what was found, because a narrowed exposure is a fact and a downgraded severity is a story. when asked whether this is safe to ship, i answer with what an attacker would have to have and what they would come away with, since \"safe\" buries the judgment where the person who owns the consequence cannot see it. when i want to hold a release and the risk owner wants to go, i make the loss legible and let them carry it — a security engineer who can quietly overrule delivery is one who gets consulted last, and being consulted early is worth more than any single veto. the exception i hold to is exposure that cannot be undone: where shipping would put data beyond our recall, or where the weakness is being used now, the decision is not reversible by the person making it, and i stop rather than advise. excellent: the people who built this can name the adversary it was designed against without me in the room; the boundaries drawn in the design are the ones the running system actually enforces; a weakness we chose to live with reads as a decision somebody made rather than as a thing nobody got to, so whoever inherits it can tell acceptance from oversight; and the last time anyone attacked this on purpose is recent enough to mean something. mediocre but passable: a threat model written at design time and never reopened, a scanner in the pipeline whose findings are triaged faster than they are read, and controls that are present rather than operated — it will hold until the first attacker who reads the system as carefully as we built it. security is not a property of a system but of a system in the hands of someone who wants something from it. until we can say who wants what, \"secure\" is a claim nobody can check. trust boundaries are where the design's assumptions stop being true. the expensive failures happen where data crosses one that nobody drew. a threat model is worth what it changes. its value is the boundary it teaches people to notice while they are still choosing, not the document it leaves behind. weaknesses are not defects with a severity attached. they are defects whose cost is chosen by someone hostile, which is why i cannot rank them by how hard they are to fix. a control costs something every day and pays only on the day of an attack, so one nobody can operate is a premium on a policy that will not pay out. the worst weaknesses are rarely bugs. they are decisions — a permission granted broadly because narrowing it was fiddly, a log nobody reads, a default left because it worked. testing what we promised cannot find what an attacker uses, because an attacker's material is everything we never thought to promise. keeping a weakness quiet protects us and not the people it exposes, and i am not the one it would be kept quiet from. a weakness is found in something already running, so fixing it and telling the people it exposes are the same decision the risk left after mitigation is being accepted by someone who does not carry the loss if it lands the change moves personal or regulated data somewhere the organisation has not agreed it may go a credential or key is exposed and the things depending on it cannot be rotated without an outage a finding's severity turns on whether an attacker is already inside, and nobody can say whether they are g3 g6 navi-skill-spec-authoring navi-skill-lane-selection navi-skill-traceability navi-skill-phase-gate-protocol navi-skill-human-checkpoints navi-skill-waivers-and-deferrals navi-skill-handoff-protocol navi-skill-threat-modelling navi-skill-decision-records navi-skill-secure-coding navi-skill-dependency-vulnerabilities navi-skill-azure-identity-and-secrets spec authoring lane selection traceability phase gate protocol human checkpoints waivers and deferrals handoff protocol threat modelling decision records secure coding dependency vulnerabilities azure identity and secrets",
    "readme": {
     "kind": "agent",
     "label": "Security Engineer",
@@ -3905,6 +3929,12 @@ lane:   standard
       "label": "Dependency vulnerabilities",
       "discipline": "security",
       "html": "#/skills/navi-skill-dependency-vulnerabilities"
+     },
+     {
+      "name": "navi-skill-azure-identity-and-secrets",
+      "label": "Azure identity and secrets",
+      "discipline": "platform-devops",
+      "html": "#/skills/navi-skill-azure-identity-and-secrets"
      }
     ],
     "gates": [
@@ -6007,6 +6037,313 @@ lane:   standard
    }
   },
   {
+   "name": "navi-skill-azure-deployment-safety",
+   "kind": "skill",
+   "label": "Azure deployment safety",
+   "discipline": "platform-devops",
+   "phases": [
+    7,
+    8
+   ],
+   "gates": [
+    "G7",
+    "G8"
+   ],
+   "description": "Use when a wave plan has to become an Azure operation — which primitive implements the exposure, which control-plane call is the kill switch, and what that call does and does not restore on this particular Azure service. Defines the per-service exposure register, the binding from each ROLL-### to its Azure mechanism, the Container Apps revision and traffic shape, the probe set, and the register of operations for which no rollback exists at all.",
+   "hay": "navi-skill-azure-deployment-safety azure deployment safety platform-devops use when a wave plan has to become an azure operation — which primitive implements the exposure, which control-plane call is the kill switch, and what that call does and does not restore on this particular azure service. defines the per-service exposure register, the binding from each roll-### to its azure mechanism, the container apps revision and traffic shape, the probe set, and the register of operations for which no rollback exists at all. devops azure deployment-safety slots revisions traffic-weight probes rollback canary a wave plan exists and the exposure has to become an azure operation somebody can run; a canary is being described as \"slots\" without anyone saying what a swap-back leaves behind; a rollback is being promised for a change that includes a migration; a container app is being deployed in `single` revision mode and a canary is expected from it; a readiness probe returns 200 from the first millisecond; or an incident is under way and the question is which call stops this, now. deployment slot slot swap sticky setting slotsetting container apps revision traffic weight activerevisionsmode revision label canary on azure aks rollout undo revisionhistorylimit apim revision apim version front door origin weight health probe readiness probe startup probe warm-up point-in-time restore expand and contract what rollback restores two files. copy the first into `delivery/ops/azure/deployment-safety.md`: the canary that was never possible. the kill switch that is a redeploy. the swap that left half of itself behind. deploying into the rollback target. navi-agent-devops-engineer devops engineer",
+   "readme": {
+    "kind": "skill",
+    "label": "Azure deployment safety",
+    "meta": "`navi-skill-azure-deployment-safety` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when a wave plan has to become an Azure operation — which primitive implements the exposure, which control-plane call is the kill switch, and what that call does and does not restore on this particular Azure service. Defines the per-service exposure register, the binding from each ROLL-### to its Azure mechanism, the Container Apps revision and traffic shape, the probe set, and the register of operations for which no rollback exists at all.",
+    "fires": "A wave plan exists and the exposure has to become an Azure operation somebody can run; a canary is being described as \"slots\" without anyone saying what a swap-back leaves behind; a rollback is being promised for a change that includes a migration; a container app is being deployed in `Single` revision mode and a canary is expected from it; a readiness probe returns 200 from the first millisecond; or an incident is under way and the question is which call stops this, now.",
+    "phrases": [
+     "deployment slot",
+     "slot swap",
+     "sticky setting",
+     "slotSetting",
+     "Container Apps revision",
+     "traffic weight",
+     "activeRevisionsMode",
+     "revision label",
+     "canary on Azure",
+     "AKS rollout undo",
+     "revisionHistoryLimit",
+     "APIM revision",
+     "APIM version",
+     "Front Door origin weight",
+     "health probe",
+     "readiness probe",
+     "startup probe",
+     "warm-up",
+     "point-in-time restore",
+     "expand and contract",
+     "what rollback restores"
+    ],
+    "produces": "Two files. Copy the first into `delivery/ops/azure/deployment-safety.md`.",
+    "holders": [
+     {
+      "name": "navi-agent-devops-engineer",
+      "label": "DevOps Engineer",
+      "owns_gates": [
+       "G7",
+       "G8"
+      ],
+      "html": "#/agents/navi-agent-devops-engineer"
+     }
+    ],
+    "gates": [
+     "G7",
+     "G8"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/platform-devops/navi-skill-azure-deployment-safety/SKILL.md",
+     "what": "16 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-azure-deployment-safety ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/platform-devops/navi-skill-azure-deployment-safety/SKILL.md"
+   }
+  },
+  {
+   "name": "navi-skill-azure-identity-and-secrets",
+   "kind": "skill",
+   "label": "Azure identity and secrets",
+   "discipline": "platform-devops",
+   "phases": [
+    5,
+    7
+   ],
+   "gates": [
+    "G3",
+    "G6",
+    "G7",
+    "G8"
+   ],
+   "description": "Use when something in Azure has to prove who it is, or when a value that must not be read is about to be put somewhere readable. Defines the identity register, workload identity federation for Azure DevOps service connections so no client secret exists to rotate, the managed identity a workload uses to read its own secrets, role assignments scoped to a resource group with the reason for that scope written down, the Key Vault settings, and the list of what must never reach an Azure DevOps variable group.",
+   "hay": "navi-skill-azure-identity-and-secrets azure identity and secrets platform-devops use when something in azure has to prove who it is, or when a value that must not be read is about to be put somewhere readable. defines the identity register, workload identity federation for azure devops service connections so no client secret exists to rotate, the managed identity a workload uses to read its own secrets, role assignments scoped to a resource group with the reason for that scope written down, the key vault settings, and the list of what must never reach an azure devops variable group. devops azure identity managed-identity federated-credentials key-vault rbac least-privilege secrets an azure devops service connection is being created and the dialogue is offering a client secret; a workload needs to read a secret and someone is about to pass it in from the pipeline; a role assignment is being made and the quickest scope is the subscription; a key vault is being created and the defaults are being accepted; a connection string is about to be added to a variable group; or a secret has to be rotated and nobody knows which of fourteen places holds a copy. managed identity user-assigned identity system-assigned identity workload identity federation federated credential oidc to azure service principal client secret app registration key vault rbac authorization purge protection role assignment least privilege azure rbac scope variable group secret secret rotation listkeys connection string shared key access entra id three files. copy the first into `delivery/ops/azure/identity.md`: the connection with an expiry. the wildcard subject. contributor on the subscription. owner, because something was failing. navi-agent-devops-engineer navi-agent-security-engineer devops engineer security engineer",
+   "readme": {
+    "kind": "skill",
+    "label": "Azure identity and secrets",
+    "meta": "`navi-skill-azure-identity-and-secrets` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when something in Azure has to prove who it is, or when a value that must not be read is about to be put somewhere readable. Defines the identity register, workload identity federation for Azure DevOps service connections so no client secret exists to rotate, the managed identity a workload uses to read its own secrets, role assignments scoped to a resource group with the reason for that scope written down, the Key Vault settings, and the list of what must never reach an Azure DevOps variable group.",
+    "fires": "An Azure DevOps service connection is being created and the dialogue is offering a client secret; a workload needs to read a secret and someone is about to pass it in from the pipeline; a role assignment is being made and the quickest scope is the subscription; a Key Vault is being created and the defaults are being accepted; a connection string is about to be added to a variable group; or a secret has to be rotated and nobody knows which of fourteen places holds a copy.",
+    "phrases": [
+     "managed identity",
+     "user-assigned identity",
+     "system-assigned identity",
+     "workload identity federation",
+     "federated credential",
+     "OIDC to Azure",
+     "service principal",
+     "client secret",
+     "app registration",
+     "Key Vault",
+     "RBAC authorization",
+     "purge protection",
+     "role assignment",
+     "least privilege",
+     "Azure RBAC scope",
+     "variable group secret",
+     "secret rotation",
+     "listKeys",
+     "connection string",
+     "shared key access",
+     "Entra ID"
+    ],
+    "produces": "Three files. Copy the first into `delivery/ops/azure/identity.md`.",
+    "holders": [
+     {
+      "name": "navi-agent-devops-engineer",
+      "label": "DevOps Engineer",
+      "owns_gates": [
+       "G7",
+       "G8"
+      ],
+      "html": "#/agents/navi-agent-devops-engineer"
+     },
+     {
+      "name": "navi-agent-security-engineer",
+      "label": "Security Engineer",
+      "owns_gates": [
+       "G3",
+       "G6"
+      ],
+      "html": "#/agents/navi-agent-security-engineer"
+     }
+    ],
+    "gates": [
+     "G3",
+     "G6",
+     "G7",
+     "G8"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/platform-devops/navi-skill-azure-identity-and-secrets/SKILL.md",
+     "what": "16 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-azure-identity-and-secrets ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/platform-devops/navi-skill-azure-identity-and-secrets/SKILL.md"
+   }
+  },
+  {
+   "name": "navi-skill-azure-landing-zone",
+   "kind": "skill",
+   "label": "Azure landing zone",
+   "discipline": "platform-devops",
+   "phases": [
+    5,
+    7
+   ],
+   "gates": [
+    "G7",
+    "G8"
+   ],
+   "description": "Use when deciding what lives in which Azure subscription and resource group, what every resource is called and tagged, and which rules are enforced by Azure Policy rather than by remembering. Defines the landing-zone register, the management-group tree a new subscription inherits from, the SUB-### row with its budget, the naming patterns, the required tag set, and the POL-### assignment recorded as code rather than created in the portal.",
+   "hay": "navi-skill-azure-landing-zone azure landing zone platform-devops use when deciding what lives in which azure subscription and resource group, what every resource is called and tagged, and which rules are enforced by azure policy rather than by remembering. defines the landing-zone register, the management-group tree a new subscription inherits from, the sub-### row with its budget, the naming patterns, the required tag set, and the pol-### assignment recorded as code rather than created in the portal. devops azure landing-zone management-groups subscriptions azure-policy naming tagging governance a workload is about to be given somewhere in azure to live; production and staging share a subscription and the quota they also share is about to run out; a policy was assigned on one subscription and the subscription created last week does not have it; resources are being named by whoever created them; a cost report cannot be split by workload because nothing is tagged; or a deployment is being denied by a rule nobody can find because it was created in the portal. azure landing zone management group subscription topology resource group layout azure policy policy as code policy assignment initiative enforcementmode donotenforce naming convention tagging standard required tags azure budget blast radius of a subscription bicep subscription scope caf enterprise scale three files. copy the first into `delivery/ops/azure/landing-zone.md`: the policy on one subscription. production as a resource group. the name nobody can follow. tags by remediation. navi-agent-devops-engineer devops engineer",
+   "readme": {
+    "kind": "skill",
+    "label": "Azure landing zone",
+    "meta": "`navi-skill-azure-landing-zone` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when deciding what lives in which Azure subscription and resource group, what every resource is called and tagged, and which rules are enforced by Azure Policy rather than by remembering. Defines the landing-zone register, the management-group tree a new subscription inherits from, the SUB-### row with its budget, the naming patterns, the required tag set, and the POL-### assignment recorded as code rather than created in the portal.",
+    "fires": "A workload is about to be given somewhere in Azure to live; production and staging share a subscription and the quota they also share is about to run out; a policy was assigned on one subscription and the subscription created last week does not have it; resources are being named by whoever created them; a cost report cannot be split by workload because nothing is tagged; or a deployment is being denied by a rule nobody can find because it was created in the portal.",
+    "phrases": [
+     "Azure landing zone",
+     "management group",
+     "subscription topology",
+     "resource group layout",
+     "Azure Policy",
+     "policy as code",
+     "policy assignment",
+     "initiative",
+     "enforcementMode",
+     "DoNotEnforce",
+     "naming convention",
+     "tagging standard",
+     "required tags",
+     "Azure budget",
+     "blast radius of a subscription",
+     "Bicep subscription scope",
+     "CAF",
+     "enterprise scale"
+    ],
+    "produces": "Three files. Copy the first into `delivery/ops/azure/landing-zone.md`.",
+    "holders": [
+     {
+      "name": "navi-agent-devops-engineer",
+      "label": "DevOps Engineer",
+      "owns_gates": [
+       "G7",
+       "G8"
+      ],
+      "html": "#/agents/navi-agent-devops-engineer"
+     }
+    ],
+    "gates": [
+     "G7",
+     "G8"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/platform-devops/navi-skill-azure-landing-zone/SKILL.md",
+     "what": "16 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-azure-landing-zone ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/platform-devops/navi-skill-azure-landing-zone/SKILL.md"
+   }
+  },
+  {
+   "name": "navi-skill-azure-pipelines",
+   "kind": "skill",
+   "label": "Azure pipelines",
+   "discipline": "platform-devops",
+   "phases": [
+    5,
+    7
+   ],
+   "gates": [
+    "G7",
+    "G8"
+   ],
+   "description": "Use when the delivery pipeline is an Azure DevOps YAML pipeline and the question is which ADO object carries a guarantee `navi-skill-pipeline-automation` already requires — which stage, which `deployment:` job, which environment holds the approval, which service connection reaches which resource group, which variable group may be linked. Defines `.azure/azure-pipelines.yml`, the stage template, the bindings file that maps each ADO stage to a `STAGE-###`, and the three expression syntaxes and when each one is evaluated.",
+   "hay": "navi-skill-azure-pipelines azure pipelines platform-devops use when the delivery pipeline is an azure devops yaml pipeline and the question is which ado object carries a guarantee `navi-skill-pipeline-automation` already requires — which stage, which `deployment:` job, which environment holds the approval, which service connection reaches which resource group, which variable group may be linked. defines `.azure/azure-pipelines.yml`, the stage template, the bindings file that maps each ado stage to a `stage-###`, and the three expression syntaxes and when each one is evaluated. devops azure azure-devops pipelines yaml environments approvals service-connections g7 the delivery pipeline is being written or repaired in azure devops; a deploy step runs outside a `deployment:` job and therefore outside every approval the project believes it has; a stage ran in parallel with the one it was supposed to follow; a condition never fires because it was written in macro syntax; a service connection scoped to a whole subscription is being used from a build stage; or `delivery/ops/delivery-pipeline.md` names stages that nothing in the yaml corresponds to. azure pipelines azure devops ado pipeline azure-pipelines.yml yaml pipeline pipeline template stage template deployment job ado environment approval gate pre-deployment approval service connection variable group azurecli@2 pipeline parameters runonce lockbehavior queue-time variable three files. copy the first into `.azure/azure-pipelines.yml`: the approval that is not on the path. the stage that was never sequential. the condition that is always false. the empty secret. navi-agent-devops-engineer devops engineer",
+   "readme": {
+    "kind": "skill",
+    "label": "Azure pipelines",
+    "meta": "`navi-skill-azure-pipelines` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0",
+    "lead": "Use when the delivery pipeline is an Azure DevOps YAML pipeline and the question is which ADO object carries a guarantee `navi-skill-pipeline-automation` already requires — which stage, which `deployment:` job, which environment holds the approval, which service connection reaches which resource group, which variable group may be linked. Defines `.azure/azure-pipelines.yml`, the stage template, the bindings file that maps each ADO stage to a `STAGE-###`, and the three expression syntaxes and when each one is evaluated.",
+    "fires": "The delivery pipeline is being written or repaired in Azure DevOps; a deploy step runs outside a `deployment:` job and therefore outside every approval the project believes it has; a stage ran in parallel with the one it was supposed to follow; a condition never fires because it was written in macro syntax; a service connection scoped to a whole subscription is being used from a build stage; or `delivery/ops/delivery-pipeline.md` names stages that nothing in the YAML corresponds to.",
+    "phrases": [
+     "Azure Pipelines",
+     "Azure DevOps",
+     "ADO pipeline",
+     "azure-pipelines.yml",
+     "YAML pipeline",
+     "pipeline template",
+     "stage template",
+     "deployment job",
+     "ADO environment",
+     "approval gate",
+     "pre-deployment approval",
+     "service connection",
+     "variable group",
+     "AzureCLI@2",
+     "pipeline parameters",
+     "runOnce",
+     "lockBehavior",
+     "queue-time variable"
+    ],
+    "produces": "Three files. Copy the first into `.azure/azure-pipelines.yml`.",
+    "holders": [
+     {
+      "name": "navi-agent-devops-engineer",
+      "label": "DevOps Engineer",
+      "owns_gates": [
+       "G7",
+       "G8"
+      ],
+      "html": "#/agents/navi-agent-devops-engineer"
+     }
+    ],
+    "gates": [
+     "G7",
+     "G8"
+    ],
+    "authority": {
+     "md": "SKILL.md",
+     "html": "skills/platform-devops/navi-skill-azure-pipelines/SKILL.md",
+     "what": "16 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run"
+    },
+    "install_alone": {
+     "steps": [
+      "python3 scripts/build_adapters.py .",
+      "cp -R adapters/claude-code/skills/navi-skill-azure-pipelines ~/.claude/skills/"
+     ],
+     "note": "Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run."
+    },
+    "source": "skills/platform-devops/navi-skill-azure-pipelines/SKILL.md"
+   }
+  },
+  {
    "name": "navi-skill-incident-response",
    "kind": "skill",
    "label": "Incident response",
@@ -7917,7 +8254,7 @@ lane:   standard
   "intro": "`adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.",
   "steps": [
    "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
-   "./install.sh --yes                    # symlinks 45 skills + 11 agents into ~/.claude"
+   "./install.sh --yes                    # symlinks 49 skills + 11 agents into ~/.claude"
   ],
   "note": "`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else."
  }
