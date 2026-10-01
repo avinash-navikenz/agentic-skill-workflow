@@ -1,0 +1,25 @@
+{
+  "name": "navi-delivery",
+  "owner": {
+    "name": "Navikenz"
+  },
+  "metadata": {
+    "description": "navi-delivery — an agentic SDLC framework, plan to monitor: persona agents carrying each discipline's judgment over best-practice skills carrying each discipline's rules, with a seven-verb CLI that records nine gates across four lanes.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "navi-delivery",
+      "source": "./adapters/claude-code",
+      "description": "The whole framework as one Claude Code plugin: every persona agent and every skill, in the flat layout a harness loads. Generated output — the source lives under agents/ and skills/ at the repo root. The navi-delivery CLI is installed separately; see the repository README.",
+      "tags": [
+        "sdlc",
+        "adlc",
+        "spec-driven",
+        "agents",
+        "skills"
+      ],
+      "homepage": "https://github.com/navikenz/navi-delivery"
+    }
+  ]
+}
