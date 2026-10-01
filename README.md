@@ -21,6 +21,7 @@ nine gates.
 | [`automation/cron/README.md`](automation/cron/README.md) | The optional runner from tracker item to proposed branch |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every ruling made while building v1, and what each one cost |
 | [`docs/deck/README.md`](docs/deck/README.md) | The 19-slide overview deck, and how to rebuild it |
+| [`docs/HOSTING.md`](docs/HOSTING.md) | Publishing the field guide behind Entra, and what to configure |
 
 ---
 
