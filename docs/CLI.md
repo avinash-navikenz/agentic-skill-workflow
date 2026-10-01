@@ -1,9 +1,9 @@
 # CLI reference
 
-Seven verbs. Zero runtime dependencies beyond Node ≥ 20 and Python 3.
+Eight verbs. Zero runtime dependencies beyond Node ≥ 20 and Python 3.
 
 ```bash
-navi-delivery <init|propose|status|gate|validate|archive|doctor>
+navi-delivery <init|propose|status|gate|validate|archive|doctor|telemetry>
 navi-delivery --version     # 0.1.0
 ```
 
@@ -138,7 +138,7 @@ navi-delivery validate --strict
 ```
 
 ```text
-0 finding(s) across 56 file(s)
+0 finding(s) across 61 file(s)
 
 0 separation finding(s)
 
@@ -426,13 +426,15 @@ the delivery record.
 Run from the framework repo root, not from a consuming repo.
 
 ```bash
-npm test                                       # 91 Node tests
-python3 -m unittest discover -s tests/lint     # 77 Python tests
+npm test                                       # the Node suite
+python3 -m unittest discover -s tests/lint     # the Python suite
 python3 scripts/validate_manifests.py .        # M1-M7
 python3 scripts/lint_separation.py .           # SEP1-SEP4
-python3 scripts/validate_skill_checks.py .     # each skill's own Validation block
+python3 scripts/validate_skill_checks.py       # each skill's own Validation block
+python3 scripts/validate_mcp_configs.py .      # C1-C6 on config/mcp/
 python3 scripts/golden_path.py                 # a toy change through all four lanes
 python3 scripts/build_adapters.py .            # regenerate adapters/ and AGENTS.md
+python3 scripts/build_catalogue.py . --readmes --inject   # regenerate the page and READMEs
 ```
 
 ### Manifest rules
@@ -446,29 +448,51 @@ python3 scripts/build_adapters.py .            # regenerate adapters/ and AGENTS
 | `M5` | Every skill is named by at least one agent |
 | `M6` | A skill's `description` contains `Trigger phrases include:` |
 | `M7` | A skill's `used_by_agents` equals exactly the set of agents listing it |
+| `M8` | `metadata.kind` is one of `skill`, `agent` — spelled exactly |
 
 M7 reports in two directions, because the fix differs: one means the skill's claim is stale,
 the other means an agent acquired the skill without being recorded.
+
+M8 exists because `kind` is the routing key for every kind-dependent check here. A
+one-character typo (`kind: Agent`) made `lint_separation.py` report nothing on a file
+carrying a numbered procedure, a Checklist heading and a bulleted imperative — every check
+fell through, and the file scored a silent zero. When M8 fires, M4/M5/M7 are withheld and
+said to be withheld, because they would otherwise accuse the other side of each broken
+pair.
 
 ### Separation rules
 
 | Rule | Fails on |
 |---|---|
+| `SEP0` | `metadata.kind` unrecognised — no check could be selected, so the file was **not graded** |
 | `SEP1` | A numbered procedure inside an `.agent.md` |
 | `SEP2` | A `## Template` or `## Checklist` section inside an `.agent.md` |
 | `SEP3` | Persona voice inside a `SKILL.md` |
 | `SEP4` | First person inside a `SKILL.md` |
+| `SEP5` | A **bulleted** imperative directive inside an `.agent.md` |
+
+SEP5 is SEP1's blind spot. SEP1 matches numbered procedures, so the same three imperatives
+written as bullets scored zero findings while the numbered form scored one. Refusing to
+grade a file (SEP0) is likewise a finding rather than a pass.
 
 ### Expected output
 
+Every line is a count, so the numbers here would be wrong by the next commit. What matters
+is the shape: a failure count of zero on every line, and zero skills failing their own
+Validation block.
+
 ```text
-125 pass / 0 fail
-OK (99 tests)
-0 finding(s) across 56 file(s)
+<N> pass / 0 fail
+OK (<N> tests)
+0 finding(s) across <N> file(s)
 0 separation finding(s)
-44 harnessed · 1 declared-unharnessable · 0 failing  (of 45 skill(s) considered)
+0 finding(s) across <N> connection file(s)
+<N> harnessed · 1 declared-unharnessable · 0 failing  (of <N> skill(s) considered)
 golden path: OK
 ```
+
+The live numbers are whatever CI last printed; this repository's own workflow runs every one
+of these on both ubuntu and macOS.
 
 The one declared-unharnessable skill is `navi-skill-code-review`, whose substantive checks
 read a live authenticated pull request through `gh api graphql`. Neither a fixture nor CI can

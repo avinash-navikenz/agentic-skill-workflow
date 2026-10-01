@@ -3,8 +3,8 @@
 **An agentic SDLC framework — Plan to Monitor, in any harness.**
 Agents hold the judgment. Skills hold the rules.
 
-The framework ships 11 persona agents carrying each discipline's judgment, and 45
-skills across 13 disciplines carrying each discipline's rules. A seven-verb CLI
+The framework ships 11 persona agents carrying each discipline's judgment, and 50
+skills across 13 disciplines carrying each discipline's rules. An eight-verb CLI
 scaffolds the lifecycle into your repo and records what actually happened at each of
 nine gates.
 
@@ -42,7 +42,7 @@ refreshes it later. What lands is `adapters/claude-code/`: the generated flat la
 carrying every agent and every skill. [`install.sh`](#other-ways-to-install) and the
 single-item copy remain supported alternatives.
 
-**2. Put the CLI on your PATH.** The seven-verb CLI is a Node script in this repository
+**2. Put the CLI on your PATH.** The eight-verb CLI is a Node script in this repository
 and is *not* part of the plugin, so this step wants the clone either way:
 
 ```bash
