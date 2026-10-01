@@ -20,8 +20,10 @@ a `delivery/` tree there.
 
 ## `init`
 
-Scaffolds `delivery/` into the current repo, generates `delivery/AGENTS.md`, and detects the
-harness.
+Scaffolds `delivery/` into the current repo, copies `delivery/AGENTS.md` in from
+`templates/delivery/AGENTS.md`, and detects the harness. `init` generates nothing: that
+template is itself generated, but by `scripts/build_adapters.py` at build time, from the
+agents and skills in this repository — not here, and not from your repo.
 
 ```bash
 navi-delivery init
@@ -37,7 +39,7 @@ Creates:
 ```
 delivery/
 ├── project.md              your stack and conventions — human-authored, fill this in
-├── AGENTS.md               generated harness entry point
+├── AGENTS.md               harness entry point, copied from a generated template
 ├── specs/                  current truth
 ├── changes/archive/
 ├── decisions/

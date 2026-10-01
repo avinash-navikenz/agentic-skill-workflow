@@ -1095,10 +1095,12 @@ Next:
 
       <li>
         <h3>Scaffold, and open the change</h3>
-        <p class="small"><code>init</code> writes <code>delivery/</code>, generates
-        <code>AGENTS.md</code> from the agent and skill tree, and detects the harness. It is
-        idempotent per repo. The lane is chosen <em>now</em>, before any work, and cannot be
-        widened later.</p>
+        <p class="small"><code>init</code> writes <code>delivery/</code>, copies
+        <code>AGENTS.md</code> in from <code>templates/delivery/AGENTS.md</code>, and detects the
+        harness. That template is generated from the agent and skill tree by
+        <code>build_adapters.py</code> at build time, not by <code>init</code>. It is idempotent
+        per repo. The lane is chosen <em>now</em>, before any work, and cannot be widened
+        later.</p>
         <div class="term">
           <div class="term-head"><span class="dot"></span>init · propose · status<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery init</span>

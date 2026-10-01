@@ -147,7 +147,7 @@ CI regenerates and diffs, so a hand edit fails the build.
 ## The seven verbs
 
 ```bash
-navi-delivery init                             # scaffold delivery/, generate AGENTS.md, detect harness
+navi-delivery init                             # scaffold delivery/, copy in AGENTS.md, detect harness
 navi-delivery propose <name> --lane <lane>     # open a change from templates
 navi-delivery status                           # change, lane, gate verdicts, stale artifacts
 navi-delivery validate [--strict]              # frontmatter, separation, traceability
@@ -167,7 +167,7 @@ Full reference, including flags and exit codes, in [`docs/CLI.md`](docs/CLI.md).
 your-repo/
 └── delivery/
     ├── project.md        your stack and conventions
-    ├── AGENTS.md         harness entry point (generated)
+    ├── AGENTS.md         harness entry point (copied from a generated template)
     ├── specs/            current truth
     ├── changes/          in flight, and archive/
     ├── decisions/        ADRs
