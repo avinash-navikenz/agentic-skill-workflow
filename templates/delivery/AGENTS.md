@@ -27,7 +27,7 @@ fallback instead.
 Use when choosing the technical approach for a change — its boundaries, its quality attributes, its failure modes, and what we are buying versus building — and when reviewing whether what was built matches what was decided. Owns ADLC Phases 3 and 9 and the G3-DESIGN gate.
 
 - Owns gates: G3, G9
-- Skills: navi-skill-spec-authoring, navi-skill-change-proposal, navi-skill-task-decomposition, navi-skill-traceability, navi-skill-lane-selection, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-handoff-protocol, navi-skill-quality-attributes, navi-skill-non-functional-requirements, navi-skill-interface-contracts, navi-skill-api-design, navi-skill-threat-modelling, navi-skill-decision-records, navi-skill-code-review
+- Skills: navi-skill-spec-authoring, navi-skill-change-proposal, navi-skill-task-decomposition, navi-skill-traceability, navi-skill-lane-selection, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-handoff-protocol, navi-skill-quality-attributes, navi-skill-non-functional-requirements, navi-skill-interface-contracts, navi-skill-api-design, navi-skill-threat-modelling, navi-skill-decision-records, navi-skill-knowledge-publishing, navi-skill-code-review
 
 ### navi-agent-business-analyst (business-analysis)
 
@@ -48,14 +48,14 @@ Use when a change touches a dataset, a schema, a pipeline or a feature — decid
 Use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, SLOs and secrets posture. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates.
 
 - Owns gates: G7, G8
-- Skills: navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-version-control-workflow, navi-skill-dependency-vulnerabilities, navi-skill-pipeline-automation, navi-skill-progressive-delivery, navi-skill-observability, navi-skill-incident-response, navi-skill-release-readiness
+- Skills: navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-human-checkpoints, navi-skill-waivers-and-deferrals, navi-skill-handoff-protocol, navi-skill-version-control-workflow, navi-skill-branching, navi-skill-merge-conflicts, navi-skill-dependency-vulnerabilities, navi-skill-pipeline-automation, navi-skill-progressive-delivery, navi-skill-observability, navi-skill-incident-response, navi-skill-knowledge-publishing, navi-skill-release-readiness
 
 ### navi-agent-fullstack-developer (software-development)
 
 Use when implementing a specified and designed change — decomposing it into tasks, choosing contracts and seams, and deciding what to refactor versus leave alone. Owns ADLC Phase 5 and the G5-BUILD gate, which it co-owns with the Data and ML Engineers on a change that touches data or a model.
 
 - Owns gates: G5
-- Skills: navi-skill-task-decomposition, navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-handoff-protocol, navi-skill-test-driven-development, navi-skill-interface-contracts, navi-skill-api-design, navi-skill-secure-coding, navi-skill-code-review, navi-skill-version-control-workflow, navi-skill-dependency-vulnerabilities, navi-skill-pipeline-automation, navi-skill-test-strategy, navi-skill-test-design
+- Skills: navi-skill-task-decomposition, navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-handoff-protocol, navi-skill-test-driven-development, navi-skill-interface-contracts, navi-skill-api-design, navi-skill-secure-coding, navi-skill-code-review, navi-skill-pull-requests, navi-skill-version-control-workflow, navi-skill-commit-craft, navi-skill-branching, navi-skill-merge-conflicts, navi-skill-dependency-vulnerabilities, navi-skill-pipeline-automation, navi-skill-test-strategy, navi-skill-test-design
 
 ### navi-agent-machine-learning-engineer (machine-learning)
 
@@ -76,14 +76,14 @@ Use when a model has to be promoted, served, watched and eventually retired — 
 Use when routing a change through the ADLC — choosing its lane, deciding whether it may advance, arbitrating between personas, and ordering rework after a failed gate. Owns ADLC Phases 1 through 9 and enforces every gate in the active lane's set.
 
 - Owns gates: none (enforces gates without owning one)
-- Skills: navi-skill-phase-gate-protocol, navi-skill-lane-selection, navi-skill-waivers-and-deferrals, navi-skill-human-checkpoints, navi-skill-handoff-protocol, navi-skill-traceability, navi-skill-change-proposal, navi-skill-task-decomposition
+- Skills: navi-skill-phase-gate-protocol, navi-skill-lane-selection, navi-skill-waivers-and-deferrals, navi-skill-human-checkpoints, navi-skill-handoff-protocol, navi-skill-traceability, navi-skill-change-proposal, navi-skill-task-decomposition, navi-skill-work-item-sync
 
 ### navi-agent-product-owner (product-management)
 
 Use when deciding whether a change is worth making, what it commits to, and what it deliberately will not do — and later, whether the shipped change moved the measure it promised. Owns ADLC Phases 1 and 9 and the G1-INTENT and G9-FEEDBACK gates.
 
 - Owns gates: G1, G9
-- Skills: navi-skill-change-proposal, navi-skill-lane-selection, navi-skill-spec-authoring, navi-skill-acceptance-criteria, navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-waivers-and-deferrals, navi-skill-human-checkpoints, navi-skill-handoff-protocol, navi-skill-outcome-and-kpi-definition, navi-skill-backlog-prioritisation, navi-skill-requirements-elicitation
+- Skills: navi-skill-change-proposal, navi-skill-lane-selection, navi-skill-spec-authoring, navi-skill-acceptance-criteria, navi-skill-traceability, navi-skill-phase-gate-protocol, navi-skill-waivers-and-deferrals, navi-skill-human-checkpoints, navi-skill-handoff-protocol, navi-skill-outcome-and-kpi-definition, navi-skill-backlog-prioritisation, navi-skill-work-item-sync, navi-skill-requirements-elicitation
 
 ### navi-agent-qa-engineer (quality-engineering)
 

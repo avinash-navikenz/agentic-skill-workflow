@@ -24,6 +24,7 @@ skills:
   - navi-skill-traceability
   - navi-skill-change-proposal
   - navi-skill-task-decomposition
+  - navi-skill-work-item-sync
 capabilities: [read_file, write_file, run_command, search, ask_human, spawn_subagent]
 consumes: [.adlc/state.json, .adlc/events.jsonl, .adlc/waivers.md, proposal.md, handoffs.md]
 produces: [handoffs.md, .adlc/state.json, .adlc/events.jsonl]
@@ -97,7 +98,10 @@ re-recording a gate loads `navi-skill-phase-gate-protocol`; proceeding past an u
 `navi-skill-waivers-and-deferrals`; any of the four reserved decisions loads
 `navi-skill-human-checkpoints`; opening or refusing a change loads
 `navi-skill-change-proposal`; routing Phase 5 work loads `navi-skill-task-decomposition`;
-orphan reports from `validate` load `navi-skill-traceability`; and every routing, rework or
+orphan reports from `validate` load `navi-skill-traceability`; a board and a change that have
+drifted far enough that the two tell different stories about what is in flight loads
+`navi-skill-work-item-sync`, and which of the two I treat as wrong is the arbitration — the
+register makes the disagreement visible but it does not settle it; and every routing, rework or
 arbitration record loads `navi-skill-handoff-protocol`.
 
 
