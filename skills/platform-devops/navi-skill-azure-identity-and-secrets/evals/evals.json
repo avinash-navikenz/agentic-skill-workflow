@@ -1,0 +1,72 @@
+{
+  "skill": "navi-skill-azure-identity-and-secrets",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "Set up how the web-shell pipeline and the running container app authenticate to Azure, and where the signing key lives.",
+      "expect": [
+        "identity.md",
+        "workload identity federation",
+        "managed identity",
+        "Key Vault",
+        "RBAC-",
+        "resource group",
+        "enableRbacAuthorization"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "We need the upstream API token available to the app. Put it in the web-shell-common variable group and mark it secret.",
+      "expect": [
+        "never",
+        "variable group",
+        "masks",
+        "log",
+        "Key Vault",
+        "managed identity",
+        "runtime"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The Trusted layer holds customer email addresses and the analysts should only see the hashed column. Add row-level security and PII masking to the Databricks tables.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "Two ADO runs deployed the production environment at the same time last night. Fix the pipeline so that cannot happen.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The deploy was failing on a permission error so I gave the service connection Owner on the subscription and it went green. Can we leave it?",
+      "expect": [
+        "Owner",
+        "grant",
+        "further rights",
+        "resource group",
+        "RBAC-",
+        "Exceptions"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "Add an AzureKeyVault@2 task at the start of the deploy job so the secrets are available as pipeline variables for the rest of the stage.",
+      "expect": [
+        "pipeline",
+        "scope",
+        "every task",
+        "reference",
+        "managed identity",
+        "runtime",
+        "revision"
+      ]
+    }
+  ]
+}

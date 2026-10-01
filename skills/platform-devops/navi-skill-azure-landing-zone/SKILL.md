@@ -437,9 +437,11 @@ test -f "$POLICY" || echo "no $POLICY"
 grep -q "^targetScope = 'subscription'" "$BICEP" 2>/dev/null \
   || echo "$BICEP does not set targetScope = 'subscription'"
 
-# No tenant-specific GUID is baked into a template
+# No tenant-specific GUID is baked into a template. Built-in role definition ids are the
+# same in every tenant, so a line that names `roleDefinitions` is not one of these.
 grep -rnE "'[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'" \
   infra/azure/ 2>/dev/null \
+  | grep -v 'roleDefinitions' \
   | sed 's/^/hardcoded GUID in a template, which pins it to one tenant: /'
 
 python3 - <<'PY'

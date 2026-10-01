@@ -442,6 +442,9 @@ stage:
   - { skill: navi-skill-azure-landing-zone, fence: 0, path: "delivery/ops/azure/landing-zone.md" }
   - { skill: navi-skill-azure-landing-zone, fence: 1, path: "infra/azure/platform/main.bicep" }
   - { skill: navi-skill-azure-landing-zone, fence: 2, path: "infra/azure/policy/assignments.json" }
+  - { skill: navi-skill-azure-identity-and-secrets, fence: 0, path: "delivery/ops/azure/identity.md" }
+  - { skill: navi-skill-azure-identity-and-secrets, fence: 1, path: "infra/azure/identity/main.bicep" }
+  - { skill: navi-skill-azure-identity-and-secrets, fence: 2, path: ".azure/variable-groups.yml" }
   - { skill: navi-skill-backlog-prioritisation, fence: 0, path: "delivery/backlog.md" }
   - { skill: navi-skill-incident-response, fence: 0, path: "delivery/ops/postmortems/{change}.md" }
   - { skill: navi-skill-outcome-and-kpi-definition, fence: 1, path: "delivery/ops/postmortems/{change}.md", mode: append }
@@ -501,6 +504,49 @@ skills:
         file: openapi.yaml
         delete_line: "additionalProperties: false"
         expects: "forbid unlisted ones"
+
+  navi-skill-azure-identity-and-secrets:
+    mutations:
+      - name: a value that would matter if it were read is put in a variable group
+        file: ".azure/variable-groups.yml"
+        replace:
+          - "      - name: healthPath\n        value: /healthz\n"
+          - "      - name: healthPath\n        value: /healthz\n      - name: storageConnectionString\n        value: DefaultEndpointsProtocol=https;AccountName=stwebshellweu;AccountKey=aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789abcd\n"
+        expects: "variable 'storageConnectionString' in variable group 'web-shell-common'"
+      - name: a role assignment is widened above the resource group
+        file: "delivery/ops/azure/identity.md"
+        replace: ["| RBAC-002 | id-webshell-prd-weu | AcrPull | rg-webshell-bld-weu |", "| RBAC-002 | id-webshell-prd-weu | AcrPull | sub-navikenz-platform-weu |"]
+        expects: "RBAC-002 is scoped to 'sub-navikenz-platform-weu'"
+      - name: a workload is given a role that can grant itself further roles
+        file: "delivery/ops/azure/identity.md"
+        replace: ["| RBAC-001 | id-webshell-prd-weu | Key Vault Secrets User |", "| RBAC-001 | id-webshell-prd-weu | Owner |"]
+        expects: "RBAC-001 grants 'Owner'"
+      - name: a vault falls back to access policies
+        file: "infra/azure/identity/main.bicep"
+        replace: ["    enableRbacAuthorization: true", "    enableRbacAuthorization: false"]
+        expects: "enableRbacAuthorization is false, not true"
+      - name: a vault secret can be destroyed permanently by one command
+        file: "infra/azure/identity/main.bicep"
+        replace: ["    enablePurgeProtection: true", "    enablePurgeProtection: false"]
+        expects: "enablePurgeProtection is false, not true"
+      - name: a production vault is opened to the internet
+        file: "infra/azure/identity/main.bicep"
+        replace: ["    publicNetworkAccess: 'Disabled'", "    publicNetworkAccess: 'Enabled'"]
+        expects: "publicNetworkAccess is 'Enabled', not 'Disabled'"
+      - name: a template fetches a key where a managed identity would do
+        file: "infra/azure/identity/main.bicep"
+        append: "\nvar legacyStorageKey = listKeys(resourceId('Microsoft.Storage/storageAccounts', 'stwebshellweu'), '2023-01-01').keys[0].value\n"
+        expects: "template fetches a key with listKeys("
+      - name: a service connection is re-created with a stored client secret
+        file: "delivery/ops/azure/identity.md"
+        replace: ["| ID-002 | sc-web-shell-prod | workload identity federation |", "| ID-002 | sc-web-shell-prod | app registration with client secret |"]
+        expects: "authenticates by 'app registration with client secret'"
+      - name: a federated credential is widened to the whole organisation
+        file: "delivery/ops/azure/identity.md"
+        replace:
+          - "| sc://navikenz/web-shell/sc-web-shell-prod | api://AzureADTokenExchange |"
+          - "| sc://navikenz/* | api://AzureADTokenExchange |"
+        expects: "subject contains a wildcard"
 
   navi-skill-azure-landing-zone:
     mutations:

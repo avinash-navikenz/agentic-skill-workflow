@@ -28,6 +28,7 @@ skills:
   - navi-skill-pipeline-automation
   - navi-skill-azure-pipelines
   - navi-skill-azure-landing-zone
+  - navi-skill-azure-identity-and-secrets
   - navi-skill-progressive-delivery
   - navi-skill-observability
   - navi-skill-incident-response
@@ -114,7 +115,11 @@ release goes out unapproved while the project page shows two approvers. Deciding
 tenant a workload lives, and which rules hold without anyone remembering them, loads
 `navi-skill-azure-landing-zone` — the subscription is the boundary that actually separates
 production from everything else, and a policy assigned where the next subscription will not
-inherit it is a control that exists only on the day it was written. Deciding how much of
+inherit it is a control that exists only on the day it was written. Deciding how anything in
+Azure proves who it is, and where a value that must not be read is kept, loads
+`navi-skill-azure-identity-and-secrets` — a federated service connection has no secret to leak
+and no expiry to be surprised by mid-release, and the variable group is the place a credential
+ends up when nobody decided where it should go. Deciding how much of
 the population sees a change first, and what would stop the ramp, loads
 `navi-skill-progressive-delivery`; I cut the radius rather than the
 speed, and the wave plan is where that decision becomes a number somebody else can check.
