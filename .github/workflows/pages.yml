@@ -14,10 +14,21 @@
 # page matches the tree" true by construction. A skill or agent merged to main
 # therefore appears on the site with no further step.
 #
-# THE SITE IS PUBLIC. GitHub Pages has no access control outside an organization
-# on GitHub Enterprise Cloud, and a login added to a static page in JavaScript is
-# not access control. Everything published here is readable by anyone with the
-# URL — see docs/HOSTING.md before putting anything internal in the page.
+# PUBLISHING IS OFF by default. The repository is private, and GitHub Pages from
+# a private repository needs Pro or above — so the deploy job is gated behind a
+# repository variable and does not run until somebody sets it. Without the gate
+# this workflow failed on every push, and a permanently red check is a check
+# people stop reading.
+#
+# The BUILD job still runs on every push, because it is worth something on its
+# own: it proves both branches still assemble a page, and catches a catalogue
+# that no longer regenerates cleanly.
+#
+# To publish: make the repository public (or move to Pro), then
+# Settings -> Pages -> Source: GitHub Actions, and set the repository variable
+# PUBLISH_PAGES to `true`. THE SITE IS PUBLIC EITHER WAY — Pages has no access
+# control outside an organization on GitHub Enterprise Cloud, and a login added
+# to a static page in JavaScript is not access control. See docs/HOSTING.md.
 name: pages
 
 on:
@@ -103,6 +114,8 @@ jobs:
 
   deploy:
     needs: build
+    # Only when somebody has deliberately turned publishing on.
+    if: vars.PUBLISH_PAGES == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

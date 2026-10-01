@@ -21,7 +21,21 @@ nine gates.
 | [`automation/cron/README.md`](automation/cron/README.md) | The optional runner from tracker item to proposed branch |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Every ruling made while building v1, and what each one cost |
 | [`docs/deck/README.md`](docs/deck/README.md) | The 19-slide overview deck, and how to rebuild it |
-| [`docs/HOSTING.md`](docs/HOSTING.md) | Publishing the field guide behind Entra, and what to configure |
+| [`docs/HOSTING.md`](docs/HOSTING.md) | Reading the field guide from a clone, and publishing it if you want to |
+
+---
+
+## The field guide
+
+`docs/index.html` is the whole framework as one browsable page — every agent, every skill,
+a worked demo, and the install paths. It needs no web server:
+
+```bash
+open docs/index.html          # macOS;  xdg-open on Linux,  start on Windows
+```
+
+It is one self-contained file, and its "on disk at …" links open the real `SKILL.md` and
+`README.md` files beside it. See [`docs/HOSTING.md`](docs/HOSTING.md) to publish it.
 
 ---
 
