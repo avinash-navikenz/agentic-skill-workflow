@@ -19,30 +19,46 @@ nine gates.
 
 ---
 
-## Quickstart — clone to first proposal
+## Quickstart — install to first proposal
 
 Prerequisites: **Node ≥ 20** and **Python 3**. Nothing else; the framework has no runtime
 dependencies.
 
+**1. Install the agents and skills.** This repository is a Claude Code plugin marketplace
+publishing one plugin. From inside Claude Code:
+
+```
+/plugin marketplace add navikenz/navi-delivery
+/plugin install navi-delivery@navi-delivery
+```
+
+That is the preferred route — no clone to install, and `/plugin update navi-delivery`
+refreshes it later. What lands is `adapters/claude-code/`: the generated flat layout
+carrying every agent and every skill. [`install.sh`](#other-ways-to-install) and the
+single-item copy remain supported alternatives.
+
+**2. Put the CLI on your PATH.** The seven-verb CLI is a Node script in this repository
+and is *not* part of the plugin, so this step wants the clone either way:
+
 ```bash
 git clone <this-repo> navi-delivery
 cd navi-delivery
-
-# 1. Install the agents and skills into your Claude directory.
-./install.sh --yes
-# => Installed 45 skill(s) and 11 agent(s).
-
-# 2. Put the CLI on your PATH.
 npm install --global .
 # => added 1 package
+```
 
-# 3. Scaffold the framework into the repo you actually work in.
+**3. Scaffold the framework into the repo you actually work in.**
+
+```bash
 cd /path/to/your-repo
 navi-delivery init
 # => Initialised delivery/ (harness: claude-code)
 # => Next: navi-delivery propose <name> --lane standard
+```
 
-# 4. Open your first change.
+**4. Open your first change.**
+
+```bash
 navi-delivery propose add-csv-export --lane standard
 # => Created delivery/changes/add-csv-export (lane: standard; gates: G1 · G2 · G3 · G5 · G6 · G7 · G8)
 
@@ -59,15 +75,12 @@ That is the five minutes. What to do next — write the spec, record the gates, 
 is [`docs/WALKTHROUGH.md`](docs/WALKTHROUGH.md), which follows this exact change all the
 way through and shows the output of every step.
 
-### If you would rather not install globally
+### Other ways to install
 
-The CLI is a plain Node script and runs fine by path, from any working directory:
-
-```bash
-node /path/to/navi-delivery/cli/index.js init
-```
-
-### Installer options
+`install.sh` installs the same `adapters/claude-code/` tree straight into your Claude
+directory. It symlinks by default, so an edit to the repo takes effect live — which is
+what you want when you are changing the framework rather than using it, and it is the
+form CI runs.
 
 ```bash
 ./install.sh              # interactive, symlinks (edits to the repo take effect live)
@@ -80,19 +93,33 @@ node /path/to/navi-delivery/cli/index.js init
 `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations, which default to
 `$HOME/.claude/skills` and `$HOME/.claude/agents`.
 
+A single skill or agent, without the rest, is a copy out of that same tree — every skill
+and agent README carries the exact command and the caveat that comes with it: a skill
+installed alone has no agent holding it, and nothing will invoke it.
+
+The CLI runs fine by path from any working directory if you would rather not install it
+globally:
+
+```bash
+node /path/to/navi-delivery/cli/index.js init
+```
+
 ---
 
 ## Which artefact to install
 
-**Install `adapters/claude-code/`.** That is what `install.sh` installs, and it is the
-generated Claude Code plugin: a flat `skills/<name>/SKILL.md` and `agents/<name>.md`
-layout, plus its own `.claude-plugin/plugin.json`, so the directory is a complete
-installable plugin on its own.
+**Install `adapters/claude-code/`.** That is what the marketplace publishes and what
+`install.sh` installs: the generated Claude Code plugin, a flat `skills/<name>/SKILL.md`
+and `agents/<name>.md` layout plus its own `.claude-plugin/plugin.json`, so the directory
+is a complete installable plugin on its own.
 
-The repository root also carries a `.claude-plugin/plugin.json`, but its skills are nested
-one level deeper — `skills/<discipline>/<name>/SKILL.md`. That nesting is how the *source*
-is organised, by discipline, so a reader can find things. **Whether a harness loads a
-nested layout correctly is unverified.** Do not install the repo root and assume it works.
+The repository root carries two manifests. `.claude-plugin/marketplace.json` is the
+marketplace, and its single plugin entry sources `./adapters/claude-code` — so installing
+through `/plugin install` never installs the root. `.claude-plugin/plugin.json` describes
+the root itself as a plugin, but the root's skills are nested one level deeper —
+`skills/<discipline>/<name>/SKILL.md`. That nesting is how the *source* is organised, by
+discipline, so a reader can find things. **Whether a harness loads a nested layout
+correctly is unverified.** Do not install the repo root and assume it works.
 
 `adapters/` is generated output. Never hand-edit it; change the source under `agents/` or
 `skills/` and regenerate:
@@ -105,7 +132,8 @@ CI regenerates and diffs, so a hand edit fails the build.
 
 ### Other harnesses, honestly
 
-- **Claude Code** — supported and exercised. `adapters/claude-code/`.
+- **Claude Code** — supported and exercised. `adapters/claude-code/`, installed as a
+  plugin from the marketplace this repository publishes, or by `install.sh`.
 - **Any harness with no plugin support** — `adapters/generic/RUNBOOK.md` is generated for
   exactly this: a single paste-in file carrying the capability fallback table, every agent,
   and the skills each holds.
