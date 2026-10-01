@@ -440,6 +440,12 @@ stage:
   # navi-skill-branching's Template is the repository configuration its rules assume;
   # its own block reads those keys back out of this file.
   - { skill: navi-skill-branching, fence: 0, path: ".git/config", mode: append }
+  # navi-skill-merge-conflicts ships two fences the repository itself has to carry:
+  # the merge attributes (fence 0) and the config its rules assume (fence 1). Its
+  # own block reads both back out, and `git check-attr` resolves the first against
+  # the lockfile the corpus already supplies.
+  - { skill: navi-skill-merge-conflicts, fence: 0, path: ".gitattributes" }
+  - { skill: navi-skill-merge-conflicts, fence: 1, path: ".git/config", mode: append }
   - { skill: navi-skill-pull-requests, fence: 0, path: "delivery/changes/{change}/pull-request.md" }
   - { skill: navi-skill-dependency-vulnerabilities, fence: 0, path: "delivery/changes/{change}/evidence/g6-dependencies.md" }
   - { skill: navi-skill-api-design, fence: 0, path: "openapi.yaml" }
@@ -633,6 +639,33 @@ skills:
         file: "delivery/changes/{change}/proposal.md"
         replace: ["gates: G1 · G2 · G3 · G4 · G5 · G6 · G7 · G8 · G9", "gates: G2 · G6 · G7"]
         expects: "and the lane enforces"
+
+  navi-skill-merge-conflicts:
+    mutations:
+      - name: a lockfile is left to git's line merge
+        file: ".gitattributes"
+        delete_line: "package-lock.json"
+        expects: "package-lock.json has no merge=binary in .gitattributes"
+      - name: a path is set to resolve by discarding one side
+        file: ".gitattributes"
+        replace: ["yarn.lock           merge=binary", "yarn.lock           merge=ours"]
+        expects: "resolves a path by discarding one side"
+      - name: the conflict markers stop showing the common ancestor
+        file: ".git/config"
+        replace: ["conflictStyle = zdiff3", "conflictStyle = merge"]
+        expects: "merge.conflictStyle is neither diff3 nor zdiff3"
+      - name: resolutions are no longer remembered between rebases
+        file: ".git/config"
+        replace: ["enabled = true", "enabled = false"]
+        expects: "rerere.enabled is not true"
+      - name: rerere is allowed to stage a replayed resolution unseen
+        file: ".git/config"
+        replace: ["autoupdate = false", "autoupdate = true"]
+        expects: "rerere.autoupdate is true"
+      - name: a conflict marker survives into a tracked artefact
+        file: "delivery/changes/{change}/tasks.md"
+        append: "\n<<<<<<< ours\n- [ ] **TASK-099** keep the header precedence\n=======\n- [ ] **TASK-099** keep the session fallback\n>>>>>>> theirs\n"
+        expects: "conflict marker left in tracked content"
 
   navi-skill-model-cards:
     mutations:

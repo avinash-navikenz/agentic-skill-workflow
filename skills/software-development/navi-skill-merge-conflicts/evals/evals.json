@@ -1,0 +1,61 @@
+{
+  "skill": "navi-skill-merge-conflicts",
+  "cases": [
+    {
+      "id": "pos-1",
+      "type": "positive",
+      "prompt": "I brought main into change/theme-persistence and git stopped. resolver.ts and package-lock.json are both conflicted. Walk me through it.",
+      "expect": [
+        "git status --short",
+        "git log --merge",
+        "git show :2:",
+        "npm install --package-lock-only",
+        "tests"
+      ]
+    },
+    {
+      "id": "pos-2",
+      "type": "positive",
+      "prompt": "This branch has been open two weeks and I resolve the same conflict in CHANGELOG.md and the resolver every single day. There has to be a better way.",
+      "expect": [
+        "rerere.enabled",
+        "merge=union",
+        "append-only",
+        "earlier answer"
+      ]
+    },
+    {
+      "id": "neg-1",
+      "type": "negative",
+      "prompt": "The MERGE statement in the Trusted layer conflicts with the SCD2 update when two source rows for the same key land in one batch. Work out the right match condition.",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "neg-2",
+      "type": "negative",
+      "prompt": "main has moved again and Sam has this branch checked out too. Should today's integration be a rebase or a merge?",
+      "expect_not_triggered": true
+    },
+    {
+      "id": "edge-1",
+      "type": "edge",
+      "prompt": "The rebase stopped on one of my commits and the conflict looks horrible. Just run git rebase --skip, that commit was junk anyway.",
+      "expect": [
+        "drops the entire commit",
+        "git rebase --abort",
+        "reflog"
+      ]
+    },
+    {
+      "id": "edge-2",
+      "type": "edge",
+      "prompt": "package-lock.json conflicts every day. I'm putting `package-lock.json merge=ours` in .gitattributes so it stops.",
+      "expect": [
+        "discard",
+        "merge=binary",
+        "npm install --package-lock-only",
+        "the merge reports success"
+      ]
+    }
+  ]
+}

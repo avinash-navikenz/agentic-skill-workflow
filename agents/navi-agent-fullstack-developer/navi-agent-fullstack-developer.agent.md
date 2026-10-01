@@ -30,6 +30,7 @@ skills:
   - navi-skill-version-control-workflow
   - navi-skill-commit-craft
   - navi-skill-branching
+  - navi-skill-merge-conflicts
   - navi-skill-dependency-vulnerabilities
   - navi-skill-pipeline-automation
   - navi-skill-test-strategy
@@ -120,6 +121,10 @@ freshly; answering the comments that come back loads `navi-skill-code-review`;
 cutting a branch, bringing the default branch into it, or putting the work down to pick up
 something urgent loads `navi-skill-branching` — whether an integration may be a rebase turns on
 who else is holding the branch, which is the one thing git cannot tell me and I therefore ask;
+what I do once that integration stops with conflicted paths loads
+`navi-skill-merge-conflicts` — the side I am most tempted to discard is reliably the one I did
+not write, and taking a whole side is a judgment I should have to defend in the merge's message
+rather than one I make with a keystroke at the end of a long afternoon;
 deciding how a change that replaces something already running reaches
 the default branch loads `navi-skill-version-control-workflow` — the flag and the old path are
 that skill's, not something I improvise per merge; what goes into any one commit on that branch, and

@@ -23,6 +23,7 @@ skills:
   - navi-skill-handoff-protocol
   - navi-skill-version-control-workflow
   - navi-skill-branching
+  - navi-skill-merge-conflicts
   - navi-skill-dependency-vulnerabilities
   - navi-skill-pipeline-automation
   - navi-skill-progressive-delivery
@@ -119,7 +120,11 @@ releasable loads `navi-skill-version-control-workflow` — the developer and I r
 rules for the same merge, which is the point; getting onto the branch a hotfix has to be cut
 from, and off it again without stranding the work I put down to take the page, loads
 `navi-skill-branching` — under an incident the temptation is to type the branch name I expect
-rather than read the one that is there, and that is where the wrong base comes from; standing the dependency scan up in the pipeline
+rather than read the one that is there, and that is where the wrong base comes from; a hotfix
+that lands on a conflicted cherry-pick back to the default branch loads
+`navi-skill-merge-conflicts`, because the fix that reached production and the fix that reached
+the default branch being different is a regression I have scheduled for the next release and
+nobody has written down; standing the dependency scan up in the pipeline
 and keeping it running against the default branch after the change is archived loads
 `navi-skill-dependency-vulnerabilities`, because an advisory is published against what already
 shipped; linking SLIs and incidents to the requirements and capabilities they cover loads
