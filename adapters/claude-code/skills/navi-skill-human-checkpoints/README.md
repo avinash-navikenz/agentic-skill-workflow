@@ -4,7 +4,7 @@
 
 `navi-skill-human-checkpoints` · skill · discipline `lifecycle-method` · ADLC phases 2, 3, 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when a decision reaches a point the framework reserves for a person — spec sign-off, architecture sign-off, release approval, or an incident rollback call. Defines the four checkpoints, what each approver is attesting to, the record a decision leaves, and the rule that an unavailable human blocks the change rather than being simulated.
+Defines the four checkpoints, what each approver is attesting to, the record a decision leaves, and the rule that an unavailable human blocks the change rather than being simulated.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `human checkpoint`, `sign-off`, `spec sign-off`, `a
 ## What it produces
 
 Requesting a decision — the envelope appended to `delivery/changes/<name>/handoffs.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Questions parked in a document.
+- Simulated approval.
+- Self-approval.
+- Approval by absence of dissent.
+- Approval without disclosure.
+- Waiver instead of a person.
+- Collective approver.
+- Approval that outlived its subject.
+- Rollback recorded after the fact, days later.
 
 ## Which agents hold it (7)
 

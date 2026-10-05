@@ -2,7 +2,7 @@
 
 `navi-skill-dependency-vulnerabilities` · skill · discipline `security` · ADLC phases 5, 6 · model `sonnet` · draft v0.1.0
 
-Use when a change ships third-party dependencies and G6 asks whether they carry known vulnerabilities, or when a scanner has produced findings that need dispositioning. Defines the scan scope, the per-ecosystem command, the advisory ids to record, the four dispositions, and how a finding that will not be fixed is accepted with an expiry.
+Defines the scan scope, the per-ecosystem command, the advisory ids to record, the four dispositions, and how a finding that will not be fixed is accepted with an expiry.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `dependency vulnerabilities`, `npm audit`, `pip-aud
 ## What it produces
 
 Copy into `delivery/changes/<name>/evidence/g6-dependencies.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Scanning the manifest.
+- The invented cutoff.
+- The silent drop.
+- False positive by assertion.
+- Pinning over fixing.
+- Waiver with no name and no date.
+- Pass with an open finding.
+- The stale scan.
+- Offline zero.
 
 ## Which agents hold it (3)
 

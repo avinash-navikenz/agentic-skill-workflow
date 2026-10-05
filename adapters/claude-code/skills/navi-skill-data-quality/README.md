@@ -4,7 +4,7 @@
 
 `navi-skill-data-quality` · skill · discipline `data-engineering` · ADLC phases 4, 5, 8 · model `sonnet` · draft v0.1.0
 
-Use when defining what "good" means for a dataset, when G4 asks for data-quality checks and their thresholds, or when a check has breached and the run has to do something. Defines the checks file, the CHK-### entry, the five dimensions that must each be covered or explicitly recorded empty, the three breach behaviours, and the run record the gates read.
+Defines the checks file, the CHK-### entry, the five dimensions that must each be covered or explicitly recorded empty, the three breach behaviours, and the run record the gates read.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `data quality`, `data validation`, `quality checks`
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/data/session-events/checks.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- `not_null` on everything.
+- The word threshold.
+- The undocumented number.
+- `log it`.
+- The check that repairs.
+- Re-run until green.
+- Production-only checking.
+- The write-only quarantine.
+- Definitions as evidence.
 
 ## Which agents hold it (2)
 

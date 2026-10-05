@@ -4,7 +4,7 @@
 
 `navi-skill-release-readiness` · skill · discipline `quality-engineering` · ADLC phases 6, 7 · model `opus` · draft v0.1.0
 
-Use when answering whether a change is safe to release, when G6 is about to be recorded, or when the release decision needs an honest statement of residual risk. Defines the release report and its three mandatory sections — proven, sampled, untouched — into exactly one of which every criterion, risk and threat must fall; the defect and flakiness records; the disposition of every security finding; and the separation of the recommendation from the decision.
+Defines the release report and its three mandatory sections — proven, sampled, untouched — into exactly one of which every criterion, risk and threat must fall; the defect and flakiness records; the disposition of every security finding; and the separation of the recommendation from the decision.
 
 ## When it fires
 
@@ -15,6 +15,21 @@ It is written to trigger on: `release readiness`, `go/no-go`, `are we ready to s
 ## What it produces
 
 Copy into `delivery/changes/<name>/evidence/g6-quality.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- "We're done."
+- Sampled reported as proven.
+- The empty untouched list.
+- The percentage instead of the answer.
+- The defect downgraded at the gate.
+- The re-run recorded as the result.
+- `not-applicable` with no reason.
+- The report that approves itself.
+- The undisclosed waiver.
+- The stale report.
 
 ## Which agents hold it (2)
 

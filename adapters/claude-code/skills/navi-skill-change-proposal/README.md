@@ -4,7 +4,7 @@
 
 `navi-skill-change-proposal` · skill · discipline `spec-driven-development` · ADLC phases 1, 2 · model `sonnet` · draft v0.1.0
 
-Use when opening a change — writing `proposal.md` or reviewing one before G1-INTENT. Defines the proposal template, what a complete Why, What changes, Impact and Non-goals contains, the lane declaration, and the rule that one change is in flight at a time.
+Defines the proposal template, what a complete Why, What changes, Impact and Non-goals contains, the lane declaration, and the rule that one change is in flight at a time.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `proposal`, `proposal.md`, `propose a change`, `ope
 ## What it produces
 
 theme-persistence — see the skill's Template section.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Why as activity.
+- Outcome with no measure.
+- Impact by omission.
+- Non-goals as wishlist.
+- Non-goal that is really a requirement.
+- Proposal as specification.
+- Hand-built change folder.
+- Second change in flight.
 
 ## Which agents hold it (4)
 

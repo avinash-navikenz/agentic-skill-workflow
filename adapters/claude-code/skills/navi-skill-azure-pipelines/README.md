@@ -4,7 +4,7 @@
 
 `navi-skill-azure-pipelines` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0
 
-Use when the delivery pipeline is an Azure DevOps YAML pipeline and the question is which ADO object carries a guarantee `navi-skill-pipeline-automation` already requires — which stage, which `deployment:` job, which environment holds the approval, which service connection reaches which resource group, which variable group may be linked. Defines `.azure/azure-pipelines.yml`, the stage template, the bindings file that maps each ADO stage to a `STAGE-###`, and the three expression syntaxes and when each one is evaluated.
+Defines `.azure/azure-pipelines.yml`, the stage template, the bindings file that maps each ADO stage to a `STAGE-###`, and the three expression syntaxes and when each one is evaluated.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `Azure Pipelines`, `Azure DevOps`, `ADO pipeline`, 
 ## What it produces
 
 Three files. Copy the first into `.azure/azure-pipelines.yml`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The approval that is not on the path.
+- The stage that was never sequential.
+- The condition that is always false.
+- The empty secret.
+- One connection, every environment.
+- Production's own template.
+- The tag that moved.
+- The queue-time escape hatch.
 
 ## Which agents hold it (1)
 

@@ -4,7 +4,7 @@
 
 `navi-skill-model-registry-and-promotion` · skill · discipline `mlops` · ADLC phases 4, 7 · model `sonnet` · draft v0.1.0
 
-Use when a model artifact has to move toward or away from serving traffic, when G7 asks whether the model version is registered and the promotion criteria met, or when a rollback has to be decided. Defines the promotion criteria file written before any candidate is scored, the PROMO-### entry, the append-only registry, the four stages, the reproducibility precondition and the rollback record.
+Defines the promotion criteria file written before any candidate is scored, the PROMO-### entry, the append-only registry, the four stages, the reproducibility precondition and the rollback record.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `model registry`, `promote model`, `promotion crite
 ## What it produces
 
 The criteria, written before any candidate is scored, at `delivery/changes/<name>/specs/models/theme-ranker/promotion.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Criteria written after the score.
+- The aggregate-only gate.
+- Promotion as a deploy step.
+- The unreproducible production model.
+- Rollback by belief.
+- The registry edited in place.
+- Everything at `production`.
+- Canary without a fraction.
+- The card that describes something else.
 
 ## Which agents hold it (1)
 

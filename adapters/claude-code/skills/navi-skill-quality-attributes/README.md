@@ -4,7 +4,7 @@
 
 `navi-skill-quality-attributes` · skill · discipline `architecture` · ADLC phases 3, 6 · model `opus` · draft v0.1.0
 
-Use when a design has to state what it optimises for, when a non-functional requirement arrives as an adjective, or when G6 needs a threshold it can measure. Defines the QAS-### scenario form, the ranking that forces a trade-off, and the cost every attribute charges.
+Defines the QAS-### scenario form, the ranking that forces a trade-off, and the cost every attribute charges.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `quality attributes`, `non-functional`, `NFR`, `lat
 ## What it produces
 
 Fill the `## Quality attributes` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The adjective list.
+- The mean.
+- The unranked list.
+- The free attribute.
+- Two copies of one number.
+- The unmeasurable measure.
+- Design-time measurement.
+- Environment omitted.
 
 ## Which agents hold it (2)
 

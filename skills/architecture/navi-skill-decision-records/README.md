@@ -2,7 +2,7 @@
 
 `navi-skill-decision-records` · skill · discipline `architecture` · ADLC phases 3, 9 · model `sonnet` · draft v0.1.0
 
-Use when a design choice is about to be made, reversed, or superseded, or when G3 asks where a decision was written down. Defines the ADR file, its numbering, its statuses, the rejected-alternative requirement, and how an accepted risk is recorded against a name.
+Defines the ADR file, its numbering, its statuses, the rejected-alternative requirement, and how an accepted risk is recorded against a name.
 
 ## When it fires
 
@@ -13,6 +13,19 @@ It is written to trigger on: `ADR`, `architecture decision record`, `decision re
 ## What it produces
 
 Copy into `delivery/decisions/ADR-007.md` and replace the content, not the headings.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The decision with no rival.
+- Consequences that are all upside.
+- Editing an accepted decision.
+- Role as acceptor.
+- Reason that describes the winner.
+- ADR written after the gate.
+- Numbered by directory position.
+- Decision recorded in the handoff only.
 
 ## Which agents hold it (2)
 

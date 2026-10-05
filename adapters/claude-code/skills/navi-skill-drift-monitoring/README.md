@@ -4,7 +4,7 @@
 
 `navi-skill-drift-monitoring` · skill · discipline `mlops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when a model is about to serve traffic and nothing is watching it, when G8 asks whether drift and decay monitors are live with thresholds and an owner, or when a drift alert has fired and the next action is unclear. Defines the monitors file, the MON-### entry, the four layers that must each be covered or recorded empty, the derivation a threshold must carry, the rule that drift alerts and never retrains, and the data-quality precedence rule.
+Defines the monitors file, the MON-### entry, the four layers that must each be covered or recorded empty, the derivation a threshold must carry, the rule that drift alerts and never retrains, and the data-quality precedence rule.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `drift monitoring`, `data drift`, `concept drift`, 
 ## What it produces
 
 Copy into `delivery/ops/models/theme-ranker/monitors.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Accuracy as the only monitor.
+- PSI 0.2 because everyone uses 0.2.
+- One window fires the page.
+- Drift wired to retrain.
+- Drift that was a broken join.
+- The alias owner.
+- Configured, not arriving.
+- The stale baseline.
+- The uncovered failure mode.
 
 ## Which agents hold it (2)
 

@@ -2,7 +2,7 @@
 
 `navi-skill-pipeline-automation` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0
 
-Use when the path a change takes from commit to a running environment has to be defined, made reproducible, or repaired — or when G7 asks for a deployment reproducible from a recorded artifact version and a rollback that has been exercised. Defines the delivery pipeline file, the STAGE-### entry, build-once-promote-the-same-digest, the secrets rule, the manual-step register, and the release record G7 reads.
+Defines the delivery pipeline file, the STAGE-### entry, build-once-promote-the-same-digest, the secrets rule, the manual-step register, and the release record G7 reads.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `CI/CD`, `build pipeline`, `delivery pipeline`, `de
 ## What it produces
 
 Copy into `delivery/ops/delivery-pipeline.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Rebuild per environment.
+- The tag as identity.
+- `continue-on-error: true` on the scan.
+- The retry that hides a race.
+- The special production path.
+- Rollback as a paragraph.
+- The secret that was redacted.
+- `latest` in the base image.
+- The pipeline nobody can run twice.
 
 ## Which agents hold it (2)
 

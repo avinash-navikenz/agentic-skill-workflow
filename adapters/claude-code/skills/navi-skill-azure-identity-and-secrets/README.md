@@ -4,7 +4,7 @@
 
 `navi-skill-azure-identity-and-secrets` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0
 
-Use when something in Azure has to prove who it is, or when a value that must not be read is about to be put somewhere readable. Defines the identity register, workload identity federation for Azure DevOps service connections so no client secret exists to rotate, the managed identity a workload uses to read its own secrets, role assignments scoped to a resource group with the reason for that scope written down, the Key Vault settings, and the list of what must never reach an Azure DevOps variable group.
+Defines the identity register, workload identity federation for Azure DevOps service connections so no client secret exists to rotate, the managed identity a workload uses to read its own secrets, role assignments scoped to a resource group with the reason for that scope written down, the Key Vault settings, and the list of what must never reach an Azure DevOps variable group.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `managed identity`, `user-assigned identity`, `syst
 ## What it produces
 
 Three files. Copy the first into `delivery/ops/azure/identity.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The connection with an expiry.
+- The wildcard subject.
+- Contributor on the subscription.
+- Owner, because something was failing.
+- The vault with access policies.
+- The pipeline that fetches the secret.
+- The connection string in the variable group.
+- `listKeys()` because it was quicker.
+- The pinned secret version.
 
 ## Which agents hold it (2)
 

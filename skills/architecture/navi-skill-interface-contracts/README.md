@@ -2,7 +2,7 @@
 
 `navi-skill-interface-contracts` · skill · discipline `architecture` · ADLC phases 3, 5 · model `opus` · draft v0.1.0
 
-Use when a design draws a boundary — a call, an event, a shared table, a file drop — and the two sides need something to build against, or when a change to an existing interface has to be classified as breaking or not. Defines the CONTRACT-### entry, its required fields, the breaking-change test, and the versioning and retirement rules.
+Defines the CONTRACT-### entry, its required fields, the breaking-change test, and the versioning and retirement rules.
 
 ## When it fires
 
@@ -13,6 +13,19 @@ It is written to trigger on: `interface contract`, `boundary`, `breaking change`
 ## What it produces
 
 Fill the `## Interface contracts` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The undeclared table.
+- Meaning changed in place.
+- The happy-path contract.
+- Retry on a non-idempotent write.
+- The deprecation with no date.
+- Consumers listed as a team.
+- Contract after implementation.
+- Contract with no test.
 
 ## Which agents hold it (2)
 

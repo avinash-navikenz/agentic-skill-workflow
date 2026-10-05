@@ -4,7 +4,7 @@
 
 `navi-skill-agent-observability` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when an LLM agent is about to run in front of users and nothing would let anybody reconstruct a run afterwards, when a trace is present but answers no question, or when a dashboard is empty and nobody can say whether the spans never left or never rendered. Defines delivery/ops/agent-telemetry.md, the SPAN-### register, the derived ids that keep a retry on one trace, the attributes that make cost and latency attributable, the content capture decision, how an evaluation result attaches, and the dated proof that spans arrived and rendered.
+Defines delivery/ops/agent-telemetry.md, the SPAN-### register, the derived ids that keep a retry on one trace, the attributes that make cost and latency attributable, the content capture decision, how an evaluation result attaches, and the dated proof that spans arrived and rendered.
 
 ## When it fires
 
@@ -15,6 +15,21 @@ It is written to trigger on: `agent observability`, `LLM tracing`, `trace an age
 ## What it produces
 
 The register, at `delivery/ops/agent-telemetry.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The kind that renders nowhere.
+- One identity per run.
+- The forked retry.
+- Cost that is quietly short.
+- The failure that was never emitted.
+- Prompts by default.
+- The batch lost to one field.
+- The offline label.
+- Nanoseconds as numbers.
+- Configured, not arrived.
 
 ## Which agents hold it (1)
 

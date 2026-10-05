@@ -4,7 +4,7 @@
 
 `navi-skill-commit-craft` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when a commit is about to be made on a change branch — deciding what goes into it, what stays out, and writing the message that explains why the change is shaped the way it is. Defines the staging pass, the one-reason commit boundary, the drafted message file, and the trailers that bind a commit to its task and to the Azure DevOps, GitHub or Jira work item.
+Defines the staging pass, the one-reason commit boundary, the drafted message file, and the trailers that bind a commit to its task and to the Azure DevOps, GitHub or Jira work item.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `commit message`, `write a commit`, `git add`, `sta
 ## What it produces
 
 The drafted message, at `delivery/changes/theme-persistence/commits/TASK-006.msg`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- `git add -A` then write the subject.
+- The what-body.
+- "Address review comments."
+- The missing blank line.
+- The wrapped trailer.
+- The wrong platform's id.
+- Closing from the branch.
+- The uncredited pair.
+- The amend after the push.
 
 ## Which agents hold it (1)
 

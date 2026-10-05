@@ -4,7 +4,7 @@
 
 `navi-skill-model-cards` · skill · discipline `machine-learning` · ADLC phases 4, 5, 7 · model `sonnet` · draft v0.1.0
 
-Use when a model is about to be handed to whoever will operate it, promoted, or released, and whoever inherits it needs to know how it was judged, who it is worst for, and what it is not to be used for. Defines the model card file, its nine mandatory sections, the NOTFIT-### entry, the rule that every number cites an EVAL-### with its interval, and the failure modes each bound to a detection.
+Defines the model card file, its nine mandatory sections, the NOTFIT-### entry, the rule that every number cites an EVAL-### with its interval, and the failure modes each bound to a detection.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `model card`, `model documentation`, `intended use`
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/models/theme-ranker/model-card.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The marketing card.
+- "Use with care."
+- The number with no interval.
+- Aggregate-only segments.
+- The stale card.
+- The alias owner.
+- The card that leaks.
+- Failure modes with no detection.
+- The new file per version.
 
 ## Which agents hold it (2)
 

@@ -4,7 +4,7 @@
 
 `navi-skill-incident-response` · skill · discipline `platform-devops` · ADLC phases 8, 9 · model `sonnet` · draft v0.1.0
 
-Use when something is wrong in production right now, when a hotfix has to reach users before the normal gates could be recorded, or when G9 asks for a postmortem whose insights are routed somewhere. Defines the severity scale drawn from observable impact, the incident commander role, the timeline record, the hotfix lane's deferred G2, the postmortem file the gate reads, and the rule that every INSIGHT-### goes to exactly one destination.
+Defines the severity scale drawn from observable impact, the incident commander role, the timeline record, the hotfix lane's deferred G2, the postmortem file the gate reads, and the rule that every INSIGHT-### goes to exactly one destination.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `incident`, `outage`, `production is down`, `sev1`,
 ## What it produces
 
 Copy into `delivery/ops/postmortems/<name>.md`. `navi-delivery archive` writes a stub at this path only when the file is absent, and only after the gates are settled — on `full` and `hotfix` this file exists first.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Severity from the guess.
+- Everyone commanding.
+- Evidence before users.
+- The forward fix under pressure.
+- The timeline written from memory.
+- The single root cause.
+- The person as the cause.
+- The insight routed twice.
+- The postmortem archive wrote.
 
 ## Which agents hold it (2)
 

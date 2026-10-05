@@ -4,7 +4,7 @@
 
 `navi-skill-test-strategy` · skill · discipline `quality-engineering` · ADLC phases 2, 6 · model `opus` · draft v0.1.0
 
-Use when deciding where the testing effort goes before any test is written, or when G6's entry criterion asks for a strategy naming the risks and the coverage for each. Defines the strategy file, the RISK-### entry, the three sources a risk register is assembled from, the allocation to the lowest level that can prove a risk, the recorded not-covered list, and the environment fidelity gaps that make a risk untestable where it is being chased.
+Defines the strategy file, the RISK-### entry, the three sources a risk register is assembled from, the allocation to the lowest level that can prove a risk, the recorded not-covered list, and the environment fidelity gaps that make a risk untestable where it is being chased.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `test strategy`, `test plan`, `risk-based testing`,
 ## What it produces
 
 Copy into `delivery/changes/<name>/test-strategy.md`, and add its row to `design.md`'s `## Linked artifacts` table.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The pyramid with no risks.
+- Likelihood as a word.
+- Everything at end-to-end.
+- The strategy with no gap.
+- Happy-path-only allocation.
+- The environment that cannot show it.
+- The retry in the config.
+- The instrument chosen at Phase 6.
+- Coverage as a percentage.
 
 ## Which agents hold it (2)
 

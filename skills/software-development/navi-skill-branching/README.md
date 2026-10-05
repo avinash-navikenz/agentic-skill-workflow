@@ -2,7 +2,7 @@
 
 `navi-skill-branching` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when creating a branch, moving onto one that already exists, bringing the default branch into one, or deleting one. Defines the base a branch is cut from, the upstream it tracks, the choice between rebase and merge when integrating, how uncommitted work survives a switch, and how a finished or abandoned branch is cleaned up on Azure DevOps, GitHub and Jira-tracked repositories.
+Defines the base a branch is cut from, the upstream it tracks, the choice between rebase and merge when integrating, how uncommitted work survives a switch, and how a finished or abandoned branch is cleaned up on Azure DevOps, GitHub and Jira-tracked repositories.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `create a branch`, `git switch`, `git checkout`, `c
 ## What it produces
 
 The repository configuration these rules assume, appended once to `.git/config` — or set with `git config --local <key> <value>`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Branching off yesterday's `main`.
+- Typing `main`.
+- `git checkout` for everything.
+- The token in the URL.
+- Rebasing a shared branch.
+- The anonymous stash.
+- The pop that half-worked.
+- `git branch -D` to make the message go away.
+- The branch that is gone.
 
 ## Which agents hold it (2)
 

@@ -4,7 +4,7 @@
 
 `navi-skill-requirements-elicitation` · skill · discipline `business-analysis` · ADLC phases 1, 2 · model `opus` · draft v0.1.0
 
-Use when turning a request into what is actually wanted, before any requirement is written — or when a spec is being reviewed and nobody can say who asked for a clause. Defines the elicitation record, the ACTOR-### entry including the actors who are not users, the six-prompt pass recorded even where it yields nothing, the ASSUM-### that states what would falsify it, the Q-### that is never closed by assumption, and the provenance line every requirement carries.
+Defines the elicitation record, the ACTOR-### entry including the actors who are not users, the six-prompt pass recorded even where it yields nothing, the ASSUM-### that states what would falsify it, the Q-### that is never closed by assumption, and the provenance line every requirement carries.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `requirements elicitation`, `gather requirements`, 
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/<capability>/elicitation.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The solution written in as the requirement.
+- End users only.
+- The sensible guess.
+- The unfalsifiable assumption.
+- `Quickly`.
+- The clause from nowhere.
+- The silent reconciliation.
+- The question answered in a meeting.
 
 ## Which agents hold it (2)
 

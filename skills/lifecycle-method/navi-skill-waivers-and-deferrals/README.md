@@ -2,7 +2,7 @@
 
 `navi-skill-waivers-and-deferrals` · skill · discipline `lifecycle-method` · ADLC phases 1, 2, 3, 4, 5, 6, 7, 8, 9 · model `sonnet` · draft v0.1.0
 
-Use when an enforced gate cannot be met and delivery must proceed anyway, or when a hotfix defers G2. Defines the waiver row format, the mandatory reason and future expiry, what a waiver may and may not cover, and how an expired waiver is settled.
+Defines the waiver row format, the mandatory reason and future expiry, what a waiver may and may not cover, and how an expired waiver is settled.
 
 ## When it fires
 
@@ -13,6 +13,18 @@ It is written to trigger on: `waiver`, `waive a gate`, `waivers.md`, `defer a ga
 ## What it produces
 
 Recording a waiver.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Waiver as a synonym for pass.
+- Reason that names no risk.
+- Hand-written row.
+- Rolling expiry.
+- Waived human checkpoint.
+- Waiving a skipped gate.
+- Expiry chosen to be accepted.
 
 ## Which agents hold it (6)
 

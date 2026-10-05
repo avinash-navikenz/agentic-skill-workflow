@@ -4,7 +4,7 @@
 
 `navi-skill-azure-landing-zone` · skill · discipline `platform-devops` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0
 
-Use when deciding what lives in which Azure subscription and resource group, what every resource is called and tagged, and which rules are enforced by Azure Policy rather than by remembering. Defines the landing-zone register, the management-group tree a new subscription inherits from, the SUB-### row with its budget, the naming patterns, the required tag set, and the POL-### assignment recorded as code rather than created in the portal.
+Defines the landing-zone register, the management-group tree a new subscription inherits from, the SUB-### row with its budget, the naming patterns, the required tag set, and the POL-### assignment recorded as code rather than created in the portal.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `Azure landing zone`, `management group`, `subscrip
 ## What it produces
 
 Three files. Copy the first into `delivery/ops/azure/landing-zone.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The policy on one subscription.
+- Production as a resource group.
+- The name nobody can follow.
+- Tags by remediation.
+- The GUID in the template.
+- Audit mode that was going to be temporary.
+- The remediation that never ran.
+- The portal policy.
 
 ## Which agents hold it (1)
 

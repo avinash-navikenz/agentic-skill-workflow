@@ -4,7 +4,7 @@
 
 `navi-skill-progressive-delivery` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when deciding how much of the population sees a change first, what would halt the ramp, and how it is taken back — or when G7 asks for the blast radius and an exercised rollback. Defines the rollout file, the ROLL-### wave, the blast-radius statement as a count and a population, the halt condition bound to an SLI, the kill switch that is not a redeploy, and the soak long enough for the signal to exist.
+Defines the rollout file, the ROLL-### wave, the blast-radius statement as a count and a population, the halt condition bound to an SLI, the kill switch that is not a redeploy, and the soak long enough for the signal to exist.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `progressive delivery`, `canary`, `canary release`,
 ## What it produces
 
 Copy into `delivery/changes/<name>/rollout.md`, and add its row to `design.md`'s `## Linked artifacts` table.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The percentage blast radius.
+- The calendar soak.
+- The halt nobody agreed.
+- Canary as the only rollback.
+- Two ramps, one population.
+- The aggregate that hides a segment.
+- Old path removed in the same merge.
+- The plan with no observations.
+- Rollback assumed, not checked.
 
 ## Which agents hold it (2)
 

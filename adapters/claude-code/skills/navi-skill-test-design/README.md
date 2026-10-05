@@ -4,7 +4,7 @@
 
 `navi-skill-test-design` · skill · discipline `quality-engineering` · ADLC phases 5, 6 · model `sonnet` · draft v0.1.0
 
-Use when turning an acceptance criterion into the actual test cases, or when a suite passes and the defect reached production anyway. Defines the case file, the TC-### entry, the six-technique pass recorded even where it yields nothing, the three-case boundary rule, the absent-value class that is distinct from empty and default, the observable-outcome rule, and the requirement that every automated test names the AC-### it proves.
+Defines the case file, the TC-### entry, the six-technique pass recorded even where it yields nothing, the three-case boundary rule, the absent-value class that is distinct from empty and default, the observable-outcome rule, and the requirement that every automated test names the AC-### it proves.
 
 ## When it fires
 
@@ -15,6 +15,21 @@ It is written to trigger on: `test cases`, `test design`, `boundary values`, `eq
 ## What it produces
 
 Copy into `delivery/changes/<name>/test-design.md`, and link it from `test-strategy.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- One case per criterion.
+- The boundary tested once.
+- Absent folded into empty.
+- The test that asserts the table.
+- The test named after the function.
+- The five-assertion case.
+- Cases written from the diff.
+- `now()` in the fixture.
+- `expect(() => f()).toThrow()`.
+- The fix with no failing case.
 
 ## Which agents hold it (2)
 

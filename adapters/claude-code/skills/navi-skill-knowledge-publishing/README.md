@@ -4,7 +4,7 @@
 
 `navi-skill-knowledge-publishing` · skill · discipline `integration` · ADLC phases 2, 3, 9 · model `sonnet` · draft v0.1.0
 
-Use when an artefact that lives in `delivery/` has to be readable by people who do not have the repository — a spec, an ADR, a postmortem — and is published to Confluence, an Azure DevOps wiki or a docs repository. Defines what is publishable, which direction edits flow, the concurrency token each platform demands, the markup each one accepts, when to go through an MCP server instead of a token, and how a published page is kept from going stale.
+Defines what is publishable, which direction edits flow, the concurrency token each platform demands, the markup each one accepts, when to go through an MCP server instead of a token, and how a published page is kept from going stale.
 
 ## When it fires
 
@@ -15,6 +15,21 @@ It is written to trigger on: `publish to Confluence`, `push the ADR to the wiki`
 ## What it produces
 
 The register, at `delivery/published.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Editing the page.
+- Publishing the draft.
+- The page with no row.
+- No commit in the register.
+- Omitting the version.
+- Markdown in a storage body.
+- The token in the script.
+- Publishing the whole tree.
+- The orphaned page.
+- The wiki link as evidence.
 
 ## Which agents hold it (2)
 

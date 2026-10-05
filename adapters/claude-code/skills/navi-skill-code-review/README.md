@@ -4,7 +4,7 @@
 
 `navi-skill-code-review` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when reviewing a pull request, responding to review comments, or deciding whether a change may merge. Defines who reviews, what is read against what, the three comment classes, how a blocking comment is resolved, and what G5 accepts as the review record.
+Defines who reviews, what is read against what, the three comment classes, how a blocking comment is resolved, and what G5 accepts as the review record.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `code review`, `review this PR`, `pull request`, `b
 ## What it produces
 
 Reviewing, from the command line.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Rubber stamp.
+- The taste blocker.
+- Resolution by agreement.
+- Author resolves the blocker.
+- Silent force-push.
+- Merge now, comments later.
+- The orphan TODO.
+- Secret removed in a follow-up commit.
+- Two changes in one pull request.
 
 ## Which agents hold it (2)
 

@@ -4,7 +4,7 @@
 
 `navi-skill-evaluation-design` · skill · discipline `machine-learning` · ADLC phases 4, 6 · model `opus` · draft v0.1.0
 
-Use when designing how a model will be judged, before it is fitted, or when G4 asks whether the evaluation set is held out and leakage-checked. Defines the evaluation file, the split rules, the six-prompt leakage pass, the EVAL-### entry with its uncertainty interval, the per-SLICE-### reporting rule, the test-set read log and the reproduce block.
+Defines the evaluation file, the split rules, the six-prompt leakage pass, the EVAL-### entry with its uncertainty interval, the per-SLICE-### reporting rule, the test-set read log and the reproduce block.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `evaluation design`, `held-out set`, `train test sp
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/models/theme-ranker/evaluation.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The random split on time-series data.
+- The leaked encoder.
+- The bare number.
+- The interval that is ignored.
+- The test set read eleven times.
+- Aggregate-only reporting.
+- The dropped small slice.
+- The default threshold.
+- The unreproducible evaluation.
 
 ## Which agents hold it (2)
 

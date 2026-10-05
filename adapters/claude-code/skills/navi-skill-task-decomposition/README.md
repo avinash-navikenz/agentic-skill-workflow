@@ -4,7 +4,7 @@
 
 `navi-skill-task-decomposition` · skill · discipline `spec-driven-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when breaking a specification into the tasks that implement it, or reviewing `tasks.md` before G5-BUILD. Defines `TASK-###` numbering and sizing, the vertical-slice rule, dependency ordering, and the `Implements:` binding the traceability validator reads.
+Defines `TASK-###` numbering and sizing, the vertical-slice rule, dependency ordering, and the `Implements:` binding the traceability validator reads.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `task breakdown`, `decompose`, `tasks.md`, `TASK-`,
 ## What it produces
 
 Tasks — theme-persistence — see the skill's Template section.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Horizontal slice.
+- Unbolded task.
+- Buried `Implements:`.
+- Task larger than a day.
+- Investigation with no output.
+- Task inventing a requirement.
+- Mutual dependency.
+- Optimistic checkbox.
 
 ## Which agents hold it (5)
 

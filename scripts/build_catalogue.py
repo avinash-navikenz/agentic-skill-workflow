@@ -136,6 +136,32 @@ def _split_description(description: str) -> tuple[str, list[str]]:
     return text, []
 
 
+# A skill's frontmatter `description` is written trigger-first — "Use when ..." —
+# because that is what an agent matches against when deciding whether to load the
+# skill. That makes it the wrong opening line for a person browsing the catalogue:
+# all 50 begin with the same two words, and the sentence is then restated, more
+# precisely, under "When it fires". So the README and the page drop it and lead
+# with what the skill actually defines. Nothing reads the frontmatter differently;
+# only the rendered summary changes.
+_USE_WHEN = re.compile(r"^Use when\b.*?\.(?=\s+[A-Z])\s*", re.S)
+
+
+def _skill_lead(description: str) -> str:
+    """The description with its leading "Use when ..." sentence removed.
+
+    Returns the description unchanged when stripping would leave nothing — a
+    skill whose description is only a trigger still needs a lead.
+    """
+    rest = _USE_WHEN.sub("", description, count=1).strip()
+    return rest or description
+
+
+def _first_sentence(text: str) -> str:
+    """The opening sentence, for a one-line card summary."""
+    m = re.match(r".*?\.(?=\s|$)", text, re.S)
+    return (m.group(0) if m else text).strip()
+
+
 def _label(name: str) -> str:
     """`navi-skill-api-design` -> `API design`; `navi-agent-qa-engineer` -> `QA Engineer`."""
     stem = re.sub(r"^navi-(skill|agent)-", "", name)
@@ -343,7 +369,9 @@ def catalogue_items(root: Path) -> dict:
                 "produces": _template_artifact(sections.get("Template", "")),
                 "used_by_agents": list(meta.get("used_by_agents") or []),
                 "rule_count": len(re.findall(r"^\d+\.\s", rules, re.MULTILINE)),
-                "anti_patterns": _bold_leads(sections.get("Anti-patterns", ""))[:4],
+                # Not capped: these are rendered in full on the page and in the README, and a
+                # silent [:4] showed four of a skill's eight as if that were all of them.
+                "anti_patterns": _bold_leads(sections.get("Anti-patterns", "")),
                 "has_validation": "Validation" in sections,
             })
         else:
@@ -554,8 +582,9 @@ def _skill_readme(s: dict, agents_by_name: dict) -> dict:
         "kind": "skill",
         "label": s["label"],
         "meta": _meta_line({**s, "kind": "skill"}),
-        "lead": s["description"],
+        "lead": _skill_lead(s["description"]),
         "fires": s["trigger"],
+        "rules_out": list(s["anti_patterns"]),
         "phrases": list(s["trigger_phrases"]),
         "produces": _end_sentence(s["produces"]),
         "holders": holders,
@@ -675,6 +704,13 @@ def readme_markdown(m: dict, *, flat: bool = False) -> str:
                 if m["produces"] else "_Nothing declared._", ""]
         if m.get("consumes"):
             out += ["Reads " + ", ".join(f"`{c}`" for c in m["consumes"]) + ".", ""]
+
+    if m["kind"] == "skill" and m.get("rules_out"):
+        out += ["## What it rules out", "",
+                "The named failures the rules exist to prevent:", ""]
+        for a in m["rules_out"]:
+            out.append(f"- {a}")
+        out.append("")
 
     if m["kind"] == "skill":
         n = len(m["holders"])
@@ -818,6 +854,7 @@ def _cards(data: dict, kind: str, models: dict) -> list[dict]:
             "phases": list(e["phases"]),
             "gates": list(models[e["name"]]["gates"]),
             "description": e["description"],
+            "summary": _first_sentence(models[e["name"]]["lead"]),
             "hay": _hay({**e, "kind": kind}, models),
             "readme": _for_page(models[e["name"]]),
         })

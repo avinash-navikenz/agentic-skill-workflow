@@ -2,7 +2,7 @@
 
 `navi-skill-azure-deployment-safety` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when a wave plan has to become an Azure operation — which primitive implements the exposure, which control-plane call is the kill switch, and what that call does and does not restore on this particular Azure service. Defines the per-service exposure register, the binding from each ROLL-### to its Azure mechanism, the Container Apps revision and traffic shape, the probe set, and the register of operations for which no rollback exists at all.
+Defines the per-service exposure register, the binding from each ROLL-### to its Azure mechanism, the Container Apps revision and traffic shape, the probe set, and the register of operations for which no rollback exists at all.
 
 ## When it fires
 
@@ -13,6 +13,19 @@ It is written to trigger on: `deployment slot`, `slot swap`, `sticky setting`, `
 ## What it produces
 
 Two files. Copy the first into `delivery/ops/azure/deployment-safety.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The canary that was never possible.
+- The kill switch that is a redeploy.
+- The swap that left half of itself behind.
+- Deploying into the rollback target.
+- Readiness that always passes.
+- The timestamped revision.
+- The restore that was called a rollback.
+- Scale to zero on the way back.
 
 ## Which agents hold it (1)
 

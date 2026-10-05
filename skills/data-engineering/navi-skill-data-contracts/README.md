@@ -2,7 +2,7 @@
 
 `navi-skill-data-contracts` · skill · discipline `data-engineering` · ADLC phases 4, 5 · model `sonnet` · draft v0.1.0
 
-Use when a change reads, produces or evolves a dataset, when G4 asks for a data contract, or when a dataset is handed to another agent. Defines the contract file, the per-field schema row, the freshness and ownership guarantees, the PII classification, and the two sections — how it was produced and what it is not fit for — that travel with every dataset handoff.
+Defines the contract file, the per-field schema row, the freshness and ownership guarantees, the PII classification, and the two sections — how it was produced and what it is not fit for — that travel with every dataset handoff.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `data contract`, `dataset schema`, `source of truth
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/data/session-events/contract.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The schema dump.
+- `nullable: yes`.
+- Freshness as a cron line.
+- The alias owner.
+- Silent breaking change.
+- Empty `## Not fit for`.
+- The handoff that restates the contract.
+- Classification by omission.
+- The uncontracted source.
 
 ## Which agents hold it (2)
 

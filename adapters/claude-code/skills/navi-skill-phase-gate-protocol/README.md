@@ -4,7 +4,7 @@
 
 `navi-skill-phase-gate-protocol` · skill · discipline `lifecycle-method` · ADLC phases 1, 2, 3, 4, 5, 6, 7, 8, 9 · model `opus` · draft v0.1.0
 
-Use when entering or leaving an ADLC phase, recording a gate verdict, or deciding whether a change may advance. Defines the nine phases, the entry and exit criteria of each gate, what counts as evidence, and how a failed gate propagates staleness.
+Defines the nine phases, the entry and exit criteria of each gate, what counts as evidence, and how a failed gate propagates staleness.
 
 ## When it fires
 
@@ -15,6 +15,18 @@ It is written to trigger on: `gate`, `phase gate`, `G1`, `G2`, `G3`, `G4`, `G5`,
 ## What it produces
 
 Recording a pass, with the evidence written first.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Prose verdict.
+- Conditional pass.
+- Stale-clearing by assumption.
+- Recycled evidence.
+- Skipping a gate into a waiver.
+- Archiving around a gate.
+- Out-of-order recording.
 
 ## Which agents hold it (11)
 

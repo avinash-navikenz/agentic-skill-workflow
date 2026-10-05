@@ -2,7 +2,7 @@
 
 `navi-skill-pipeline-design` · skill · discipline `data-engineering` · ADLC phases 3, 4, 5 · model `sonnet` · draft v0.1.0
 
-Use when a change adds or alters a pipeline that moves or reshapes data, when G4 asks for end-to-end lineage, or when a rerun, a backfill or a late record has to behave predictably. Defines the pipeline file, the PIPE-### entry, the four run modes and their idempotency keys, the empty-source and lateness rules, the backfill procedure and the restatement record.
+Defines the pipeline file, the PIPE-### entry, the four run modes and their idempotency keys, the empty-source and lateness rules, the backfill procedure and the restatement record.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `pipeline design`, `ETL`, `ELT`, `lineage`, `idempo
 ## What it produces
 
 Copy into `delivery/changes/<name>/pipeline.md`, and add its row to `design.md`'s `## Linked artifacts` table.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The non-idempotent upsert.
+- The silent empty run.
+- Lateness by omission.
+- The backfill invented under pressure.
+- Cost as an estimate.
+- Two datasets, one job.
+- Lineage as a picture.
+- The unreviewed quarantine.
+- Silent restatement.
 
 ## Which agents hold it (1)
 

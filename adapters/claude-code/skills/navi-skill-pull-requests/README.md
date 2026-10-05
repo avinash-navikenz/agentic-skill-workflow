@@ -4,7 +4,7 @@
 
 `navi-skill-pull-requests` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when opening a pull request, or when a reviewer cannot tell from the description what the change is for. Defines the description written from the actual diff, the sections that carry what the diff cannot show, the reviewer's reading order, and how the tracker item is linked on Azure DevOps, GitHub and Jira.
+Defines the description written from the actual diff, the sections that carry what the diff cannot show, the reviewer's reading order, and how the tracker item is linked on Azure DevOps, GitHub and Jira.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `pull request`, `PR description`, `open a PR`, `rai
 ## What it produces
 
 Copy into `delivery/changes/<name>/pull-request.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- "See AB#4421."
+- The commit-log description.
+- Two-dot diff.
+- The undisclosed migration.
+- The stale description.
+- The lockfile ambush.
+- Alphabetical review.
+- The wrong platform's link.
+- Ready while red.
 
 ## Which agents hold it (1)
 

@@ -2,7 +2,7 @@
 
 `navi-skill-threat-modelling` · skill · discipline `architecture` · ADLC phases 3, 6 · model `opus` · draft v0.1.0
 
-Use when a design draws or moves a trust boundary, when G3 asks for a threat model, or when G6 asks which threats were exercised against the build. Defines the threat-model file, the per-boundary elicitation pass, the THREAT-### entry, and the three dispositions a threat may end in.
+Defines the threat-model file, the per-boundary elicitation pass, the THREAT-### entry, and the three dispositions a threat may end in.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `threat model`, `STRIDE`, `trust boundary`, `attack
 ## What it produces
 
 Copy into `delivery/changes/<name>/threat-model.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The category asset.
+- Feature-shaped enumeration.
+- The invented severity.
+- "Monitor it."
+- Acceptance without a name.
+- Silence that reads as absence.
+- The model with no verification.
+- Inheriting a moved boundary.
+- Express means skip.
 
 ## Which agents hold it (2)
 

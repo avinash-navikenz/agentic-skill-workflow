@@ -2,7 +2,7 @@
 
 `navi-skill-traceability` · skill · discipline `lifecycle-method` · ADLC phases 2, 3, 5, 6, 8, 9 · model `sonnet` · draft v0.1.0
 
-Use when creating or reviewing any artifact that must link to an upstream one — a requirement, criterion, decision, task, test, SLI or insight. Defines the ID chain, the numbering rules, the `Implements:` convention, and the orphan classes T0 through T4 that the validator reports.
+Defines the ID chain, the numbering rules, the `Implements:` convention, and the orphan classes T0 through T4 that the validator reports.
 
 ## When it fires
 
@@ -13,6 +13,18 @@ It is written to trigger on: `traceability`, `Implements`, `REQ-`, `AC-`, `TASK-
 ## What it produces
 
 A spec that traces cleanly.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Unbolded task.
+- `Implements:` too far from the task.
+- Requirement in a paragraph.
+- Criterion under the wrong requirement.
+- Renaming to silence T3.
+- Reused number.
+- Insight with no destination.
 
 ## Which agents hold it (11)
 

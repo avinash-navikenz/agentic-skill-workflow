@@ -4,7 +4,7 @@
 
 `navi-skill-acceptance-criteria` · skill · discipline `spec-driven-development` · ADLC phases 2, 6 · model `sonnet` · draft v0.1.0
 
-Use when writing or reviewing acceptance criteria for a requirement. Defines the Given/When/Then form, the objective-testability rules, and AC-### numbering.
+Defines the Given/When/Then form, the objective-testability rules, and AC-### numbering.
 
 ## When it fires
 
@@ -15,6 +15,19 @@ It is written to trigger on: `acceptance criteria`, `AC`, `given when then`, `te
 ## What it produces
 
 REQ-001 — Theme preference persists across sessions — see the skill's Template section.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Bundled behaviours.
+- Unmeasurable adjective.
+- Restating the requirement.
+- Orphaned criterion.
+- Happy path only.
+- Threshold with no instrument.
+- Action in the `Given`.
+- Criterion that specifies the mechanism.
 
 ## Which agents hold it (3)
 

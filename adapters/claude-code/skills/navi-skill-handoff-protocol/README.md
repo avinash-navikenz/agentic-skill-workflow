@@ -4,7 +4,7 @@
 
 `navi-skill-handoff-protocol` · skill · discipline `lifecycle-method` · ADLC phases 1, 2, 3, 4, 5, 6, 7, 8, 9 · model `sonnet` · draft v0.1.0
 
-Use when one agent passes work to another, consults another, or hands back rework at a phase transition. Defines the handoff envelope YAML shape, the required fields, the `kind: review` convention for consultations, and the rule that assumptions and open questions travel with the work.
+Defines the handoff envelope YAML shape, the required fields, the `kind: review` convention for consultations, and the rule that assumptions and open questions travel with the work.
 
 ## When it fires
 
@@ -15,6 +15,18 @@ It is written to trigger on: `handoff`, `hand off`, `handoffs.md`, `phase transi
 ## What it produces
 
 A forward transition.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Prose handoff.
+- Empty assumptions on a guess.
+- Consultation as a transition.
+- Human name in `from`.
+- Rewritten history.
+- Missing `skills_used`.
+- Overstated confidence.
 
 ## Which agents hold it (11)
 

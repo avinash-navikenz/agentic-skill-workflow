@@ -2,7 +2,7 @@
 
 `navi-skill-backlog-prioritisation` · skill · discipline `product-management` · ADLC phases 1, 9 · model `opus` · draft v0.1.0
 
-Use when deciding what is done next and what is deliberately not, or when a G9 insight has to land somewhere a future change will actually find it. Defines delivery/backlog.md, the CAND-### entry, the single total order with no buckets and no ties, the recorded ordering rule and its inputs, value evidence marked assumed with the observation that would settle it, the cost-of-delay class, and the declined record that stops an idea being re-argued from zero.
+Defines delivery/backlog.md, the CAND-### entry, the single total order with no buckets and no ties, the recorded ordering rule and its inputs, value evidence marked assumed with the observation that would settle it, the cost-of-delay class, and the declined record that stops an idea being re-argued from zero.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `backlog`, `prioritisation`, `prioritization`, `wha
 ## What it produces
 
 Copy into `delivery/backlog.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The P1 bucket.
+- The backlog of solutions.
+- Conviction as evidence.
+- The point estimate.
+- The blocked top item.
+- The deleted request.
+- The insight with nowhere to land.
+- The lane discovered at proposal.
+- The estimate from before the rewrite.
 
 ## Which agents hold it (1)
 

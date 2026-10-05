@@ -4,7 +4,7 @@
 
 `navi-skill-secure-coding` · skill · discipline `software-development` · ADLC phases 5, 6 · model `sonnet` · draft v0.1.0
 
-Use when writing or reviewing code that handles untrusted input, credentials, authorisation or personal data, or when implementing a control a threat model named. Defines the banned constructs and their replacements, where authorisation is checked, how secrets and logs are handled, and the test every control carries.
+Defines the banned constructs and their replacements, where authorisation is checked, how secrets and logs are handled, and the test every control carries.
 
 ## When it fires
 
@@ -15,6 +15,21 @@ It is written to trigger on: `secure coding`, `SQL injection`, `command injectio
 ## What it produces
 
 The correct constructs, ready to copy, in the five ecosystems this framework targets.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Concatenated query.
+- Validated therefore safe.
+- Route-level authorisation.
+- The trusting body.
+- Fail open.
+- Secret in the repo, deleted later.
+- `Math.random()` token.
+- The clever token format.
+- Redaction at the call site.
+- Unbounded parse.
 
 ## Which agents hold it (2)
 

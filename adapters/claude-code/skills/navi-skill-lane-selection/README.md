@@ -4,7 +4,7 @@
 
 `navi-skill-lane-selection` · skill · discipline `lifecycle-method` · ADLC phase 1 · model `sonnet` · draft v0.1.0
 
-Use when choosing the lane for a change before proposing it, or when a change in flight turns out to be bigger than its lane. Defines the four lanes, the characteristics that select each, the gate set each enforces, and the rule that the lane is declared before work starts and changed only by re-proposing.
+Defines the four lanes, the characteristics that select each, the gate set each enforces, and the rule that the lane is declared before work starts and changed only by re-proposing.
 
 ## When it fires
 
@@ -15,6 +15,17 @@ It is written to trigger on: `which lane`, `lane selection`, `express lane`, `st
 ## What it produces
 
 theme-persistence — see the skill's Template section.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Lane by size.
+- Lane widened in place.
+- Hotfix for urgency.
+- Express for a flag that gates untested behaviour.
+- Averaging.
+- Silent second change.
 
 ## Which agents hold it (4)
 

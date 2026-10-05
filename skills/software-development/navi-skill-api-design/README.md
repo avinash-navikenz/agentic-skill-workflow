@@ -2,7 +2,7 @@
 
 `navi-skill-api-design` · skill · discipline `software-development` · ADLC phases 3, 5 · model `sonnet` · draft v0.1.0
 
-Use when designing or changing an HTTP or RPC surface — its resources, methods, status codes, error bodies, pagination, idempotency and authorisation. Defines the fixed status-code mapping, the single error shape, the pagination and idempotency rules, and the schema every endpoint is described by.
+Defines the fixed status-code mapping, the single error shape, the pagination and idempotency rules, and the schema every endpoint is described by.
 
 ## When it fires
 
@@ -13,6 +13,21 @@ It is written to trigger on: `API design`, `REST`, `endpoint`, `status code`, `4
 ## What it produces
 
 `openapi.yaml`, checked in, generating both validation and the contract test.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- 200 with an error inside.
+- Verb paths.
+- The unbounded collection.
+- Retry without a key.
+- The leaky error.
+- The ignored parameter.
+- Reworded code.
+- Serialised internals.
+- Float money.
+- Sequential ids.
 
 ## Which agents hold it (2)
 

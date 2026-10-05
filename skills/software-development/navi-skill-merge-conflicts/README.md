@@ -2,7 +2,7 @@
 
 `navi-skill-merge-conflicts` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when git has stopped with conflicted paths — a merge, a rebase, a cherry-pick or a revert — and the work on both sides has to survive the resolution. Defines which side is which in each operation, how the common ancestor is read, what is regenerated rather than merged, how rerere helps and how it misleads, when to abort, and how a side that was deliberately dropped is recorded on Azure DevOps, GitHub and Jira-tracked repositories.
+Defines which side is which in each operation, how the common ancestor is read, what is regenerated rather than merged, how rerere helps and how it misleads, when to abort, and how a side that was deliberately dropped is recorded on Azure DevOps, GitHub and Jira-tracked repositories.
 
 ## When it fires
 
@@ -13,6 +13,21 @@ It is written to trigger on: `merge conflict`, `CONFLICT (content)`, `conflict m
 ## What it produces
 
 The merge attributes these rules assume, as `.gitattributes` at the repository root.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Resolving from the markers alone.
+- The two-way marker.
+- "Ours" during a rebase.
+- The merged lockfile.
+- `merge=ours` on the lockfile.
+- `git rebase --skip` to get through it.
+- rerere on autopilot.
+- The green merge that does not build.
+- The `.orig` file in the repository.
+- Resolving in the web editor.
 
 ## Which agents hold it (2)
 

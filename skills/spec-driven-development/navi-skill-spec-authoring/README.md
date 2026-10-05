@@ -2,7 +2,7 @@
 
 `navi-skill-spec-authoring` · skill · discipline `spec-driven-development` · ADLC phases 2, 3 · model `opus` · draft v0.1.0
 
-Use when writing or reviewing a capability specification or a change's delta spec. Defines the spec template, `REQ-###` numbering, MoSCoW prioritisation, the mandatory non-functional sections, and the rule that the spec changes before the code.
+Defines the spec template, `REQ-###` numbering, MoSCoW prioritisation, the mandatory non-functional sections, and the rule that the spec changes before the code.
 
 ## When it fires
 
@@ -13,6 +13,19 @@ It is written to trigger on: `write a spec`, `specification`, `spec.md`, `delta 
 ## What it produces
 
 Capability — Theme preference — see the skill's Template section.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Spec as design.
+- Spec as task list.
+- Everything is Must.
+- Empty NFR sections.
+- Assumption disguised as a requirement.
+- Delta written as a diff.
+- Direct edit to current truth.
+- Two words for one thing.
 
 ## Which agents hold it (5)
 

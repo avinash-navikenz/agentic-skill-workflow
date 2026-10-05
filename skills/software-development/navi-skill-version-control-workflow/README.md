@@ -2,7 +2,7 @@
 
 `navi-skill-version-control-workflow` · skill · discipline `software-development` · ADLC phases 5, 7 · model `sonnet` · draft v0.1.0
 
-Use when branching, committing, merging or reverting work for a change, or when a change replaces behaviour that is already running. Defines the branch-per-change naming, the commit and merge rules, flag-guarded replacement with the old path retained, and how a bad merge is undone.
+Defines the branch-per-change naming, the commit and merge rules, flag-guarded replacement with the old path retained, and how a bad merge is undone.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `branching strategy`, `branch naming`, `commit mess
 ## What it produces
 
 A change, from branch to merge, with the old path kept.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The long-lived shared branch.
+- Replace-and-delete in one merge.
+- The immortal flag.
+- The heroic merge.
+- Fix forward under pressure.
+- Force-push over a review.
+- `fix stuff`.
+- The moving tag.
+- Hotfix off the default branch.
 
 ## Which agents hold it (2)
 

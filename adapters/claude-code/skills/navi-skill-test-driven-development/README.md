@@ -4,7 +4,7 @@
 
 `navi-skill-test-driven-development` · skill · discipline `software-development` · ADLC phase 5 · model `sonnet` · draft v0.1.0
 
-Use when implementing an acceptance criterion or fixing a defect, before the implementation is written. Defines the red-green-refactor cycle, the AC-### binding every test carries, what counts as a real red, and when a test may be changed.
+Defines the red-green-refactor cycle, the AC-### binding every test carries, what counts as a real red, and when a test may be changed.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `TDD`, `test first`, `write the test`, `red green r
 ## What it produces
 
 A full cycle for `AC-003` — a real terminal session, not a shape.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Test written after the fact.
+- Green on first run.
+- Red by harness.
+- The test edited into submission.
+- Asserting the mechanism.
+- Fix with no reproduction.
+- Sleep as synchronisation.
+- Retry until green.
+- Bundled test for a bundled criterion.
 
 ## Which agents hold it (1)
 

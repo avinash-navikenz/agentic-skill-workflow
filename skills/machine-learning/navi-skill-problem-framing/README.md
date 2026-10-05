@@ -2,7 +2,7 @@
 
 `navi-skill-problem-framing` · skill · discipline `machine-learning` · ADLC phases 3, 4 · model `opus` · draft v0.1.0
 
-Use when a change proposes to solve something with a learned model, before any model is fitted, or when G4 asks whether a baseline exists and what the metric is tied to. Defines the framing file, the decision the output informs, the cost-of-error table, the BASELINE-### entry, the target and unit of prediction, and the recorded outcome that no model is needed.
+Defines the framing file, the decision the output informs, the cost-of-error table, the BASELINE-### entry, the target and unit of prediction, and the recorded outcome that no model is needed.
 
 ## When it fires
 
@@ -13,6 +13,19 @@ It is written to trigger on: `problem framing`, `is ML the right tool`, `do we n
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/models/theme-ranker/framing.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The model with no decision.
+- The invented cost.
+- The baseline that could not have won.
+- The warehouse feature.
+- Prediction time left vague.
+- The label nobody looked at.
+- Segment reporting by proxy, unlabelled.
+- The deleted "no".
 
 ## Which agents hold it (1)
 

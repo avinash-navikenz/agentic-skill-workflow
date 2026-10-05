@@ -4,7 +4,7 @@
 
 `navi-skill-observability` · skill · discipline `platform-devops` · ADLC phases 7, 8 · model `sonnet` · draft v0.1.0
 
-Use when a shipped capability has nothing watching it, when G8 asks for an SLI with an objective, an error budget and an alert that fires before the budget burns, or when an alert is firing and nobody has agreed what to do about it. Defines delivery/ops/slo.md, the SLI-### entry, the ALERT-### entry, the user-side measurement rule, the burn-rate alert, the runbook every paging alert needs, and the proof that telemetry is arriving rather than configured.
+Defines delivery/ops/slo.md, the SLI-### entry, the ALERT-### entry, the user-side measurement rule, the burn-rate alert, the runbook every paging alert needs, and the proof that telemetry is arriving rather than configured.
 
 ## When it fires
 
@@ -15,6 +15,20 @@ It is written to trigger on: `observability`, `SLI`, `SLO`, `error budget`, `bur
 ## What it produces
 
 `navi-delivery init` scaffolds `delivery/ops/slo.md`. Fill it; do not create a second copy.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The server-side 100%.
+- Three nines because three nines.
+- The objective with no budget.
+- The single-breach page.
+- The alias on-call.
+- The runbook that says investigate.
+- Configured, not arriving.
+- The unbounded label.
+- The SLI redefined mid-ramp.
 
 ## Which agents hold it (2)
 

@@ -2,7 +2,7 @@
 
 `navi-skill-non-functional-requirements` · skill · discipline `business-analysis` · ADLC phases 2, 3 · model `opus` · draft v0.1.0
 
-Use when a requirement names a quality as an adjective, when nobody has asked what happens at ten times the volume, or when G2 is about to be recorded and the only requirements are functional. Defines the nine-category pass recorded even where it yields nothing, the rule that an NFR is an ordinary REQ-### with its threshold as an AC-###, the four admissible sources for a number, the verification line every NFR carries, and the handoffs to the SLI and to the design's quality-attribute ranking.
+Defines the nine-category pass recorded even where it yields nothing, the rule that an NFR is an ordinary REQ-### with its threshold as an AC-###, the four admissible sources for a number, the verification line every NFR carries, and the handoffs to the SLI and to the design's quality-attribute ranking.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `non-functional requirements`, `NFR`, `quality requ
 ## What it produces
 
 Fill into `delivery/changes/<name>/specs/<capability>/spec.md`, under `## Requirements`, alongside the functional ones.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The adjective requirement.
+- The round number from nowhere.
+- The threshold with no conditions.
+- The separate NFR document.
+- `GDPR compliant`.
+- `WCAG 2.2 AA`.
+- No cost requirement at all.
+- The NFR omitted because it will not be met.
+- Last project's numbers.
 
 ## Which agents hold it (2)
 

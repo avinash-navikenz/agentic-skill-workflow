@@ -2,7 +2,7 @@
 
 `navi-skill-outcome-and-kpi-definition` · skill · discipline `product-management` · ADLC phases 1, 9 · model `opus` · draft v0.1.0
 
-Use when a change has to commit to something observable before it is built, when G1 asks for at least one measurable outcome, or when G9 compares what was predicted against what happened. Defines the KPI-### entry in the proposal, the measured baseline, the target as a direction and a date, the mandatory counter-metric, the falsification condition agreed in advance, the attribution position, and the KPI-versus-SLI boundary.
+Defines the KPI-### entry in the proposal, the measured baseline, the target as a direction and a date, the mandatory counter-metric, the falsification condition agreed in advance, the attribution position, and the KPI-versus-SLI boundary.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `outcome`, `KPI`, `success metric`, `north star met
 ## What it produces
 
 Fill the `## Why` section of `delivery/changes/<name>/proposal.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- The activity outcome.
+- The retrospective baseline.
+- The target with no number.
+- No counter-metric.
+- The KPI that is an SLI.
+- The window chosen afterwards.
+- No agreed failure condition.
+- Attribution discovered at G9.
+- The KPI redefined mid-flight.
 
 ## Which agents hold it (2)
 

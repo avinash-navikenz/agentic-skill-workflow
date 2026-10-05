@@ -2,7 +2,7 @@
 
 `navi-skill-work-item-sync` · skill · discipline `integration` · ADLC phases 1, 5, 9 · model `sonnet` · draft v0.1.0
 
-Use when work has to move between the framework's `delivery/` artefacts and a tracker — creating work items from a change's tasks, keeping state and assignment in step, linking a commit or pull request to an item, and reconciling the two sides when they have drifted. Covers Azure DevOps Boards, GitHub Issues and Jira as three different systems rather than one, because the id shape, the state model and the linking syntax differ in ways that matter.
+Covers Azure DevOps Boards, GitHub Issues and Jira as three different systems rather than one, because the id shape, the state model and the linking syntax differ in ways that matter.
 
 ## When it fires
 
@@ -13,6 +13,20 @@ It is written to trigger on: `create work items from tasks`, `sync with Azure Bo
 ## What it produces
 
 The register, at `delivery/changes/<name>/work-items.md`.
+
+## What it rules out
+
+The named failures the rules exist to prevent:
+
+- Two sources of truth.
+- The bare number.
+- The reference in the title.
+- One state model for three platforms.
+- The blind create loop.
+- Generating `tasks.md` from the board.
+- The deleted work item.
+- The first page.
+- The register nobody reconciled.
 
 ## Which agents hold it (2)
 
