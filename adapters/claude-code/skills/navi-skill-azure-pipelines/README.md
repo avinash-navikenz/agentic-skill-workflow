@@ -44,11 +44,10 @@ Through them it is reachable from gates `G7`, `G8`.
 ```sh
 git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
 cd agentic-skill-workflow
-python3 scripts/build_adapters.py .
-cp -R adapters/claude-code/skills/navi-skill-azure-pipelines ~/.claude/skills/
+./install.sh --skill navi-skill-azure-pipelines
 ```
 
-Installed on its own, this skill has **no agent holding it**. Nothing in the lifecycle will invoke it: no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies. Useful for reading the rules or trying them in one session — not how the framework is meant to run.
+This installs the one skill. Nothing in the lifecycle will invoke it on its own — no phase loads it and no gate depends on it, because it is an agent that decides when a skill applies — but you can name it directly in a session. To get it loaded automatically, install one of the agents that hold it instead.
 
 ### The whole framework
 

@@ -48,16 +48,15 @@ Fullstack Developer, Data Engineer, Machine Learning Engineer, DevOps Engineer, 
 
 ## Install
 
-### This agent on its own
+### This agent and the 10 skills it holds
 
 ```sh
 git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
 cd agentic-skill-workflow
-python3 scripts/build_adapters.py .
-cp adapters/claude-code/agents/navi-agent-qa-engineer.md ~/.claude/agents/
+./install.sh --agent navi-agent-qa-engineer
 ```
 
-Installed on its own, this agent arrives **without the skills it holds**. It is written to load them rather than work from memory, so on its own it will reach for files that are not there. Useful for reading its judgment — not how the framework is meant to run.
+This installs the agent **and the skills it holds**, and nothing else — the installer reads them from the agent's own file. It is a working unit: the agent loads its skills rather than working from memory, so the two travel together. The lifecycle CLI is not included; the whole framework below adds it.
 
 ### The whole framework
 

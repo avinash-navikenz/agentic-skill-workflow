@@ -510,17 +510,17 @@ def install_framework(counts: dict) -> dict:
     }
 
 ALONE_NOTE_SKILL = (
-    "Installed on its own, this skill has **no agent holding it**. Nothing in the "
-    "lifecycle will invoke it: no phase loads it and no gate depends on it, because it "
-    "is an agent that decides when a skill applies. Useful for reading the rules or "
-    "trying them in one session — not how the framework is meant to run."
+    "This installs the one skill. Nothing in the lifecycle will invoke it on its own — "
+    "no phase loads it and no gate depends on it, because it is an agent that decides "
+    "when a skill applies — but you can name it directly in a session. To get it loaded "
+    "automatically, install one of the agents that hold it instead."
 )
 
 ALONE_NOTE_AGENT = (
-    "Installed on its own, this agent arrives **without the skills it holds**. It is "
-    "written to load them rather than work from memory, so on its own it will reach for "
-    "files that are not there. Useful for reading its judgment — not how the framework "
-    "is meant to run."
+    "This installs the agent **and the skills it holds**, and nothing else — the "
+    "installer reads them from the agent's own file. It is a working unit: the agent "
+    "loads its skills rather than working from memory, so the two travel together. "
+    "The lifecycle CLI is not included; the whole framework below adds it."
 )
 
 
@@ -577,7 +577,6 @@ def _skill_readme(s: dict, agents_by_name: dict) -> dict:
             "md": _rel(home, str(Path(a["path"]).parent.as_posix()) + "/README.md"),
             "html": _route("agent", n),
         })
-    adapter_dir = f"adapters/claude-code/skills/{s['name']}"
     return {
         "kind": "skill",
         "label": s["label"],
@@ -599,11 +598,8 @@ def _skill_readme(s: dict, agents_by_name: dict) -> dict:
             ),
         },
         "install_alone": {
-            "steps": [
-                *CLONE_STEPS,
-                "python3 scripts/build_adapters.py .",
-                f"cp -R {adapter_dir} ~/.claude/skills/",
-            ],
+            "title": "This skill on its own",
+            "steps": [*CLONE_STEPS, f"./install.sh --skill {s['name']}"],
             "note": ALONE_NOTE_SKILL,
         },
         "source": s["path"],
@@ -647,11 +643,8 @@ def _agent_readme(a: dict, skills_by_name: dict, agents_by_name: dict) -> dict:
                      "its working agreement and its skill-invocation plan"),
         },
         "install_alone": {
-            "steps": [
-                *CLONE_STEPS,
-                "python3 scripts/build_adapters.py .",
-                f"cp adapters/claude-code/agents/{a['name']}.md ~/.claude/agents/",
-            ],
+            "title": f"This agent and the {len(held)} skills it holds",
+            "steps": [*CLONE_STEPS, f"./install.sh --agent {a['name']}"],
             "note": ALONE_NOTE_AGENT,
         },
         "source": a["path"],
@@ -748,7 +741,7 @@ def readme_markdown(m: dict, *, flat: bool = False) -> str:
                     ", ".join(h["label"] for h in m["handoff_to"]) + ".", ""]
 
     framework = m["install_framework"]
-    out += ["## Install", "", "### This " + m["kind"] + " on its own", "",
+    out += ["## Install", "", "### " + m["install_alone"]["title"], "",
             _fence(m["install_alone"]["steps"]), "", m["install_alone"]["note"], "",
             "### The whole framework", "", framework["intro"], "",
             _fence(framework["steps"]), "", framework["note"], ""]
