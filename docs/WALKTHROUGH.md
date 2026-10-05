@@ -23,8 +23,10 @@ navi-delivery init
 ```
 
 ```text
-Initialised delivery/ (harness: claude-code)
-Next: navi-delivery propose <name> --lane standard
+Initialised delivery/  ·  harness claude-code  ·  prompts and the send record gitignored
+The record (specs, decisions, gate verdicts) will be committed — --private keeps it local.
+
+Next:  navi-delivery propose <name> --lane <express|standard|full|hotfix>
 ```
 
 `init` writes `delivery/`, generates `delivery/AGENTS.md` from the agent and skill tree, and
@@ -42,7 +44,17 @@ navi-delivery propose add-csv-export --lane standard
 ```
 
 ```text
-Created delivery/changes/add-csv-export (lane: standard; gates: G1 · G2 · G3 · G5 · G6 · G7 · G8)
+Created delivery/changes/add-csv-export  ·  lane standard  ·  7 gates: G1 · G2 · G3 · G5 · G6 · G7 · G8
+
+  proposal.md   why this change, and the outcome it commits to
+  design.md     the approach — one heading per G3 criterion
+  tasks.md      TASK-### bound to the REQ-### each implements
+  handoffs.md   who hands what to whom, and what is blocked
+
+Start with proposal.md. G1 reads it: proposal.md filled in: a measurable outcome, and the
+non-goals a reader would assume were in scope.
+
+Then:  navi-delivery gate G1 --pass --evidence delivery/changes/add-csv-export/proposal.md
 ```
 
 Note what that line tells you: seven gates, not nine. G4 and G9 are **outside this lane's

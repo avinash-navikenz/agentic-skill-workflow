@@ -6,6 +6,7 @@ const { readState, writeState } = require("../lib/state");
 const { isLane, gatesForLane, LANES } = require("../lib/lanes");
 const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 const { flagValue } = require("../lib/args");
+const { GATES, evidenceHint } = require("../lib/gates");
 
 const FILES = ["proposal.md", "design.md", "tasks.md", "handoffs.md"];
 
@@ -100,7 +101,8 @@ function run(argv, cwd, emit = console.log) {
   }
 
   fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
-  const gates = gatesForLane(lane).join(" · ");
+  const gateList = gatesForLane(lane);
+  const gates = gateList.join(" · ");
   for (const f of FILES) {
     const body = fs.readFileSync(path.join(templates, f), "utf8")
       .replace(/\{\{CHANGE\}\}/g, name)
@@ -110,7 +112,24 @@ function run(argv, cwd, emit = console.log) {
   }
   s.change = name; s.lane = lane; s.phase = 1; s.gates = {}; s.stale = [];
   writeState(cwd, s);
-  emit(`Created delivery/changes/${name} (lane: ${lane}; gates: ${gates})`);
+  // Four files land and the old message named none of them, so the next move
+  // was a guess or a `find`. What a reader needs here is which file to open
+  // first and what the first gate will read.
+  const PURPOSE = {
+    "proposal.md": "why this change, and the outcome it commits to",
+    "design.md":   "the approach — one heading per G3 criterion",
+    "tasks.md":    "TASK-### bound to the REQ-### each implements",
+    "handoffs.md": "who hands what to whom, and what is blocked",
+  };
+  const first = gateList[0];
+
+  emit(`Created delivery/changes/${name}  ·  lane ${lane}  ·  ${gateList.length} gates: ${gates}`);
+  emit("");
+  for (const f of FILES) emit(`  ${f.padEnd(13)} ${PURPOSE[f] || ""}`);
+  emit("");
+  emit(`Start with proposal.md. ${first} reads it: ${GATES[first].needs}.`);
+  emit("");
+  emit(`Then:  navi-delivery gate ${first} --pass --evidence ${evidenceHint(first, name)}`);
   return 0;
 }
 module.exports = { run };

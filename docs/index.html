@@ -1282,11 +1282,21 @@ $ npm install --global .</span>
         <div class="term">
           <div class="term-head"><span class="dot"></span>init · propose · status<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
 <pre><span class="c">$ navi-delivery init</span>
-<span class="o">Initialised delivery/ (harness: claude-code)
-Next: navi-delivery propose &lt;name&gt; --lane standard</span>
+<span class="o">Initialised delivery/  ·  harness claude-code  ·  prompts and the send record gitignored
+The record (specs, decisions, gate verdicts) will be committed — --private keeps it local.
+
+Next:  navi-delivery propose &lt;name&gt; --lane &lt;express|standard|full|hotfix&gt;</span>
 
 <span class="c">$ navi-delivery propose add-csv-export --lane standard</span>
-<span class="o">Created delivery/changes/add-csv-export (lane: standard; gates: G1 · G2 · G3 · G5 · G6 · G7 · G8)</span>
+<span class="o">Created delivery/changes/add-csv-export  ·  lane standard  ·  7 gates: G1 · G2 · G3 · G5 · G6 · G7 · G8
+
+  proposal.md   why this change, and the outcome it commits to
+  design.md     the approach — one heading per G3 criterion
+  tasks.md      TASK-### bound to the REQ-### each implements
+  handoffs.md   who hands what to whom, and what is blocked
+
+Start with proposal.md. G1 reads it, and the command that records it is
+  navi-delivery gate G1 --pass --evidence delivery/changes/add-csv-export/proposal.md</span>
 
 <span class="c">$ navi-delivery status</span>
 <span class="o">change: add-csv-export

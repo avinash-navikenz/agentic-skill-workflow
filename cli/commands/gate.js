@@ -6,6 +6,7 @@ const { appendEvent } = require("../lib/events");
 const { gatesForLane, ALL_GATES } = require("../lib/lanes");
 const { waiversPath } = require("../lib/paths");
 const { flagValue } = require("../lib/args");
+const { nextStepLines } = require("../lib/gates");
 const { resolveActor, actorWarning } = require("../lib/actor");
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -91,7 +92,7 @@ function evidenceError(cwd, value) {
   try {
     st = fs.statSync(path.resolve(cwd, value));
   } catch {
-    return `evidence file not found: ${value}`;
+    return `evidence file not found: ${value}\n  paths are relative to the repository root, so a file inside the change is \n  delivery/changes/<change>/<file> — see \`navi-delivery status\` for the path this gate expects`;
   }
   if (st.isDirectory()) {
     return `evidence must be a file, not a directory: ${value} — name the file inside it that records the decision`;
@@ -173,6 +174,8 @@ function run(argv, cwd, emit = console.log) {
     emit(previous
       ? `${gate} re-recorded: ${previous} -> waived until ${expires.value} (approved by: ${who.actor})`
       : `${gate} waived until ${expires.value} (approved by: ${who.actor})`);
+    emit("");
+    for (const line of nextStepLines(s, laneGates)) emit(line);
     return 0;
   }
 
@@ -209,6 +212,8 @@ function run(argv, cwd, emit = console.log) {
     ? `${gate} re-recorded: ${previous} -> ${verdict} (evidence: ${evidence.value}, by: ${who.actor})`
     : `${gate} ${verdict} (evidence: ${evidence.value}, by: ${who.actor})`);
   if (failed) emit(`rework required — ${s.stale.length} artifact(s) marked stale`);
+  emit("");
+  for (const line of nextStepLines(s, laneGates)) emit(line);
   return 0;
 }
 module.exports = { run };

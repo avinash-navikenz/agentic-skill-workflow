@@ -90,3 +90,32 @@ test("status on invalid lane reports clear error", () => {
   assert.match(out, /stndard/);
   assert.match(out, /valid lanes/i);
 });
+
+test("status points at the next gate, with the command that records it", () => {
+  // "G1 pending" is a fact, not an instruction. Before this, the reader had to
+  // know which gate came next, what it read, and where its evidence lived.
+  const root = repo();
+  propose.run(["z", "--lane", "standard"], root, () => {});
+  const lines = [];
+  status.run([], root, (s) => lines.push(String(s)));
+  const out = lines.join("\n");
+
+  assert.match(out, /G1\s+pending\s+← next/, "the next gate is not marked");
+  assert.match(out, /^G1 reads: /m, "the gate's criterion is not shown");
+  assert.match(out, /Next:\s+navi-delivery gate G1 --pass --evidence delivery\/changes\/z\/proposal\.md/);
+});
+
+test("status still lists stale artifacts that are not gates", () => {
+  const root = repo();
+  propose.run(["z", "--lane", "standard"], root, () => {});
+  const { readState } = require("../../cli/lib/state");
+  const s = readState(root);
+  s.stale = ["gate:G6", "a-loose-artifact.md"];
+  writeState(root, s);
+
+  const lines = [];
+  status.run([], root, (x) => lines.push(String(x)));
+  const out = lines.join("\n");
+  assert.match(out, /a-loose-artifact\.md/, "a non-gate stale entry vanished");
+  assert.match(out, /G6\s+pending\s+stale/, "the gate was not marked stale in the list");
+});

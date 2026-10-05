@@ -120,19 +120,18 @@ function run(argv, cwd, emit = console.log) {
   // Always, and not negotiable: content never reaches a commit by default.
   fs.writeFileSync(path.join(dir, ".gitignore"), LOCAL_ONLY);
 
-  emit(`Initialised delivery/ (harness: ${detectHarness(process.env)})`);
-  emit("delivery/.gitignore keeps prompts, completions and the send record out of git.");
+  emit(`Initialised delivery/  ·  harness ${detectHarness(process.env)}  ·  prompts and the send record gitignored`);
 
   const keepLocal = argv.includes("--private")
     || (!argv.includes("--commit") && askKeepLocal(emit));
   if (keepLocal) {
     appendRootGitignore(cwd, emit);
   } else {
-    emit("The delivery record (specs, decisions, gate verdicts) will be committed — " +
-         "re-run with --private, or add delivery/ to .gitignore, to keep it local.");
+    emit("The record (specs, decisions, gate verdicts) will be committed — --private keeps it local.");
   }
 
-  emit("Next: navi-delivery propose <name> --lane standard");
+  emit("");
+  emit("Next:  navi-delivery propose <name> --lane <express|standard|full|hotfix>");
   return 0;
 }
 

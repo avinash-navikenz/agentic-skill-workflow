@@ -1,6 +1,7 @@
 "use strict";
 const { readState } = require("../lib/state");
 const { gatesForLane, isLane, LANES } = require("../lib/lanes");
+const { nextStepLines } = require("../lib/gates");
 
 function run(argv, cwd, emit = console.log) {
   const s = readState(cwd);
@@ -21,12 +22,32 @@ function run(argv, cwd, emit = console.log) {
   // it is not printed. `state.phase` itself stays in state.json — removing it
   // would change the on-disk state format, which is a separate decision.
   emit("");
-  for (const g of gatesForLane(s.lane)) emit(`  ${g}  ${s.gates[g] || "pending"}`);
+  const lane = gatesForLane(s.lane);
+  // The gate the reader should act on next: the first unsettled one, or the
+  // first marked stale, because rework comes before anything further.
+  const staleGates = new Set(s.stale.filter((a) => a.startsWith("gate:")).map((a) => a.slice(5)));
+  const next = lane.find((g) => staleGates.has(g)) || lane.find((g) => !s.gates[g] || s.gates[g] === "fail");
+
+  for (const g of lane) {
+    const verdict = s.gates[g] || "pending";
+    const marks = [staleGates.has(g) ? "stale" : null, g === next ? "← next" : null].filter(Boolean);
+    emit(`  ${g}  ${marks.length ? verdict.padEnd(8) : verdict}${marks.join("  ")}`);
+  }
+
+  // Every stale entry, by name. Most are gates and are marked in the list
+  // above, but `stale` holds arbitrary artifact paths too and those appear
+  // nowhere else.
   if (s.stale.length) {
     emit("");
     emit(`stale artifacts (${s.stale.length}) — rework required before validate passes:`);
     for (const a of s.stale) emit(`  ${a}`);
   }
+
+  // "G3 pending" is a fact; it is not an instruction. Printing the gate's own
+  // criterion and the command that records it is the difference between a
+  // status line and a next step.
+  emit("");
+  for (const line of nextStepLines(s, lane)) emit(line);
   return 0;
 }
 module.exports = { run };

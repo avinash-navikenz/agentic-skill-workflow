@@ -73,22 +73,39 @@ npm install --global .
 ```bash
 cd /path/to/your-repo
 navi-delivery init
-# => Initialised delivery/ (harness: claude-code)
-# => Next: navi-delivery propose <name> --lane standard
+# => Initialised delivery/  ·  harness claude-code  ·  prompts and the send record gitignored
+# => Next:  navi-delivery propose <name> --lane <express|standard|full|hotfix>
 ```
 
 **4. Open your first change.**
 
 ```bash
 navi-delivery propose add-csv-export --lane standard
-# => Created delivery/changes/add-csv-export (lane: standard; gates: G1 · G2 · G3 · G5 · G6 · G7 · G8)
-
-navi-delivery status
-# => change: add-csv-export
-# => lane:   standard
+# => Created delivery/changes/add-csv-export  ·  lane standard  ·  7 gates
 # =>
-# =>   G1  pending
+# =>   proposal.md   why this change, and the outcome it commits to
+# =>   design.md     the approach — one heading per G3 criterion
+# =>   tasks.md      TASK-### bound to the REQ-### each implements
+# =>   handoffs.md   who hands what to whom, and what is blocked
+# =>
+# => Start with proposal.md. G1 reads it: a measurable outcome, and the non-goals
+# => a reader would assume were in scope.
+# =>
+# => Then:  navi-delivery gate G1 --pass --evidence delivery/changes/add-csv-export/proposal.md
+```
+
+Every command ends by naming the next one, so you are never left guessing which gate
+comes next or what it reads:
+
+```bash
+navi-delivery status
+# =>   G1  pending   ← next
+# =>   G2  pending
 # =>   ...
+# => G1 reads: proposal.md filled in: a measurable outcome, and the non-goals a reader
+# => would assume were in scope.
+# =>
+# => Next:  navi-delivery gate G1 --pass --evidence delivery/changes/add-csv-export/proposal.md
 ```
 
 That is the five minutes. What to do next — write the spec, record the gates, archive —
