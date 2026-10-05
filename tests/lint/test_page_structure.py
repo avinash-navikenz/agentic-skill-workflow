@@ -20,6 +20,11 @@ PAGE = ROOT / "docs" / "index.html"
 MARKUP_ROUTE = re.compile(r'(?<=\s)data-route="([^"]*)"')
 MARKUP_CAT = re.compile(r'(?<=\s)data-cat="([^"]+)"')
 
+# The tab order, as asked for: Home, How it works, Install, Agents, Skills,
+# Worked demo, Connect, Limits. Install sits before the catalogues because you
+# cannot use an agent you have not installed.
+ORDER = ["", "how-it-works", "install", "agents", "skills", "demo", "connect", "limits"]
+
 
 class PageStructureTest(unittest.TestCase):
     @classmethod
@@ -47,6 +52,15 @@ class PageStructureTest(unittest.TestCase):
         pages = set(re.findall(MARKUP_ROUTE, self.html))
         self.assertEqual(nav - pages, set(), "nav links to a route with no page")
         self.assertEqual(pages - nav, set(), "a page no nav entry reaches")
+
+    def test_the_nav_and_the_home_cards_are_in_the_same_order(self):
+        """The home grid is the nav in card form. They drifted apart silently
+        before, because nothing reads both."""
+        nav = re.findall(r'<a href="#/([a-z-]*)"><svg class="ico"', self.html)
+        cards = re.findall(r'^      <a href="#/([a-z-]+)">$', self.html, re.M)
+        self.assertEqual(nav, ORDER, "the nav is not in the intended order")
+        self.assertEqual(cards, [r for r in ORDER if r],
+                         "the home cards do not follow the nav order")
 
 
 if __name__ == "__main__":
