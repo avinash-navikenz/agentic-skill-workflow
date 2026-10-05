@@ -9,7 +9,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { execFileSync } = require("node:child_process");
-const { readEvents } = require("../lib/events");
+const { readEvents, appendUsage, readUsage } = require("../lib/events");
 const { readState } = require("../lib/state");
 const { adlcDir } = require("../lib/paths");
 const { fold } = require("../lib/telemetry/spans");
@@ -18,9 +18,11 @@ const { BACKENDS, resolve, redactUrl } = require("../lib/telemetry/backends");
 const { post } = require("../lib/telemetry/exporter");
 const { flagValue } = require("../lib/args");
 
-const USAGE = `usage: navi-delivery telemetry <doctor|preview|export> [options]
+const USAGE = `usage: navi-delivery telemetry <doctor|record|preview|export> [options]
 
   doctor                    which backends are configured, and what is missing
+  record  --model <id>      log one model call, so a trace can carry prompts,
+                            completions, tokens and cost the CLI never sees
   preview [--out <file>]    build the payload and write it; sends nothing
                             takes --backend too, to preview exactly that backend's payload
   export  --backend <name>  send it
@@ -46,9 +48,23 @@ function namespaceFor(cwd, env) {
   }
 }
 
+// The session a reader sees named on screen. The trace namespace works as an
+// identity but not as a label — it is a remote URL or an absolute path, so it
+// either leaks a home directory or reads as noise. `owner/repo` is what people
+// call the project.
+function sessionFor(cwd, env) {
+  if (env.NAVI_OTLP_SESSION_ID) return env.NAVI_OTLP_SESSION_ID;
+  const ns = namespaceFor(cwd, env);
+  const remote = /[:/]([^/:]+\/[^/]+?)(?:\.git)?$/.exec(ns);
+  if (remote && ns.includes("://") || (remote && ns.includes("@"))) return remote[1];
+  return path.basename(ns) || ns;
+}
+
 function foldOptions(cwd, env, lane) {
   return {
     namespace: namespaceFor(cwd, env),
+    sessionId: sessionFor(cwd, env),
+    captureContent: env.NAVI_OTLP_CAPTURE_CONTENT || "full",
     serviceName: env.NAVI_OTLP_SERVICE_NAME || "navi-delivery",
     wrapperKind: env.NAVI_OTLP_SPAN_KIND || "agent",
     // "tool", not "task". Probed against AgentObs on 2026-10-01: `task` is not a
@@ -80,11 +96,11 @@ function selectChanges(argv, cwd, events, emit) {
   return null;
 }
 
-function build(cwd, env, changes, events, state) {
+function build(cwd, env, changes, events, state, usage = []) {
   const built = [];
   for (const change of changes) {
     const lane = state && state.change === change ? state.lane : null;
-    const folded = fold(events, { ...foldOptions(cwd, env, lane), change });
+    const folded = fold(events, { ...foldOptions(cwd, env, lane), change, usage });
     if (!folded) { built.push({ change, folded: null }); continue; }
     built.push({ change, folded });
   }
@@ -106,6 +122,76 @@ function recordSidecar(cwd, entries) {
   fs.mkdirSync(adlcDir(cwd), { recursive: true });
   fs.writeFileSync(p, JSON.stringify(existing, null, 2) + "\n");
   return p;
+}
+
+// The CLI makes no model calls, so it can only report what the thing that DID
+// make them tells it. This is that doorway — and the reason an exported trace
+// can show tokens and cost at all.
+function record(argv, cwd, emit) {
+  const val = (name) => flagValue(argv, name).value;
+  const model = val("--model");
+  if (!model) {
+    emit("--model is required: cost is computed by the backend from the model and the token " +
+         "counts, so a call recorded without one is a call with no cost");
+    return 1;
+  }
+  const state = readState(cwd);
+  const change = val("--change") || (state && state.change);
+  if (!change) {
+    emit("no change in flight — name one with --change <slug>");
+    return 1;
+  }
+
+  const num = (name) => {
+    const raw = val(name);
+    if (raw === null || raw === undefined) return undefined;
+    if (!/^[0-9]+$/.test(raw)) throw new Error(`${name} must be a whole number, got ${JSON.stringify(raw)}`);
+    return Number(raw);
+  };
+  // A file, because a prompt does not survive a shell argument intact and
+  // nobody should have to escape one to record it.
+  const fromFile = (name) => {
+    const f = val(name);
+    if (!f) return undefined;
+    try {
+      return fs.readFileSync(f, "utf8");
+    } catch (e) {
+      throw new Error(`${name}: cannot read ${f} (${e.code || e.message})`);
+    }
+  };
+
+  let entry;
+  try {
+    entry = {
+      id: val("--id") || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
+      change,
+      model,
+      requested_model: val("--requested-model") || undefined,
+      provider: val("--provider") || undefined,
+      input_tokens: num("--input-tokens"),
+      output_tokens: num("--output-tokens"),
+      prompt: val("--prompt") || fromFile("--prompt-file"),
+      completion: val("--completion") || fromFile("--completion-file"),
+      agent: val("--agent") || undefined,
+      phase: val("--phase") || undefined,
+      task: val("--task") || undefined,
+      label: val("--label") || undefined,
+      started_at: val("--started-at") || undefined,
+      ended_at: val("--ended-at") || undefined,
+      error: val("--error") || undefined,
+    };
+  } catch (e) {
+    emit(e.message);
+    return 1;
+  }
+  for (const k of Object.keys(entry)) if (entry[k] === undefined) delete entry[k];
+
+  appendUsage(cwd, entry);
+  const tokens = [entry.input_tokens, entry.output_tokens].every((n) => n === undefined)
+    ? "no token counts — the backend will show no cost"
+    : `${entry.input_tokens ?? "?"} in / ${entry.output_tokens ?? "?"} out`;
+  emit(`recorded ${entry.model} against ${change} (${tokens})`);
+  return 0;
 }
 
 function doctor(cwd, env, emit) {
@@ -132,6 +218,7 @@ function doctor(cwd, env, emit) {
   }
   emit("");
   emit(`CA file: ${env.NAVI_TELEMETRY_CA_FILE || "(none — public CAs only)"}`);
+  emit(`session:  ${sessionFor(cwd, env)} (NAVI_OTLP_SESSION_ID)`);
   emit(`trace namespace: ${namespaceFor(cwd, env)}`);
   emit(`wrapper span kind: ${env.NAVI_OTLP_SPAN_KIND || "agent"} (NAVI_OTLP_SPAN_KIND)`);
   emit(`gate span kind:    ${env.NAVI_OTLP_GATE_SPAN_KIND || "task"} (NAVI_OTLP_GATE_SPAN_KIND)`);
@@ -145,7 +232,7 @@ function preview(argv, cwd, env, emit) {
   const changes = selectChanges(argv, cwd, events, emit);
   if (!changes) return 1;
   const state = readState(cwd);
-  const built = build(cwd, env, changes, events, state);
+  const built = build(cwd, env, changes, events, state, readUsage(cwd));
   const out = flagValue(argv, "--out");
 
   // A preview that could differ from what export sends would be worth nothing,
@@ -213,7 +300,7 @@ async function exportSpans(argv, cwd, env, emit) {
   const changes = selectChanges(argv, cwd, events, emit);
   if (!changes) return 1;
   const state = readState(cwd);
-  const built = build(cwd, env, changes, events, state);
+  const built = build(cwd, env, changes, events, state, readUsage(cwd));
   const dryRun = argv.includes("--dry-run");
 
   const entries = [];
@@ -260,6 +347,7 @@ function run(argv, cwd, emit = console.log, env = process.env) {
   const rest = argv.slice(1);
   if (!sub || argv.includes("--help")) { emit(USAGE); return sub ? 0 : 1; }
   if (sub === "doctor") return doctor(cwd, env, emit);
+  if (sub === "record") return record(rest, cwd, emit);
   if (sub === "preview") return preview(rest, cwd, env, emit);
   if (sub === "export") return exportSpans(rest, cwd, env, emit);
   emit(USAGE);

@@ -196,8 +196,15 @@ your-repo/
     ├── changes/          in flight, and archive/
     ├── decisions/        ADRs
     ├── ops/              slo.md · runbooks/ · postmortems/ · models/
-    └── .adlc/            state.json · events.jsonl · waivers.md
+    ├── .adlc/            state.json · events.jsonl · waivers.md
+    └── .gitignore        prompts and the send record never reach a commit
 ```
+
+Most of that is meant to be **committed** — a gate leaves evidence in the repository, and a
+verdict nobody else can read is not evidence. The two exceptions are written into
+`delivery/.gitignore` by `init`: `.adlc/usage.jsonl`, which holds prompts and completions,
+and `.adlc/telemetry.json`, which is per-machine. `init --private` keeps the whole record
+local instead; run interactively, `init` asks.
 
 `ops/` is the deliberate extension past where change-proposal tooling usually stops.
 Phases 8 and 9 need a home in the repo, or the loop from an incident back to a changed

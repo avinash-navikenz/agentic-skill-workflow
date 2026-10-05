@@ -27,15 +27,63 @@ function toNanos(iso) {
 
 const VERDICT_STATUS = { pass: 1, waived: 1, archived: 1, fail: 2 };
 
+// A model call recorded by whoever made it. The CLI makes none itself, so this
+// is the only way prompts, completions, tokens and cost can reach a trace —
+// `telemetry record` writes these, and nothing else invents them.
+function llmSpans(usage, ctx) {
+  const { traceId, rootId, change, serviceName, sessionId, captureContent } = ctx;
+  return usage
+    .filter((u) => u && u.change === change)
+    .map((u, i) => {
+      const started = toNanos(u.started_at || u.ts);
+      const ended = toNanos(u.ended_at || u.ts);
+      const attributes = {
+        "gen_ai.system": u.provider || "anthropic",
+        // The alias asked for, and the concrete id the provider answered with.
+        // They differ whenever an alias resolves to whatever is behind it.
+        "gen_ai.request.model": String(u.requested_model || u.model || ""),
+        "gen_ai.response.model": String(u.model || ""),
+        "session.id": sessionId,
+        "navi.change": change,
+      };
+      // Cost is computed by the backend from the model and the token counts; a
+      // span missing the model is a span with no cost, so the model is required
+      // by `telemetry record` rather than defaulted here.
+      if (Number.isInteger(u.input_tokens)) attributes["gen_ai.usage.input_tokens"] = u.input_tokens;
+      if (Number.isInteger(u.output_tokens)) attributes["gen_ai.usage.output_tokens"] = u.output_tokens;
+      if (u.agent) attributes["navi.agent"] = String(u.agent);
+      if (u.phase) attributes["navi.phase"] = String(u.phase);
+      if (u.task) attributes["navi.task"] = String(u.task);
+      // Prompts and completions are content, not telemetry. `none` keeps every
+      // number and drops every word.
+      if (captureContent !== "none") {
+        if (u.prompt) attributes["gen_ai.prompt"] = String(u.prompt);
+        if (u.completion) attributes["gen_ai.completion"] = String(u.completion);
+      }
+      return {
+        spanId: spanIdFor(traceId, `llm:${u.id || i}`), parentSpanId: rootId,
+        name: u.label || `llm:${u.model || "call"}`, kind: "llm", serviceName,
+        startNs: started, endNs: ended, attributes,
+        statusCode: u.error ? 2 : 1,
+        statusMessage: u.error ? String(u.error) : null,
+      };
+    });
+}
+
 function fold(events, opts) {
   const { namespace, change, serviceName = "navi-delivery",
-          wrapperKind = "agent", gateKind = "task", lane = null } = opts;
+          wrapperKind = "agent", gateKind = "task", lane = null,
+          usage = [], sessionId = null, captureContent = "full" } = opts;
 
   const mine = events.filter((e) => e && e.change === change && e.gate);
   if (mine.length === 0) return null;
 
   const traceId = traceIdFor(namespace, change);
   const rootId = spanIdFor(traceId, "change");
+  // Default: the project, not the change. A session holding one trace tells a
+  // reader nothing; grouping every change in a repository under one session is
+  // the view a delivery lead actually wants.
+  const session = sessionId || namespace;
   const startNs = toNanos(mine[0].ts);
   const endNs = toNanos(mine[mine.length - 1].ts);
 
@@ -53,6 +101,7 @@ function fold(events, opts) {
 
     const attributes = {
       "navi.change": change,
+      "session.id": session,
       "navi.gate": e.gate,
       "navi.verdict": String(e.verdict),
       // A gate decision is an instant, so this span has no duration to report.
@@ -84,6 +133,9 @@ function fold(events, opts) {
 
   const rootAttributes = {
     "navi.change": change,
+    // On every span, not just the root: AgentObs groups a Session by this, and
+    // a span without it is a span that belongs to no session.
+    "session.id": session,
     "navi.decisions": mine.length,
     "navi.gates_passed": tally.pass,
     "navi.gates_failed": tally.fail,
@@ -92,6 +144,10 @@ function fold(events, opts) {
     "navi.elapsed_ms": Number((endNs - startNs) / 1000000n),
   };
   if (lane) rootAttributes["navi.lane"] = lane;
+
+  spans.push(...llmSpans(usage, {
+    traceId, rootId, change, serviceName, sessionId: session, captureContent,
+  }));
 
   spans.unshift({
     spanId: rootId, parentSpanId: null, name: `change:${change}`,
@@ -104,4 +160,4 @@ function fold(events, opts) {
   return { traceId, spans };
 }
 
-module.exports = { fold, traceIdFor, spanIdFor, toNanos };
+module.exports = { fold, llmSpans, traceIdFor, spanIdFor, toNanos };

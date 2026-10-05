@@ -44,10 +44,30 @@ delivery/
 ├── changes/archive/
 ├── decisions/
 ├── ops/                    slo.md · runbooks/ · postmortems/ · models/
-└── .adlc/                  state.json · waivers.md
+├── .adlc/                  state.json · waivers.md
+└── .gitignore              keeps content out of git — see below
 ```
 
 `events.jsonl` appears on the first gate decision.
+
+### What is committed, and what never is
+
+`delivery/.gitignore` is written on every init and covers two files that must not reach a
+commit:
+
+| Path | Why |
+|---|---|
+| `.adlc/usage.jsonl` | prompts and completions recorded by `telemetry record` — they carry whatever was sent to a model, including source and customer data |
+| `.adlc/telemetry.json` | what **this machine** last sent and whether it arrived; per-machine, so committing it only produces conflicts |
+
+Everything else — specs, decisions, gate verdicts, waivers, the event log — **is** meant to
+be committed. The framework's premise is that a gate leaves evidence in the repository; a
+verdict nobody else can read is not evidence.
+
+`init --private` also adds `delivery/` to the repo's root `.gitignore`, for a team that
+wants the whole record local. Run interactively with no flag, `init` asks. With no TTY — CI,
+scripts, the golden path — it takes the default and says so rather than blocking on a
+question nothing can answer. `--commit` skips the question explicitly.
 
 **Refuses to overwrite.** Run twice and it stops:
 

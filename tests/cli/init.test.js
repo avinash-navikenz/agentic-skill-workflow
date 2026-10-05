@@ -3,7 +3,9 @@ const assert = require("node:assert");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { execFileSync, spawnSync } = require("node:child_process");
 const init = require("../../cli/commands/init");
+const CLI = path.resolve(__dirname, "..", "..", "cli", "index.js");
 const { readState } = require("../../cli/lib/state");
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "nd-init-"));
@@ -140,4 +142,65 @@ test("the state written by init round-trips through readState() without throwing
   init.run([], root, () => {});
   const s = readState(root);
   assert.deepStrictEqual(s, { version: 1, change: null, lane: null, phase: 1, gates: {}, stale: [] });
+});
+
+// --------------------------------------------- what init puts in .gitignore
+
+test("init always keeps prompts and the send record out of git", () => {
+  // Not a choice offered. usage.jsonl holds whatever was sent to a model —
+  // source, customer data, anything pasted in — and telemetry.json is what THIS
+  // machine sent, which is not a shared fact.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nd-ign-"));
+  execFileSync("git", ["init", "--quiet"], { cwd: root });
+  assert.strictEqual(init.run([], root, () => {}), 0);
+
+  const ignore = fs.readFileSync(path.join(root, "delivery", ".gitignore"), "utf8");
+  assert.match(ignore, /^\.adlc\/usage\.jsonl$/m);
+  assert.match(ignore, /^\.adlc\/telemetry\.json$/m);
+
+  const ignored = (p) => {
+    try {
+      execFileSync("git", ["check-ignore", "-q", p], { cwd: root });
+      return true;
+    } catch { return false; }
+  };
+  assert.ok(ignored("delivery/.adlc/usage.jsonl"), "usage.jsonl is committable");
+  assert.ok(ignored("delivery/.adlc/telemetry.json"), "telemetry.json is committable");
+  // And the record itself is NOT ignored: the gates assume evidence in the repo.
+  assert.ok(!ignored("delivery/.adlc/events.jsonl"), "the event log was ignored");
+  assert.ok(!ignored("delivery/specs"), "specs were ignored");
+});
+
+test("init leaves the root .gitignore alone unless asked", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nd-ign-"));
+  execFileSync("git", ["init", "--quiet"], { cwd: root });
+  init.run([], root, () => {});
+  assert.strictEqual(fs.existsSync(path.join(root, ".gitignore")), false);
+});
+
+test("init --private adds delivery/ once, however many times it runs", () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nd-ign-"));
+  execFileSync("git", ["init", "--quiet"], { cwd: root });
+  fs.writeFileSync(path.join(root, ".gitignore"), "node_modules/");   // no trailing newline
+
+  init.run(["--private"], root, () => {});
+  fs.rmSync(path.join(root, "delivery"), { recursive: true });
+  const out = [];
+  init.run(["--private"], root, (m) => out.push(String(m)));
+
+  const ignore = fs.readFileSync(path.join(root, ".gitignore"), "utf8");
+  assert.strictEqual(ignore.match(/^delivery\/$/gm).length, 1, "delivery/ was added twice");
+  assert.match(ignore, /^node_modules\/$/m, "an existing entry was lost");
+  assert.ok(out.some((l) => /already in \.gitignore/.test(l)));
+});
+
+test("init never blocks on a question when nothing can answer it", () => {
+  // CI, the golden path and every script run with no TTY. A prompt there would
+  // hang the build rather than ask anybody anything.
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "nd-ign-"));
+  execFileSync("git", ["init", "--quiet"], { cwd: root });
+  const r = spawnSync(process.execPath, [CLI, "init"], { cwd: root, encoding: "utf8", timeout: 10000 });
+  assert.strictEqual(r.status, 0, r.stderr);
+  assert.ok(!r.stdout.includes("[Y]"), "it asked a question nobody could answer");
+  assert.match(r.stdout, /will be committed/);
 });
