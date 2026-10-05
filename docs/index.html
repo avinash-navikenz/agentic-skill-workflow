@@ -895,290 +895,6 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
         it keeps any skill another installed agent still holds.</p>
       </div>
       <div class="half a">
-        <h3>Agents &mdash; the thinking</h3>
-        <dl>
-          <dt>Contain</dt><dd>mission &middot; mental model &middot; trade-off framing &middot; escalation triggers &middot; definition of good &middot; a skill-invocation plan</dd>
-          <dt>Answer</dt><dd>what, why, when</dd>
-          <dt>Voice</dt><dd>first person, persona</dd>
-          <dt>File</dt><dd><code>agents/navi-agent-&lt;persona&gt;/*.agent.md</code></dd>
-        </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="#/agents">Browse the <span data-total="agents">11</span> agents &rarr;</a></p>
-      </div>
-      <div class="half b">
-        <h3>Skills &mdash; the rules</h3>
-        <dl>
-          <dt>Contain</dt><dd>standards &middot; decision tables &middot; templates &middot; checklists &middot; anti-patterns &middot; a mechanical validation step</dd>
-          <dt>Answer</dt><dd>how</dd>
-          <dt>Voice</dt><dd>impersonal, imperative</dd>
-          <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
-        </dl>
-        <p class="small" style="margin:.9em 0 0"><a href="#/skills">Browse the <span data-total="skills">50</span> skills &rarr;</a></p>
-      </div>
-    </div>
-    <div class="note">
-      <p><strong>The falsifiable test.</strong> Delete every agent and the skills still fully
-      specify <em>how</em> work is done; delete every skill and the agents still specify
-      <em>what, why and when</em>.</p>
-      <p class="small sub" style="margin-bottom:0">Enforced by <code>scripts/lint_separation.py</code>.
-      The rest of the design &mdash; the gates, the lanes, the chain &mdash; is under
-      <a href="#/how-it-works">How it works</a>.</p>
-    </div>
-    <p class="small sub" style="margin-bottom:0">
-      Each item's README is a summary and carries no rules: <code>SKILL.md</code> and
-      <code>*.agent.md</code> stay the only authority, and the README links to them rather than
-      quoting them. Two copies of a rule drift, which is the thing this framework exists to stop.
-    </p>
-  </div>
-</section>
-</div>
-
-<div class="page" id="p-how" data-route="how-it-works">
-<section id="model">
-  <div class="wrap">
-    <p class="kicker">How the framework works</p>
-    <h2>Four ideas carry the whole design</h2>
-    <p class="lede small">Everything below is read out of <code>ADLC.md</code>,
-    <code>SDD.md</code> and <code>cli/lib/lanes.js</code> by
-    <code>scripts/build_catalogue.py</code> &mdash; the tables and the diagrams are the
-    framework&rsquo;s own definitions, not a description of them.</p>
-
-    <h3 style="margin-top:26px">1 · The separation</h3>
-    <p class="lede small">
-      Coding assistants land in the middle of the lifecycle and leave both ends untouched.
-      Judgment gets re-derived at every prompt, standards live in a wiki detached from the work,
-      and the loop never closes. The response is to separate the two things that keep getting
-      fused — and then to check it mechanically, because a separation nobody checks merges
-      within months.
-    </p>
-    <div class="two">
-      <div class="half a">
-        <h3>Agents — the thinking</h3>
-        <dl>
-          <dt>Contain</dt><dd>mission · mental model · trade-off framing · escalation triggers · definition of good · a skill-invocation plan</dd>
-          <dt>Answer</dt><dd>what, why, when</dd>
-          <dt>Voice</dt><dd>first person, persona</dd>
-          <dt>File</dt><dd><code>agents/navi-agent-&lt;persona&gt;/*.agent.md</code></dd>
-        </dl>
-      </div>
-      <div class="half b">
-        <h3>Skills — the rules</h3>
-        <dl>
-          <dt>Contain</dt><dd>standards · decision tables · templates · checklists · anti-patterns · a mechanical validation step</dd>
-          <dt>Answer</dt><dd>how</dd>
-          <dt>Voice</dt><dd>impersonal, imperative</dd>
-          <dt>File</dt><dd><code>skills/&lt;discipline&gt;/navi-skill-&lt;name&gt;/SKILL.md</code></dd>
-        </dl>
-      </div>
-    </div>
-    <div class="note">
-      <p><strong>The falsifiable test.</strong> Delete every agent and the skills still fully
-      specify <em>how</em> work is done; delete every skill and the agents still specify
-      <em>what, why and when</em>.</p>
-      <p class="small sub" style="margin-bottom:0">Enforced by <code>scripts/lint_separation.py</code>:
-      <strong>SEP1</strong> a numbered procedure inside an <code>.agent.md</code> ·
-      <strong>SEP2</strong> a <code>## Template</code> or <code>## Checklist</code> inside an
-      <code>.agent.md</code> · <strong>SEP3</strong> persona voice inside a <code>SKILL.md</code> ·
-      <strong>SEP4</strong> first person inside a <code>SKILL.md</code>. The build fails on any of them.</p>
-    </div>
-    <p class="small sub">
-      The corollary is the part that bites: <strong>an agent may not produce a lifecycle artifact
-      from memory.</strong> It loads the governing skill, follows it, and records which skills it
-      used in the handoff envelope. An agent that writes a spec from what it remembers about specs
-      has made the skill library decorative.
-    </p>
-
-    <h3 style="margin-top:34px">2 · Nine phases, nine gates, and a loop that closes</h3>
-    <p class="lede small">
-      Phases are not a waterfall. Phase 6's owner is consulted at phase 2 — testability of an
-      acceptance criterion is cheapest to fix while the criterion is still being written — and the
-      Architect reviews phase 5 output against the design phase 3 settled. Consultation is recorded
-      as a handoff with <code>kind: review</code>, not as a phase transition.
-    </p>
-    <figure class="figure">
-      <div class="svgscroll" id="lifecycleFig"></div>
-      <figcaption>
-        Generated from <code>ADLC.md</code> §1. <code>G1</code>–<code>G9</code> are the identifiers
-        the CLI matches; the suffixed forms (<code>G2-SPEC</code>, <code>G3-DESIGN</code>) are
-        mnemonics for readers and are never typed.
-      </figcaption>
-    </figure>
-    <p class="small">Each gate's exit criteria and the evidence it accepts, straight from <code>ADLC.md</code> §2:</p>
-    <div class="tablewrap"><table id="gateTable"></table></div>
-    <div class="note">
-      <p><strong>A verdict is one of exactly three values:</strong> <code>pass</code>,
-      <code>fail</code>, <code>waived</code>. There is no conditional pass and no pass with
-      follow-ups. <code>--pass</code> and <code>--fail</code> both require
-      <code>--evidence &lt;path&gt;</code>.</p>
-    </div>
-
-    <h3 style="margin-top:34px">3 · Four lanes, as gate subsets</h3>
-    <p class="lede small">
-      Proportionality is what keeps the framework in daily use. Nine gates on a flag flip is not
-      rigour; it is a guarantee that the next flag flip goes around the framework. The lane is
-      declared at <code>propose</code> time, written into <code>state.lane</code>, and fixed for
-      the life of the change.
-    </p>
-    <div class="tablewrap"><table class="matrix" id="laneMatrix"></table></div>
-    <div class="grid2" style="margin-top:14px">
-      <div class="panel">
-        <h4>Choosing a lane</h4>
-        <ul class="small" style="margin-bottom:0">
-          <li><strong>By the highest-severity characteristic present, never the average.</strong> One regulated field in an otherwise trivial change makes the whole change <code>full</code>.</li>
-          <li><strong>Anything touching a dataset, schema, feature store or model takes <code>full</code></strong> — see the G4 gap in <a href="#/limits">Limits</a>.</li>
-          <li><strong><code>hotfix</code> means production is degraded right now.</strong> A bug found before release is <code>standard</code>.</li>
-          <li><strong>Where two lanes both fit, take the wider one.</strong> An unnecessary gate costs hours; a missing gate costs an incident.</li>
-        </ul>
-      </div>
-      <div class="panel">
-        <h4>Skipped is not waived</h4>
-        <p class="small">A gate <strong>outside</strong> the lane's set is <em>skipped</em>: recorded
-        nowhere, and <code>navi-delivery gate</code> refuses it outright with
-        <code>&lt;G#&gt; is not in lane '&lt;lane&gt;'</code>.</p>
-        <p class="small">A gate <strong>inside</strong> the set that cannot be met is
-        <em>waived</em>, with a reason and a calendar expiry strictly in the future, appended to
-        <code>.adlc/waivers.md</code> and to the event log. Only one of the two is a decision
-        somebody made.</p>
-        <p class="small" style="margin-bottom:0"><strong>Lanes are never widened in place.</strong>
-        A change that outgrows its lane is closed out — waiving each unsettled gate with a reason
-        naming the abandonment — and re-proposed. There is no <code>abandon</code> verb.</p>
-      </div>
-    </div>
-
-    <h3 style="margin-top:34px">4 · The traceability chain</h3>
-    <p class="lede small">
-      The spec is the source of truth; code is its consequence. Every artifact after the first
-      declares the upstream ID it descends from, and the chain runs one way only — an insight can
-      propose a new requirement, but by becoming a candidate <code>REQ-###</code> in a new change,
-      never by editing backwards into a closed one.
-    </p>
-    <figure class="figure">
-      <div class="svgscroll" id="chainFig"></div>
-      <figcaption>Generated from <code>SDD.md</code> §1.</figcaption>
-    </figure>
-    <div class="tablewrap"><table id="chainTable"></table></div>
-    <div class="grid2" style="margin-top:14px">
-      <div class="panel">
-        <h4>What the validator actually sees</h4>
-        <p class="small"><code>scripts/validate_traceability.py</code> is deliberately literal.
-        It recognises a requirement only as <code>REQ-###</code> on a line starting with
-        <code>#</code>; a task only as <code>**TASK-###**</code> <em>in bold</em>; and an
-        <code>Implements: REQ-###</code> line only within three lines of its task marker.
-        Three digits minimum — it does not see <code>REQ-4</code> at all.</p>
-        <p class="small" style="margin-bottom:0">This is the single most common way a spec passes
-        validation while meaning nothing.</p>
-      </div>
-      <div class="panel">
-        <h4>The findings</h4>
-        <div class="tablewrap" style="margin:0"><table id="findingTable"></table></div>
-      </div>
-    </div>
-
-    <h3 style="margin-top:34px">Rework: a failed gate does not simply block</h3>
-    <figure class="figure">
-      <div class="svgscroll" id="reworkFig"></div>
-      <figcaption>
-        <code>gate G6 --fail</code> on a <code>standard</code> change. G6 and every later gate
-        <em>in the same lane</em> go stale; G1–G5 were decided on evidence that is still good, and
-        G4/G9 are untouched because marking a gate this lane cannot record would create a stale
-        entry that could never be cleared.
-      </figcaption>
-    </figure>
-    <p class="small">
-      <code>validate</code> fails while any stale entry remains, so rework cannot be silently
-      skipped past. Each stale gate is cleared by <strong>re-recording that gate individually</strong>
-      as <code>pass</code> or <code>waived</code> — a passing G6 does not vouch for G7. Re-recording
-      is a supported path: the event log appends a new record carrying <code>previous</code>, and
-      history is never overwritten.
-    </p>
-  </div>
-</section>
-</div>
-
-<div class="page" id="p-agents" data-route="agents">
-<section id="cat-agent" data-cat="agent">
-  <div class="wrap">
-    <p class="kicker">Catalogue · agents</p>
-    <h2>All <span data-total="agents">11</span> personas, from the source tree</h2>
-    <p class="lede small">Search by name, mission, the gates it owns or the skills it holds; filter by ADLC phase or gate. Pick one from the list and it opens in full beside it &mdash; what it is for, when it fires, what it produces, the skills it loads, when it stops and asks a human, and both ways to install it. Every skill chip jumps straight to that skill.</p>
-
-    <div class="controls">
-      <div class="row">
-        <span class="qwrap"><svg class="ico qico" aria-hidden="true"><use href="#i-search"></use></svg><input type="search" data-q placeholder="Search name, mission, trigger phrase, tag&hellip;" aria-label="Search the catalogue"></span>
-        <select data-phase aria-label="Filter by ADLC phase"></select>
-        <select data-gate aria-label="Filter by gate"></select>
-        <span class="count" data-count></span>
-        <button class="linkbtn" type="button" data-reset><svg class="ico" aria-hidden="true"><use href="#i-reset"></use></svg>Reset</button>
-      </div>
-    </div>
-
-    <div class="split" data-split>
-      <div class="list" data-list aria-label="Agents"></div>
-      <div class="detail" data-detail aria-live="polite"></div>
-    </div>
-    <div class="empty" data-empty hidden>Nothing matches those filters.</div>
-  </div>
-</section>
-</div>
-
-<div class="page" id="p-skills" data-route="skills">
-<section id="cat-skill" data-cat="skill">
-  <div class="wrap">
-    <p class="kicker">Catalogue · skills</p>
-    <h2><span data-total="skills">50</span> skills across <span data-total="disciplines">13</span> disciplines</h2>
-    <p class="lede small">Search by name, trigger phrase, discipline or tag; filter by discipline, ADLC phase or gate. A skill is reachable from a gate through the agents that hold it, which is how someone hunting &ldquo;what do I need for G6&rdquo; looks. Pick one from the list and its README opens beside it, with both ways to install it.</p>
-
-    <div class="controls">
-      <div class="row">
-        <span class="qwrap"><svg class="ico qico" aria-hidden="true"><use href="#i-search"></use></svg><input type="search" data-q placeholder="Search name, mission, trigger phrase, tag&hellip;" aria-label="Search the catalogue"></span>
-        <select data-disc aria-label="Filter by discipline"></select>
-        <select data-phase aria-label="Filter by ADLC phase"></select>
-        <select data-gate aria-label="Filter by gate"></select>
-        <span class="count" data-count></span>
-        <button class="linkbtn" type="button" data-reset><svg class="ico" aria-hidden="true"><use href="#i-reset"></use></svg>Reset</button>
-      </div>
-    </div>
-
-    <div class="split" data-split>
-      <div class="list" data-list aria-label="Skills"></div>
-      <div class="detail" data-detail aria-live="polite"></div>
-    </div>
-    <div class="empty" data-empty hidden>Nothing matches those filters.</div>
-  </div>
-</section>
-</div>
-
-<div class="page" id="p-install" data-route="install">
-<section id="ways">
-  <div class="wrap">
-    <p class="kicker">Two ways in</p>
-    <h2>One item, or the framework</h2>
-    <p class="lede small">
-      Every item under <a href="#/agents">Agents</a> and <a href="#/skills">Skills</a> carries both
-      of these, written for that item. They are not equivalent, and the difference is the thing
-      worth understanding before you pick one.
-    </p>
-    <div class="two">
-      <div class="half b">
-        <h3>One agent, with the skills it holds</h3>
-        <div class="cmdwrap"><div class="cmd"><span class="p">$ </span>git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
-<span class="p">$ </span>cd agentic-skill-workflow
-<span class="p">$ </span>./install.sh --agent navi-agent-&lt;name&gt;</div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
-        <div class="warnline">
-          <p>The installer reads the skill list out of the agent&rsquo;s own file and installs
-          those and nothing else &mdash; the Architect brings 16 of the
-          <span data-total="skills">50</span>, not all of them. The two travel together because
-          an agent loads its skills rather than working from memory. What this leaves out is the
-          lifecycle CLI: no <code>navi-delivery</code> command, so no gates and no delivery
-          record.</p>
-        </div>
-        <p class="small" style="margin-bottom:0">One skill on its own is
-        <code>./install.sh --skill navi-skill-&lt;name&gt;</code>. Nothing in the lifecycle will
-        invoke it &mdash; no phase loads it and no gate depends on it, because it is an agent
-        that decides when a skill applies &mdash; but you can name it directly in a session.
-        Both flags repeat and combine, and <code>--uninstall</code> takes the same selection:
-        it keeps any skill another installed agent still holds.</p>
-      </div>
-      <div class="half a">
         <h3>The whole framework</h3>
         <div class="cmdwrap"><div class="cmd">/plugin marketplace add avinash-navikenz/agentic-skill-workflow
 /plugin install navi-delivery@navi-delivery   <span class="hash"># <span data-total="skills">50</span> skills + <span data-total="agents">11</span> agents</span></div><button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
@@ -9378,14 +9094,22 @@ lane:   standard
   ]
  },
  "install_framework": {
-  "intro": "`adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.",
+  "intro": "Two routes. The plugin is one command and no clone; installing from source gets you the same files plus the repository, which is what the `navi-delivery` CLI and the per-item installs above are run from.",
+  "plugin": {
+   "title": "As a plugin — no clone",
+   "steps": [
+    "/plugin marketplace add avinash-navikenz/agentic-skill-workflow",
+    "/plugin install navi-delivery@navi-delivery   # 50 skills + 11 agents"
+   ],
+   "note": "Typed in Claude Code, not a shell. This installs every agent and every skill — the plugin is the whole framework and cannot be narrowed, which is what the per-item install above is for. It does not install the `navi-delivery` CLI, so there are no gates and no delivery record until you add it from source."
+  },
   "steps": [
    "git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git",
    "cd agentic-skill-workflow",
-   "python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first",
-   "./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude"
+   "./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude",
+   "npm install --global .                # the navi-delivery CLI"
   ],
-  "note": "`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else."
+  "note": "`adapters/claude-code/` is the installable artefact and is committed, so no build step is needed. `--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else."
  }
 }
 </script>
@@ -9798,7 +9522,10 @@ lane:   standard
       h += "<h4>Install &mdash; " + esc(m.install_alone.title.charAt(0).toLowerCase() + m.install_alone.title.slice(1)) + "</h4>" + cmd(m.install_alone.steps) +
            '<div class="warnline">' + md(m.install_alone.note) + "</div>";
       h += "<h4>Install &mdash; the whole framework</h4><p>" + md(F.intro) + "</p>" +
-           cmd(F.steps) + '<p class="sub">' + md(F.note) + "</p>";
+           "<p><strong>" + esc(F.plugin.title) + "</strong></p>" + cmd(F.plugin.steps) +
+           '<p class="sub">' + md(F.plugin.note) + "</p>" +
+           "<p><strong>From source</strong></p>" + cmd(F.steps) +
+           '<p class="sub">' + md(F.note) + "</p>";
 
       h += "<h4>Where the rules live</h4><p>This is a summary and carries no rules. " +
            '<a href="' + src(m.authority.html) + '" target="_blank" rel="noopener">' + ico("file") +

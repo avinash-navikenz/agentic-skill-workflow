@@ -116,8 +116,28 @@ class InstallScriptTest(unittest.TestCase):
         page = (ROOT / "docs" / "index.html").read_text(encoding="utf8")
         self.assertNotIn("cp -R adapters/claude-code/skills/navi-skill-&lt;name&gt;", page,
                          "the page still tells people to copy a skill by hand")
-        self.assertEqual(page.count("./install.sh --agent navi-agent-&lt;name&gt;"), 2,
-                         "both install sections should offer the scoped agent install")
+        self.assertEqual(page.count("./install.sh --agent navi-agent-&lt;name&gt;"), 1,
+                         "the install page should offer the scoped agent install, once")
+
+    def test_every_item_offers_the_plugin_route(self):
+        """The plugin is the one-command install and it reached none of the 61
+        item panes — they offered only a clone. The marketplace manifest is the
+        authority for the names in those two commands."""
+        import json
+        page = (ROOT / "docs" / "index.html").read_text(encoding="utf8")
+        data = json.loads(re.search(
+            r'<script id="navi-catalogue" type="application/json">(.*?)</script>',
+            page, re.S).group(1))
+        plugin = data["install_framework"]["plugin"]
+        self.assertTrue(plugin["steps"], "no plugin steps on the install block")
+
+        market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text())
+        name = market["plugins"][0]["name"]
+        self.assertIn(f"/plugin install {name}@{market['name']}", " ".join(plugin["steps"]),
+                      "the plugin command does not match marketplace.json")
+        src = pathlib.Path(market["plugins"][0]["source"].lstrip("./"))
+        self.assertTrue((ROOT / src).is_dir(),
+                        f"marketplace.json points at {src}, which does not exist")
 
 
 if __name__ == "__main__":

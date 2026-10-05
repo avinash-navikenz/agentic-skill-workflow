@@ -51,16 +51,27 @@ This installs the one skill. Nothing in the lifecycle will invoke it on its own 
 
 ### The whole framework
 
-`adapters/claude-code/` is the installable artefact: generated output in the flat layout the convention uses (`skills/<name>/SKILL.md`, `agents/<name>.md`) with its own `.claude-plugin/plugin.json`, so the directory is a complete plugin on its own. The repository root also carries a plugin manifest, but its skills are nested a level deeper and that layout has not been verified to load in any harness — do not install the repo root.
+Two routes. The plugin is one command and no clone; installing from source gets you the same files plus the repository, which is what the `navi-delivery` CLI and the per-item installs above are run from.
+
+**As a plugin — no clone**
+
+```sh
+/plugin marketplace add avinash-navikenz/agentic-skill-workflow
+/plugin install navi-delivery@navi-delivery   # 50 skills + 11 agents
+```
+
+Typed in Claude Code, not a shell. This installs every agent and every skill — the plugin is the whole framework and cannot be narrowed, which is what the per-item install above is for. It does not install the `navi-delivery` CLI, so there are no gates and no delivery record until you add it from source.
+
+**From source**
 
 ```sh
 git clone https://github.com/avinash-navikenz/agentic-skill-workflow.git
 cd agentic-skill-workflow
-python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first
 ./install.sh --yes                    # symlinks 50 skills + 11 agents into ~/.claude
+npm install --global .                # the navi-delivery CLI
 ```
 
-`--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else.
+`adapters/claude-code/` is the installable artefact and is committed, so no build step is needed. `--copy` installs copies instead of symlinks; `--uninstall` removes exactly what it installed; `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations (which default to `$HOME/.claude/skills` and `$HOME/.claude/agents`). Prerequisites are Node 20 or newer and Python 3, and nothing else.
 
 ## Where the rules live
 
