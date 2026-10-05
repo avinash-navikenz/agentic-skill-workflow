@@ -48,14 +48,26 @@ incident rollback decision — or an agent is about to record any of those four 
    what it commits to, what is unresolved, and what the alternative was.
 8. Disclose every open question and every unsettled waiver before asking for approval. An
    approval given without them is void and is re-sought once they surface.
-9. Record the decision as a handoff envelope with `kind: review`, carrying `blocked_on`,
-   `escalated_to`, and once answered, `decision` and `decided_at`. The gate verdict is then
+9. Ask through the harness's `ask_human` capability, one question at a time, with the
+   options written out. A question left in a file waits to be found; a question asked waits
+   to be answered, and only the second one is a checkpoint. Recording an open question as a
+   `Q-###` in the spec and carrying on is the failure this rule exists to stop — the work
+   proceeds on an assumption nobody made.
+10. Give every question a closed set of concrete options, each stating what it costs, and
+    lead with the recommendation where there is one. "How should empty slugs behave?" asks
+    the approver to design; "reject, or return an empty string and let the caller decide?"
+    asks them to decide, which is the only thing they are there for.
+11. Store the answer, not the question. The resolved decision belongs in the artifact it
+    changes — the requirement, the ADR, the handoff envelope — with who decided and when.
+    A list of questions left behind as a record of having asked is not a record of an answer.
+12. Record the decision as a handoff envelope with `kind: review`, carrying `blocked_on`,
+    `escalated_to`, and once answered, `decision` and `decided_at`. The gate verdict is then
    recorded separately, per `navi-skill-phase-gate-protocol`.
-10. A rejection is a `--fail` on the gate, not a pause. Record it, mark the rework, and
+13. A rejection is a `--fail` on the gate, not a pause. Record it, mark the rework, and
     re-enter the owning phase.
-11. An approval expires when its subject changes. Material change to the spec after spec
+14. An approval expires when its subject changes. Material change to the spec after spec
     sign-off, or to the design after architecture sign-off, re-opens the checkpoint.
-12. During an incident, the rollback decision is made by the incident commander and is
+15. During an incident, the rollback decision is made by the incident commander and is
     recorded before the action, not after. If the action must precede the record, the record
     is written the same hour.
 
@@ -71,6 +83,9 @@ incident rollback decision — or an agent is about to record any of those four 
 | Situation | Required action |
 |---|---|
 | Approver has not responded | Block; record `blocked_on` and `escalated_to`; do not proceed |
+| An open question changes what gets built | Ask it through `ask_human` now; do not record it as `Q-###` and continue |
+| The question has no obvious options | It is not ready to ask — work out the two or three real choices first |
+| The answer arrives | Write it into the artifact it changes, with who decided and when |
 | Approver is on leave | Find the named deputy; if none, block. Never proceed unapproved |
 | Approver says "looks fine, go ahead" in passing | Sufficient if it names the change and comes from the named approver; record verbatim |
 | Approver rejects | Record the gate `--fail` with the rejection as evidence; re-enter the owning phase |
@@ -164,8 +179,16 @@ navi-delivery gate G3 --fail --evidence delivery/changes/theme-persistence/hando
 - [ ] The gate verdict was recorded only after the decision, never alongside it
 - [ ] Nothing was waived in place of the decision
 - [ ] A rejection was recorded as `--fail` and the owning phase re-entered
+- [ ] Every open question was asked through `ask_human`, not left in a file as a `Q-###`
 
 ## Anti-patterns
+
+**Questions parked in a document.** An agent that cannot resolve something writes it into
+the spec as `Q-001`, `Q-002`, `Q-003` and carries on building. It reads as diligence — the
+uncertainty is *recorded*, after all — and it is the opposite: the work continues on
+assumptions nobody made, and the questions are discovered by whoever opens the file next,
+which may be after the thing was built. A question that changes what gets built is asked
+through `ask_human` when it arises, with options, or the work waits.
 
 **Simulated approval.** `Architecture sign-off: approved (no objections raised).` Silence is
 not approval. Block until the named approver answers.

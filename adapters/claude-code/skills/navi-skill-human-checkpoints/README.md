@@ -58,7 +58,7 @@ python3 scripts/build_adapters.py .   # adapters/ is generated; refresh it first
 
 ## Where the rules live
 
-This README is a summary and carries no rules. `SKILL.md` is the authority — it holds 12 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run. Nothing from it is repeated here, so the two cannot disagree.
+This README is a summary and carries no rules. `SKILL.md` is the authority — it holds 15 numbered rules, a decision table, a template, a checklist, an anti-pattern list, and a validation block a reader can run. Nothing from it is repeated here, so the two cannot disagree.
 
 ## Notes
 
