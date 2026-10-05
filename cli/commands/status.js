@@ -1,9 +1,9 @@
 "use strict";
 const { readState } = require("../lib/state");
 const { gatesForLane, isLane, LANES } = require("../lib/lanes");
-const { nextStepLines } = require("../lib/gates");
+const { nextStepLines, advise } = require("../lib/gates");
 
-function run(argv, cwd, emit = console.log) {
+function run(argv, cwd, emit = console.log, adviseWrite = undefined) {
   const s = readState(cwd);
   if (!s.change) { emit("no active change — run: navi-delivery propose <name> --lane <lane>"); return 0; }
 
@@ -46,8 +46,7 @@ function run(argv, cwd, emit = console.log) {
   // "G3 pending" is a fact; it is not an instruction. Printing the gate's own
   // criterion and the command that records it is the difference between a
   // status line and a next step.
-  emit("");
-  for (const line of nextStepLines(s, lane)) emit(line);
+  advise(["", ...nextStepLines(s, lane)], adviseWrite);
   return 0;
 }
 module.exports = { run };

@@ -59,4 +59,19 @@ function nextStepLines(state, laneGates) {
   return lines;
 }
 
-module.exports = { GATES, evidenceHint, nextStepLines };
+// Guidance is for a person at a terminal, and only then.
+//
+// It goes to stderr so stdout stays the command's data, AND it is suppressed
+// entirely when stdout is not a TTY. Both matter: a script doing
+// `navi-delivery status > state.txt` wants the state, and a skill's Validation
+// block doing `$(navi-delivery status | grep ...)` captures stdout while its
+// harness captures stderr too — so a pipe must produce no advice at all, not
+// advice on another channel.
+function advise(lines, write) {
+  const out = write || ((s) => {
+    if (process.stdout.isTTY) process.stderr.write(s);
+  });
+  for (const line of lines) out(line + "\n");
+}
+
+module.exports = { GATES, evidenceHint, nextStepLines, advise };

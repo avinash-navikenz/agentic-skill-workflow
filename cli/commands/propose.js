@@ -6,7 +6,7 @@ const { readState, writeState } = require("../lib/state");
 const { isLane, gatesForLane, LANES } = require("../lib/lanes");
 const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 const { flagValue } = require("../lib/args");
-const { GATES, evidenceHint } = require("../lib/gates");
+const { GATES, evidenceHint, advise } = require("../lib/gates");
 
 const FILES = ["proposal.md", "design.md", "tasks.md", "handoffs.md"];
 
@@ -127,9 +127,9 @@ function run(argv, cwd, emit = console.log) {
   emit("");
   for (const f of FILES) emit(`  ${f.padEnd(13)} ${PURPOSE[f] || ""}`);
   emit("");
-  emit(`Start with proposal.md. ${first} reads it: ${GATES[first].needs}.`);
-  emit("");
-  emit(`Then:  navi-delivery gate ${first} --pass --evidence ${evidenceHint(first, name)}`);
+  advise([`Start with proposal.md. ${first} reads it: ${GATES[first].needs}.`,
+          "",
+          `Then:  navi-delivery gate ${first} --pass --evidence ${evidenceHint(first, name)}`]);
   return 0;
 }
 module.exports = { run };

@@ -6,7 +6,7 @@ const { appendEvent } = require("../lib/events");
 const { gatesForLane, ALL_GATES } = require("../lib/lanes");
 const { waiversPath } = require("../lib/paths");
 const { flagValue } = require("../lib/args");
-const { nextStepLines } = require("../lib/gates");
+const { nextStepLines, advise } = require("../lib/gates");
 const { resolveActor, actorWarning } = require("../lib/actor");
 
 const DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -106,7 +106,7 @@ function evidenceError(cwd, value) {
   return null;
 }
 
-function run(argv, cwd, emit = console.log) {
+function run(argv, cwd, emit = console.log, adviseWrite = undefined) {
   const gate = argv[0];
   if (!ALL_GATES.includes(gate)) { emit(`unknown gate '${gate}' — valid: ${ALL_GATES.join(", ")}`); return 1; }
 
@@ -174,8 +174,7 @@ function run(argv, cwd, emit = console.log) {
     emit(previous
       ? `${gate} re-recorded: ${previous} -> waived until ${expires.value} (approved by: ${who.actor})`
       : `${gate} waived until ${expires.value} (approved by: ${who.actor})`);
-    emit("");
-    for (const line of nextStepLines(s, laneGates)) emit(line);
+    advise(["", ...nextStepLines(s, laneGates)], adviseWrite);
     return 0;
   }
 
@@ -212,8 +211,7 @@ function run(argv, cwd, emit = console.log) {
     ? `${gate} re-recorded: ${previous} -> ${verdict} (evidence: ${evidence.value}, by: ${who.actor})`
     : `${gate} ${verdict} (evidence: ${evidence.value}, by: ${who.actor})`);
   if (failed) emit(`rework required — ${s.stale.length} artifact(s) marked stale`);
-  emit("");
-  for (const line of nextStepLines(s, laneGates)) emit(line);
+  advise(["", ...nextStepLines(s, laneGates)], adviseWrite);
   return 0;
 }
 module.exports = { run };

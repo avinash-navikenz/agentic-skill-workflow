@@ -4,6 +4,7 @@ const path = require("node:path");
 const { deliveryDir } = require("../lib/paths");
 const { newState, writeState } = require("../lib/state");
 const { detectHarness } = require("../lib/capabilities");
+const { advise } = require("../lib/gates");
 const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 
 const DIRS = ["specs", "changes/archive", "decisions", "ops/runbooks", "ops/postmortems", "ops/models", ".adlc"];
@@ -130,8 +131,7 @@ function run(argv, cwd, emit = console.log) {
     emit("The record (specs, decisions, gate verdicts) will be committed — --private keeps it local.");
   }
 
-  emit("");
-  emit("Next:  navi-delivery propose <name> --lane <express|standard|full|hotfix>");
+  advise(["", "Next:  navi-delivery propose <name> --lane <express|standard|full|hotfix>"]);
   return 0;
 }
 

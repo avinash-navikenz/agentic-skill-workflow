@@ -96,13 +96,17 @@ test("status points at the next gate, with the command that records it", () => {
   // know which gate came next, what it read, and where its evidence lived.
   const root = repo();
   propose.run(["z", "--lane", "standard"], root, () => {});
-  const lines = [];
-  status.run([], root, (s) => lines.push(String(s)));
+  const lines = [], advice = [];
+  status.run([], root, (s) => lines.push(String(s)), (s) => advice.push(String(s)));
   const out = lines.join("\n");
+  const said = advice.join("");
 
   assert.match(out, /G1\s+pending\s+← next/, "the next gate is not marked");
-  assert.match(out, /^G1 reads: /m, "the gate's criterion is not shown");
-  assert.match(out, /Next:\s+navi-delivery gate G1 --pass --evidence delivery\/changes\/z\/proposal\.md/);
+  // The criterion and the command are ADVICE, not data: stdout stays
+  // machine-readable because four skills' Validation blocks parse it.
+  assert.match(said, /^G1 reads: /m, "the gate's criterion is not shown");
+  assert.match(said, /Next:\s+navi-delivery gate G1 --pass --evidence delivery\/changes\/z\/proposal\.md/);
+  assert.ok(!/Next:/.test(out), "guidance leaked onto stdout, which scripts parse");
 });
 
 test("status still lists stale artifacts that are not gates", () => {

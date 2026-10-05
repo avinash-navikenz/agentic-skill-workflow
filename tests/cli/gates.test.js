@@ -3,7 +3,7 @@ const { test } = require("node:test");
 const assert = require("node:assert");
 const fs = require("node:fs");
 const path = require("node:path");
-const { GATES, evidenceHint, nextStepLines } = require("../../cli/lib/gates");
+const { GATES, evidenceHint, nextStepLines, advise } = require("../../cli/lib/gates");
 const { ALL_GATES, gatesForLane } = require("../../cli/lib/lanes");
 
 test("every gate the lanes use has guidance, and none is invented", () => {
@@ -62,4 +62,27 @@ test("when everything is settled it says so, and names the two commands left", (
   assert.match(out, /Every gate settled/);
   assert.match(out, /validate/);
   assert.match(out, /archive c/);
+});
+
+test("advice is silent when stdout is not a terminal", () => {
+  // A skill's Validation block runs `$(navi-delivery status | grep ...)` and its
+  // harness captures stderr too, so a pipe must produce NO advice — putting it
+  // on another channel is not enough. This is what four failing skills taught.
+  const seen = [];
+  const realIsTTY = Object.getOwnPropertyDescriptor(process.stdout, "isTTY");
+  const realWrite = process.stderr.write;
+  try {
+    Object.defineProperty(process.stdout, "isTTY", { value: false, configurable: true });
+    process.stderr.write = (s) => { seen.push(String(s)); return true; };
+    advise(["Next:  do the thing"]);
+    assert.deepStrictEqual(seen, [], "advice was written to a non-terminal");
+
+    Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
+    advise(["Next:  do the thing"]);
+    assert.strictEqual(seen.length, 1, "advice was withheld from a terminal");
+  } finally {
+    process.stderr.write = realWrite;
+    if (realIsTTY) Object.defineProperty(process.stdout, "isTTY", realIsTTY);
+    else delete process.stdout.isTTY;
+  }
 });
