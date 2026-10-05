@@ -12,6 +12,19 @@ A workload is about to be given somewhere in Azure to live; production and stagi
 
 It is written to trigger on: `Azure landing zone`, `management group`, `subscription topology`, `resource group layout`, `Azure Policy`, `policy as code`, `policy assignment`, `initiative`, `enforcementMode`, `DoNotEnforce`, `naming convention`, `tagging standard`, `required tags`, `Azure budget`, `blast radius of a subscription`, `Bicep subscription scope`, `CAF`, `enterprise scale`.
 
+## How to use it
+
+Usually you do not have to. DevOps Engineer loads it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-azure-landing-zone
+/navi-delivery:navi-skill-azure-landing-zone
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Three files. Copy the first into `delivery/ops/azure/landing-zone.md`.

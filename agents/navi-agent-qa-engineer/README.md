@@ -8,6 +8,19 @@ Find out where this change is most likely to hurt someone, spend the testing eff
 
 Use when deciding what to test, how much, and whether a change is safe to release — risk-based coverage, test design, flakiness, and the release-blocking call. Owns ADLC Phase 6 and the G6-QUALITY gate, and is consulted at Phase 2 for testability.
 
+## How to use it
+
+At Phase 6 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-qa-engineer <what you want decided>
+/navi-delivery:navi-agent-qa-engineer <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-qa-engineer` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-qa-engineer to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `test artifacts`, `gate evidence`, `handoffs.md`.

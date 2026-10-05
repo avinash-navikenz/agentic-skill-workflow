@@ -10,6 +10,19 @@ A change has no defined path to an environment; a deployment cannot be traced ba
 
 It is written to trigger on: `CI/CD`, `build pipeline`, `delivery pipeline`, `deployment pipeline`, `GitHub Actions`, `Azure DevOps`, `Jenkins`, `GitLab CI`, `build once deploy many`, `artifact digest`, `reproducible build`, `promote to staging`, `deploy step`, `pipeline secrets`, `rollback stage`, `G7 release evidence`.
 
+## How to use it
+
+Usually you do not have to. DevOps Engineer and Fullstack Developer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-pipeline-automation
+/navi-delivery:navi-skill-pipeline-automation
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/ops/delivery-pipeline.md`.

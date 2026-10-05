@@ -12,6 +12,19 @@ An agent is about to serve users and no span register exists; a trace is being r
 
 It is written to trigger on: `agent observability`, `LLM tracing`, `trace an agent run`, `span`, `OpenTelemetry`, `OTLP`, `GenAI semantic conventions`, `gen_ai attributes`, `token usage`, `LLM cost attribution`, `prompt capture`, `tool call span`, `llm.span.kind`, `service.name`, `AgentObs`, `Opik`, `LangSmith`, `trace id`, `span id`, `eval attached to a span`, `empty dashboard`.
 
+## How to use it
+
+Usually you do not have to. MLOps Engineer loads it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-agent-observability
+/navi-delivery:navi-skill-agent-observability
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 The register, at `delivery/ops/agent-telemetry.md`.

@@ -12,6 +12,19 @@ A specification has passed G2 (and G3 where the lane enforces it) and needs the 
 
 It is written to trigger on: `task breakdown`, `decompose`, `tasks.md`, `TASK-`, `break this down`, `vertical slice`, `task sizing`, `dependency order`, `work breakdown`, `what are the tasks`.
 
+## How to use it
+
+Usually you do not have to. Fullstack Developer, Data Engineer and Machine Learning Engineer, and 2 more, load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-task-decomposition
+/navi-delivery:navi-skill-task-decomposition
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Tasks — theme-persistence — see the skill's Template section.

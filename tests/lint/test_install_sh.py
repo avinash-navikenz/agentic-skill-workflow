@@ -30,7 +30,8 @@ class InstallScriptTest(unittest.TestCase):
         self.addCleanup(shutil.rmtree, self.tmp, ignore_errors=True)
         env = {**os.environ,
                "CLAUDE_SKILLS_DIR": str(self.skills),
-               "CLAUDE_AGENTS_DIR": str(self.agents)}
+               "CLAUDE_AGENTS_DIR": str(self.agents),
+               "CLAUDE_COMMANDS_DIR": str(self.commands)}
         p = subprocess.run(["bash", str(INSTALL), *args, "--yes"],
                            cwd=ROOT, env=env, capture_output=True, text=True)
         self.assertEqual(p.returncode, expect,
@@ -41,6 +42,7 @@ class InstallScriptTest(unittest.TestCase):
         self.tmp = tempfile.mkdtemp()
         self.skills = pathlib.Path(self.tmp, "skills")
         self.agents = pathlib.Path(self.tmp, "agents")
+        self.commands = pathlib.Path(self.tmp, "commands")
 
     def installed(self):
         s = sorted(p.name for p in self.skills.iterdir()) if self.skills.exists() else []
@@ -138,6 +140,22 @@ class InstallScriptTest(unittest.TestCase):
         src = pathlib.Path(market["plugins"][0]["source"].lstrip("./"))
         self.assertTrue((ROOT / src).is_dir(),
                         f"marketplace.json points at {src}, which does not exist")
+
+    def test_an_agent_brings_its_slash_command_and_takes_it_away_again(self):
+        """The command is how an agent is reached like a skill; installing the
+        agent without it would leave the documented `/name` form dead."""
+        agent = "navi-agent-architect"
+        self.run_install("--agent", agent)
+        self.assertTrue((self.commands / f"{agent}.md").is_file(),
+                        "the agent's slash command was not installed")
+        self.run_install("--agent", agent, "--uninstall")
+        self.assertFalse((self.commands / f"{agent}.md").exists(),
+                         "uninstall left the slash command behind")
+
+    def test_a_skill_install_brings_no_command(self):
+        """Only agents have commands; a stray one would be an orphan slash."""
+        self.run_install("--skill", "navi-skill-commit-craft")
+        self.assertFalse(self.commands.exists() and any(self.commands.iterdir()))
 
 
 if __name__ == "__main__":

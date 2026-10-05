@@ -8,6 +8,19 @@ Establish whether a learned model is the right instrument at all, and if it is, 
 
 Use when a change proposes to solve something with a learned model — deciding whether ML is warranted, what the baseline is, how the model is evaluated, and where it will fail. Owns ADLC Phases 4 and 5: the G4-DATA-MODEL gate jointly with the Data Engineer, and the G5-BUILD gate jointly with the Data Engineer and the Full Stack Developer.
 
+## How to use it
+
+At Phase 4 and Phase 5 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-machine-learning-engineer <what you want decided>
+/navi-delivery:navi-agent-machine-learning-engineer <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-machine-learning-engineer` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-machine-learning-engineer to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `tasks.md`, `model and evaluation artifacts`, `handoffs.md`.

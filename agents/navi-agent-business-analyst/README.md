@@ -8,6 +8,19 @@ Turn an approved intent into a specification precise enough that two competent e
 
 Use when turning an approved intent into an unambiguous, testable specification. Owns ADLC Phase 2 and the G2-SPEC gate.
 
+## How to use it
+
+At Phase 2 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-business-analyst <what you want decided>
+/navi-delivery:navi-agent-business-analyst <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-business-analyst` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-business-analyst to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `changes/<name>/specs/<capability>/spec.md`, `handoffs.md`.

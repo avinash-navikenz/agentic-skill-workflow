@@ -10,6 +10,19 @@ Work on a change branch has reached a point worth recording; a working tree hold
 
 It is written to trigger on: `commit message`, `write a commit`, `git add`, `staging`, `git add -p`, `atomic commit`, `amend`, `fixup`, `commit body`, `why not what`, `conventional commit`, `commit trailer`, `co-authored-by`, `AB#`, `smart commit`, `link commit to work item`.
 
+## How to use it
+
+Usually you do not have to. Fullstack Developer loads it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-commit-craft
+/navi-delivery:navi-skill-commit-craft
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 The drafted message, at `delivery/changes/theme-persistence/commits/TASK-006.msg`.

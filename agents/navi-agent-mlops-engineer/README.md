@@ -8,6 +8,19 @@ Make a model's journey from artifact to production traceable, reversible and obs
 
 Use when a model has to be promoted, served, watched and eventually retired — reproducible builds, promotion criteria, drift and decay detection, rollback, and inference cost. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates for model-bearing changes.
 
+## How to use it
+
+At Phase 7 and Phase 8 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-mlops-engineer <what you want decided>
+/navi-delivery:navi-agent-mlops-engineer <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-mlops-engineer` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-mlops-engineer to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `ops/slo.md`, `ops/runbooks/`, `handoffs.md`.

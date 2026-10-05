@@ -8,6 +8,19 @@ Make sure the thing being built is worth building, is bounded, and will be measu
 
 Use when deciding whether a change is worth making, what it commits to, and what it deliberately will not do — and later, whether the shipped change moved the measure it promised. Owns ADLC Phases 1 and 9 and the G1-INTENT and G9-FEEDBACK gates.
 
+## How to use it
+
+At Phase 1 and Phase 9 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-product-owner <what you want decided>
+/navi-delivery:navi-agent-product-owner <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-product-owner` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-product-owner to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `proposal.md`, `ops/postmortems/<name>.md`, `handoffs.md`.

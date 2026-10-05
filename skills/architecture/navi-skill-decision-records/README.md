@@ -10,6 +10,19 @@ A design choice is being made at Phase 3, a choice already recorded is being rev
 
 It is written to trigger on: `ADR`, `architecture decision record`, `decision record`, `why did we choose`, `record this decision`, `supersede an ADR`, `rejected alternatives`, `accepted risk`.
 
+## How to use it
+
+Usually you do not have to. Architect and Security Engineer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-decision-records
+/navi-delivery:navi-skill-decision-records
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/decisions/ADR-007.md` and replace the content, not the headings.

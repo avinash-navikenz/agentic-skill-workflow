@@ -539,6 +539,85 @@ ALONE_NOTE_AGENT = (
 )
 
 
+
+# How a reader actually sets one of these going. The framework's designed path
+# is that an agent loads a skill when its trigger fires; naming it is the
+# override for when it does not. The two slash forms are the two install routes:
+# a personal install is `/<name>`, a plugin install is `/<plugin>:<name>`.
+PLUGIN_NAME = "navi-delivery"
+
+
+def _and_list(items: list[str]) -> str:
+    """`a`, `a and b`, `a, b and c` — a comma-joined list reads as a stutter in
+    the middle of a sentence."""
+    if not items:
+        return ""
+    if len(items) == 1:
+        return items[0]
+    return ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def _skill_usage(name: str, holders: list[dict]) -> dict:
+    shown = [h["label"] for h in holders[:3]]
+    more = f", and {len(holders) - 3} more," if len(holders) > 3 else ""
+    if shown:
+        verb = "loads" if len(holders) == 1 else "load"
+        lead = (
+            f"Usually you do not have to. {_and_list(shown)}{more} {verb} it when its "
+            "trigger fires, which is what the trigger phrases above are for — describe "
+            "the work and the skill arrives with it."
+        )
+    else:
+        lead = (
+            "No agent holds this skill, so nothing loads it for you. Naming it is the "
+            "only way it is ever applied."
+        )
+    return {
+        "lead": lead,
+        "invoke": [
+            f"/{name}",
+            f"/{PLUGIN_NAME}:{name}",
+        ],
+        "invoke_note": (
+            "The first form is an install into `~/.claude/skills`; the second is the "
+            "plugin install, where skills are namespaced by the plugin they came from. "
+            "Name it this way when the trigger did not fire, or when you want its rules "
+            "applied to work that is already done."
+        ),
+        "after": (
+            "It brings its rules and the checklist it is graded against. Ask it to run "
+            "its own **Validation block** on the result — that is the part no style "
+            "guide has: the rules arrive with something that can check them."
+        ),
+    }
+
+
+def _agent_usage(name: str, label: str, phases: list) -> dict:
+    where = _and_list([f"Phase {p}" for p in phases]) or "the phases it owns"
+    return {
+        "lead": (
+            f"At {where} the Orchestrator hands over to it, and that is the path the "
+            "lifecycle takes on its own. To reach it directly, it ships a slash command "
+            "of its own — an agent is called the same way a skill is."
+        ),
+        "invoke": [
+            f"/{name} <what you want decided>",
+            f"/{PLUGIN_NAME}:{name} <what you want decided>",
+        ],
+        "invoke_note": (
+            "The command is generated from this agent and travels with it: "
+            f"`install.sh --agent {name}` puts it in `~/.claude/commands`, and the plugin "
+            "install namespaces it under the plugin. Asking in prose works too — "
+            f"*use {name} to ...* — the command only saves you remembering the name."
+        ),
+        "after": (
+            "It loads the skills listed below rather than working from memory, and the "
+            "command asks it to say which it used. If it answers without naming one, the "
+            "skill did not load."
+        ),
+    }
+
+
 def _end_sentence(text: str) -> str:
     """A `## Template` lead-in ends in `:` because a fenced block follows it in the
     source. The block is not carried into the README, so the colon would dangle."""
@@ -612,6 +691,7 @@ def _skill_readme(s: dict, agents_by_name: dict) -> dict:
                 + (", and a validation block a reader can run" if s["has_validation"] else "")
             ),
         },
+        "usage": _skill_usage(s["name"], holders),
         "install_alone": {
             "title": "This skill on its own",
             "steps": [*CLONE_STEPS, f"./install.sh --skill {s['name']}"],
@@ -657,6 +737,7 @@ def _agent_readme(a: dict, skills_by_name: dict, agents_by_name: dict) -> dict:
             "what": ("its mission, mental model, how it decides, its definition of good, "
                      "its working agreement and its skill-invocation plan"),
         },
+        "usage": _agent_usage(a["name"], a["label"], a["phases"]),
         "install_alone": {
             "title": f"This agent and the {len(held)} skills it holds",
             "steps": [*CLONE_STEPS, f"./install.sh --agent {a['name']}"],
@@ -688,6 +769,12 @@ def _fence(steps: list[str]) -> str:
     return "```sh\n" + "\n".join(steps) + "\n```"
 
 
+def _plain_fence(lines: list[str]) -> str:
+    """No language tag: these are typed to the session, not to a shell, and `sh`
+    highlighting on a slash command reads as a command you could paste anywhere."""
+    return "```\n" + "\n".join(lines) + "\n```"
+
+
 def readme_markdown(m: dict, *, flat: bool = False) -> str:
     """Render one README. `flat=True` is the copy that ships inside the generated
     adapter, where the discipline folders are gone and a relative link to a sibling
@@ -703,6 +790,10 @@ def readme_markdown(m: dict, *, flat: bool = False) -> str:
     if m["phrases"]:
         out += ["It is written to trigger on: " +
                 ", ".join(f"`{p}`" for p in m["phrases"]) + ".", ""]
+
+    u = m["usage"]
+    out += ["## How to use it", "", u["lead"], "",
+            _plain_fence(u["invoke"]), "", u["invoke_note"], "", u["after"], ""]
 
     out += ["## What it produces", ""]
     if m["kind"] == "skill":

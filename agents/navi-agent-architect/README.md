@@ -8,6 +8,19 @@ Choose the approach whose failure modes we can live with, write down why the rej
 
 Use when choosing the technical approach for a change — its boundaries, its quality attributes, its failure modes, and what we are buying versus building — and when reviewing whether what was built matches what was decided. Owns ADLC Phases 3 and 9 and the G3-DESIGN gate.
 
+## How to use it
+
+At Phase 3 and Phase 9 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-architect <what you want decided>
+/navi-delivery:navi-agent-architect <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-architect` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-architect to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `design.md`, `decisions/ADR-###.md`, `handoffs.md`.

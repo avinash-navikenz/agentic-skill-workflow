@@ -10,6 +10,19 @@ An Azure DevOps service connection is being created and the dialogue is offering
 
 It is written to trigger on: `managed identity`, `user-assigned identity`, `system-assigned identity`, `workload identity federation`, `federated credential`, `OIDC to Azure`, `service principal`, `client secret`, `app registration`, `Key Vault`, `RBAC authorization`, `purge protection`, `role assignment`, `least privilege`, `Azure RBAC scope`, `variable group secret`, `secret rotation`, `listKeys`, `connection string`, `shared key access`, `Entra ID`.
 
+## How to use it
+
+Usually you do not have to. DevOps Engineer and Security Engineer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-azure-identity-and-secrets
+/navi-delivery:navi-skill-azure-identity-and-secrets
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Three files. Copy the first into `delivery/ops/azure/identity.md`.

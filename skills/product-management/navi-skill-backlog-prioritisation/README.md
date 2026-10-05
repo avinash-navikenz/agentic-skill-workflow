@@ -10,6 +10,19 @@ More work is wanted than can be done; a stakeholder is asking why their request 
 
 It is written to trigger on: `backlog`, `prioritisation`, `prioritization`, `what do we do next`, `roadmap order`, `value vs effort`, `WSJF`, `cost of delay`, `MoSCoW at portfolio level`, `say no`, `decline a request`, `candidate requirement`, `INSIGHT routing`, `sequencing work`.
 
+## How to use it
+
+Usually you do not have to. Product Owner loads it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-backlog-prioritisation
+/navi-delivery:navi-skill-backlog-prioritisation
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/backlog.md`.

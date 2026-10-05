@@ -24,8 +24,9 @@
 # are not there. With no selection, everything is installed.
 #
 # Environment:
-#   CLAUDE_SKILLS_DIR   default $HOME/.claude/skills
-#   CLAUDE_AGENTS_DIR   default $HOME/.claude/agents
+#   CLAUDE_SKILLS_DIR     default $HOME/.claude/skills
+#   CLAUDE_AGENTS_DIR     default $HOME/.claude/agents
+#   CLAUDE_COMMANDS_DIR   default $HOME/.claude/commands
 #
 # Portability: POSIX-compatible constructs only. No `sed -i`, no `readlink -f`,
 # no `realpath`, no `mapfile`, no GNU-only flags — this runs on macOS and on the
@@ -73,6 +74,10 @@ ADAPTER="$SCRIPT_DIR/adapters/claude-code"
 
 SKILLS_SRC="$ADAPTER/skills"
 AGENTS_SRC="$ADAPTER/agents"
+# Each agent also ships a slash command, so an agent can be reached the same way
+# a skill is. Generated beside the agents; absent only on an adapter built before
+# they existed, which is why nothing here requires the directory.
+COMMANDS_SRC="$ADAPTER/commands"
 
 if [ ! -d "$SKILLS_SRC" ] || [ ! -d "$AGENTS_SRC" ]; then
   printf 'error: %s is missing skills/ or agents/.\n' "$ADAPTER" >&2
@@ -82,6 +87,7 @@ fi
 
 SKILLS_DST="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 AGENTS_DST="${CLAUDE_AGENTS_DIR:-$HOME/.claude/agents}"
+COMMANDS_DST="${CLAUDE_COMMANDS_DIR:-$HOME/.claude/commands}"
 
 # The skills an agent holds are declared in its own file, so a scoped install
 # does not need a hard-coded map and cannot fall out of date when a skill moves
@@ -165,6 +171,11 @@ else
   printf 'navi-delivery installer (%s)\n' "$MODE"
   printf '  %s skills -> %s\n' "$skill_count" "$SKILLS_DST"
   printf '  %s agents -> %s\n' "$agent_count" "$AGENTS_DST"
+  # `[ ... ] && printf` would be the last command in its list, so under `set -e`
+  # a missing commands/ directory would exit the installer instead of skipping.
+  if [ -d "$COMMANDS_SRC" ]; then
+    printf '  %s commands -> %s\n' "$agent_count" "$COMMANDS_DST"
+  fi
 fi
 
 if [ "$ASSUME_YES" -ne 1 ]; then
@@ -206,8 +217,9 @@ $name
     if [ -e "$target" ] || [ -L "$target" ]; then rm -rf "$target"; removed=$((removed + 1)); fi
   done
   for name in $SEL_AGENTS; do
-    target="$AGENTS_DST/$name.md"
-    if [ -e "$target" ] || [ -L "$target" ]; then rm -f "$target"; removed=$((removed + 1)); fi
+    for target in "$AGENTS_DST/$name.md" "$COMMANDS_DST/$name.md"; do
+      if [ -e "$target" ] || [ -L "$target" ]; then rm -f "$target"; removed=$((removed + 1)); fi
+    done
   done
   [ "$kept" -gt 0 ] && printf 'Kept %s skill(s) another installed agent still holds.\n' "$kept"
   printf 'Removed %s item(s).\n' "$removed"
@@ -237,9 +249,18 @@ done
 
 for name in $SEL_AGENTS; do
   install_one "$AGENTS_SRC/$name.md" "$AGENTS_DST/$name.md"
+  if [ -f "$COMMANDS_SRC/$name.md" ]; then
+    mkdir -p "$COMMANDS_DST"
+    install_one "$COMMANDS_SRC/$name.md" "$COMMANDS_DST/$name.md"
+  fi
 done
 
-printf 'Installed %s skill(s) and %s agent(s).\n' "$skill_count" "$agent_count"
+if [ -d "$COMMANDS_SRC" ]; then
+  printf 'Installed %s skill(s) and %s agent(s), each agent with its slash command.\n' \
+    "$skill_count" "$agent_count"
+else
+  printf 'Installed %s skill(s) and %s agent(s).\n' "$skill_count" "$agent_count"
+fi
 printf '\nNext:\n'
 printf '  cd /path/to/your-repo\n'
 printf '  node %s/cli/index.js init\n' "$SCRIPT_DIR"

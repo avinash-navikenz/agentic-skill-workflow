@@ -12,6 +12,19 @@ G6 is about to be recorded; someone has asked whether the change is done; a rele
 
 It is written to trigger on: `release readiness`, `go/no-go`, `are we ready to ship`, `ship decision`, `release report`, `residual risk`, `release blocker`, `known defects`, `sign off the release`, `release criteria`, `what is proven`, `what is untested`, `G6 evidence`, `gate G6`.
 
+## How to use it
+
+Usually you do not have to. QA Engineer and DevOps Engineer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-release-readiness
+/navi-delivery:navi-skill-release-readiness
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/changes/<name>/evidence/g6-quality.md`.

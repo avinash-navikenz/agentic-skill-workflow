@@ -10,6 +10,19 @@ An `AC-###` has to become tests; a suite is green and a defect reached productio
 
 It is written to trigger on: `test cases`, `test design`, `boundary values`, `equivalence partitioning`, `decision table testing`, `state transition testing`, `negative tests`, `edge cases`, `empty state`, `null handling`, `pairwise`, `test data`, `fixtures`, `deterministic tests`, `which cases do we need`.
 
+## How to use it
+
+Usually you do not have to. QA Engineer and Fullstack Developer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-test-design
+/navi-delivery:navi-skill-test-design
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/changes/<name>/test-design.md`, and link it from `test-strategy.md`.

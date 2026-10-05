@@ -12,6 +12,19 @@ A capability is about to go live with nothing watching it; G8 is about to be rec
 
 It is written to trigger on: `observability`, `SLI`, `SLO`, `error budget`, `burn rate`, `alerting`, `monitoring`, `dashboards`, `telemetry`, `instrumentation`, `golden signals`, `p99 latency`, `availability target`, `alert fatigue`, `runbook`, `on-call`, `G8 operate`.
 
+## How to use it
+
+Usually you do not have to. DevOps Engineer and MLOps Engineer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-observability
+/navi-delivery:navi-skill-observability
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 `navi-delivery init` scaffolds `delivery/ops/slo.md`. Fill it; do not create a second copy.

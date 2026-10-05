@@ -10,6 +10,19 @@ A request has arrived as a solution; a spec is about to be written and nobody ha
 
 It is written to trigger on: `requirements elicitation`, `gather requirements`, `stakeholder interview`, `ambiguity`, `open question`, `assumption`, `actors`, `user journey`, `edge cases nobody mentioned`, `empty state`, `what did they actually ask for`, `workshop`, `discovery`, `G2 spec`.
 
+## How to use it
+
+Usually you do not have to. Business Analyst and Product Owner load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-requirements-elicitation
+/navi-delivery:navi-skill-requirements-elicitation
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/<capability>/elicitation.md`.

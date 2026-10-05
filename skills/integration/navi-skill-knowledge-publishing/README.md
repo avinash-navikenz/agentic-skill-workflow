@@ -10,6 +10,19 @@ An ADR has been accepted and the people it binds do not read the repository; a p
 
 It is written to trigger on: `publish to Confluence`, `push the ADR to the wiki`, `share the spec with the business`, `postmortem write-up`, `Confluence page id`, `storage format`, `atlas_doc_format`, `azure devops wiki page`, `docs repo`, `MCP Atlassian`, `page version conflict`, `409`, `stale wiki page`.
 
+## How to use it
+
+Usually you do not have to. Architect and DevOps Engineer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-knowledge-publishing
+/navi-delivery:navi-skill-knowledge-publishing
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 The register, at `delivery/published.md`.

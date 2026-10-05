@@ -10,6 +10,19 @@ A change is about to be proposed and needs a lane, or a change in flight has gro
 
 It is written to trigger on: `which lane`, `lane selection`, `express lane`, `standard lane`, `full lane`, `hotfix`, `how much process`, `proportionate process`, `gate set`, `--lane`.
 
+## How to use it
+
+Usually you do not have to. Orchestrator, Product Owner and Architect, and 1 more, load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-lane-selection
+/navi-delivery:navi-skill-lane-selection
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 theme-persistence — see the skill's Template section.

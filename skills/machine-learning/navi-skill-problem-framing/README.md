@@ -10,6 +10,19 @@ A proposal says a model will solve something; a model is about to be fitted and 
 
 It is written to trigger on: `problem framing`, `is ML the right tool`, `do we need a model`, `baseline`, `heuristic baseline`, `label definition`, `unit of prediction`, `prediction time`, `cost of a wrong prediction`, `classification or regression`, `feature availability at inference`, `G4 baseline`.
 
+## How to use it
+
+Usually you do not have to. Machine Learning Engineer loads it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-problem-framing
+/navi-delivery:navi-skill-problem-framing
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 Copy into `delivery/changes/<name>/specs/models/theme-ranker/framing.md`.

@@ -12,6 +12,19 @@ A change is about to be opened, or an existing `proposal.md` is under review bef
 
 It is written to trigger on: `proposal`, `proposal.md`, `propose a change`, `open a change`, `why what impact non-goals`, `change request`, `G1`, `intent`, `navi-delivery propose`, `start a change`.
 
+## How to use it
+
+Usually you do not have to. Product Owner, Orchestrator and Business Analyst, and 1 more, load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-change-proposal
+/navi-delivery:navi-skill-change-proposal
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 theme-persistence — see the skill's Template section.

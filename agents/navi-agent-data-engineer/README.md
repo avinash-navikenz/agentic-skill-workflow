@@ -8,6 +8,19 @@ Make the data underneath a change trustworthy: known in origin, stable in shape,
 
 Use when a change touches a dataset, a schema, a pipeline or a feature — deciding how data is sourced, shaped, evolved and proven correct before anything is built on it. Owns ADLC Phases 4 and 5: the G4-DATA-MODEL gate jointly with the ML Engineer, and the G5-BUILD gate jointly with the ML Engineer and the Full Stack Developer.
 
+## How to use it
+
+At Phase 4 and Phase 5 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-data-engineer <what you want decided>
+/navi-delivery:navi-agent-data-engineer <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-data-engineer` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-data-engineer to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `tasks.md`, `pipeline and schema changes`, `handoffs.md`.

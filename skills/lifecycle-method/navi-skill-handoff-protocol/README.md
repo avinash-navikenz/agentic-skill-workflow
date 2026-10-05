@@ -10,6 +10,19 @@ Work is moving between agents — forward at a phase transition, sideways as a c
 
 It is written to trigger on: `handoff`, `hand off`, `handoffs.md`, `phase transition`, `pass to the architect`, `consult QA`, `handoff envelope`, `assumptions`, `open questions`, `confidence`, `rework record`, `kind review`.
 
+## How to use it
+
+Usually you do not have to. Orchestrator, Product Owner and Business Analyst, and 8 more, load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-handoff-protocol
+/navi-delivery:navi-skill-handoff-protocol
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 A forward transition.

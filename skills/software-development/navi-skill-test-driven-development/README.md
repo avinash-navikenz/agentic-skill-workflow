@@ -10,6 +10,19 @@ A `TASK-###` is about to be implemented, a defect has been reported, or a refact
 
 It is written to trigger on: `TDD`, `test first`, `write the test`, `red green refactor`, `failing test`, `regression test`, `reproduce the bug`, `unit test for this criterion`, `test before code`.
 
+## How to use it
+
+Usually you do not have to. Fullstack Developer loads it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-test-driven-development
+/navi-delivery:navi-skill-test-driven-development
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 A full cycle for `AC-003` — a real terminal session, not a shape.

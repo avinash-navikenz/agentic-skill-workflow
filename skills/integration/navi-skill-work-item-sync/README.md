@@ -10,6 +10,19 @@ A change's `tasks.md` has been written and the team works off a board; a work it
 
 It is written to trigger on: `create work items from tasks`, `sync with Azure Boards`, `push tasks to Jira`, `GitHub issues from tasks`, `link commit to work item`, `AB#`, `closing keyword`, `smart commit`, `transition the issue`, `work item state`, `reconcile the board`, `tracker drift`, `az boards`, `gh issue`, `Jira REST API`.
 
+## How to use it
+
+Usually you do not have to. Orchestrator and Product Owner load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-work-item-sync
+/navi-delivery:navi-skill-work-item-sync
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 The register, at `delivery/changes/<name>/work-items.md`.

@@ -8,6 +8,19 @@ Find out how this change could be turned against us while the answer is still ch
 
 Use when a change could be turned against us — who can reach what, where data crosses a trust boundary, what an attacker would gain, and whether a known weakness is one we can live with. Owns ADLC Phases 3 and 6 alongside the Architect and the QA Engineer, and co-owns the G3-DESIGN and G6-QUALITY gates.
 
+## How to use it
+
+At Phase 3 and Phase 6 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-security-engineer <what you want decided>
+/navi-delivery:navi-agent-security-engineer <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-security-engineer` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-security-engineer to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `threat model`, `security findings`, `decisions/ADR-###.md`, `gate evidence`, `handoffs.md`, `.adlc/waivers.md`.

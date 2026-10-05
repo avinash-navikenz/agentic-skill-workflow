@@ -10,6 +10,19 @@ A branch is about to be created; someone else's branch has to be run locally; th
 
 It is written to trigger on: `create a branch`, `git switch`, `git checkout`, `checkout someone's branch`, `set upstream`, `track a remote branch`, `rebase onto main`, `keep my branch up to date`, `stash`, `git worktree`, `detached HEAD`, `delete a branch`, `prune`, `branch is gone`, `default branch`.
 
+## How to use it
+
+Usually you do not have to. Fullstack Developer and DevOps Engineer load it when its trigger fires, which is what the trigger phrases above are for — describe the work and the skill arrives with it.
+
+```
+/navi-skill-branching
+/navi-delivery:navi-skill-branching
+```
+
+The first form is an install into `~/.claude/skills`; the second is the plugin install, where skills are namespaced by the plugin they came from. Name it this way when the trigger did not fire, or when you want its rules applied to work that is already done.
+
+It brings its rules and the checklist it is graded against. Ask it to run its own **Validation block** on the result — that is the part no style guide has: the rules arrive with something that can check them.
+
 ## What it produces
 
 The repository configuration these rules assume, appended once to `.git/config` — or set with `git config --local <key> <value>`.

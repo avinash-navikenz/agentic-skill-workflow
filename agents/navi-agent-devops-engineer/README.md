@@ -8,6 +8,19 @@ Make releasing boring and reversible, and make what happens afterwards visible e
 
 Use when a change has to reach an environment safely and be operable afterwards — delivery pipeline, environment parity, blast radius, rollback, SLOs and secrets posture. Owns ADLC Phases 7 and 8 and the G7-RELEASE and G8-OPERATE gates.
 
+## How to use it
+
+At Phase 7 and Phase 8 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-devops-engineer <what you want decided>
+/navi-delivery:navi-agent-devops-engineer <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-devops-engineer` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-devops-engineer to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `ops/slo.md`, `ops/runbooks/`, `handoffs.md`, `.adlc/waivers.md`.

@@ -8,6 +8,19 @@ Keep a change moving at the smallest amount of process that is still honest abou
 
 Use when routing a change through the ADLC — choosing its lane, deciding whether it may advance, arbitrating between personas, and ordering rework after a failed gate. Owns ADLC Phases 1 through 9 and enforces every gate in the active lane's set.
 
+## How to use it
+
+At Phase 1, Phase 2, Phase 3, Phase 4, Phase 5, Phase 6, Phase 7, Phase 8 and Phase 9 the Orchestrator hands over to it, and that is the path the lifecycle takes on its own. To reach it directly, it ships a slash command of its own — an agent is called the same way a skill is.
+
+```
+/navi-agent-orchestrator <what you want decided>
+/navi-delivery:navi-agent-orchestrator <what you want decided>
+```
+
+The command is generated from this agent and travels with it: `install.sh --agent navi-agent-orchestrator` puts it in `~/.claude/commands`, and the plugin install namespaces it under the plugin. Asking in prose works too — *use navi-agent-orchestrator to ...* — the command only saves you remembering the name.
+
+It loads the skills listed below rather than working from memory, and the command asks it to say which it used. If it answers without naming one, the skill did not load.
+
 ## What it produces
 
 Writes `handoffs.md`, `.adlc/state.json`, `.adlc/events.jsonl`.
