@@ -30,7 +30,7 @@ exercised against the build.
 ## Rules
 
 1. Write the model at `delivery/changes/<name>/threat-model.md`. Link it from the
-   `## Threat model` heading that `templates/change/design.md` ships into every `design.md`,
+   `## Threat model` heading in `design.md`, which `navi-delivery scaffold design` writes,
    and add a row for it to that template's `## Linked artifacts` table. G3's exit criteria are
    read against the design; a model nothing links to is a file nobody opens.
 2. Open with `## What is worth taking` — every asset this change creates, moves or exposes,

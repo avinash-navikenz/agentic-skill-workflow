@@ -205,8 +205,13 @@ def run_lane(lane: str, workdir: Path) -> None:
     check_init(workdir)
     run(["propose", change, "--lane", lane], workdir)
     change_dir = delivery / "changes" / change
+    # Structure, not content. propose scaffolds no artifacts: an empty template
+    # makes "nobody started" indistinguishable from "written badly", and lets a
+    # gate pass against a placeholder. The files below are written by the work.
+    for rel in ["specs", "evidence"]:
+        assert (change_dir / rel).is_dir(), f"propose did not create {rel}/"
     for rel in ["proposal.md", "design.md", "tasks.md", "handoffs.md"]:
-        assert (change_dir / rel).exists(), f"propose did not create {rel}"
+        assert not (change_dir / rel).exists(), f"propose scaffolded {rel}"
     check_propose_refusals(workdir, change)
 
     # --- phase 2: the delta spec, and only the delta -----------------------

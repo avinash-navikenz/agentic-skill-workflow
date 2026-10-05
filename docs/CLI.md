@@ -1,9 +1,9 @@
 # CLI reference
 
-Eight verbs. Zero runtime dependencies beyond Node ≥ 20 and Python 3.
+Nine verbs. Zero runtime dependencies beyond Node ≥ 20 and Python 3.
 
 ```bash
-navi-delivery <init|propose|status|gate|validate|archive|doctor|telemetry>
+navi-delivery <init|propose|scaffold|status|gate|validate|archive|doctor|telemetry>
 navi-delivery --version     # 0.1.0
 ```
 
@@ -117,6 +117,45 @@ Lanes: `express` · `standard` · `full` · `hotfix`. See [ADLC.md](../ADLC.md) 
 
 One change is in flight at a time, by design: `state.json` holds one change's gate verdicts
 and stale set, so a second concurrent change would have nowhere to record them.
+
+---
+
+## `scaffold <proposal|design|tasks|handoffs>`
+
+Writes one change artifact from its template, into the change in flight.
+
+`propose` deliberately creates none of them. An empty template makes "nobody has started"
+indistinguishable from "somebody wrote this badly", and lets a gate pass against a
+placeholder — so a file that exists is a file somebody wrote. This command is how you ask
+for a skeleton when the work reaches that artifact.
+
+```bash
+navi-delivery scaffold design
+```
+
+```text
+Wrote delivery/changes/add-csv-export/design.md — a skeleton, not an answer.
+Its rules are in navi-skill-decision-records.
+```
+
+| Artifact | File | Rules live in |
+|---|---|---|
+| `proposal` | `proposal.md` | `navi-skill-change-proposal` |
+| `design` | `design.md` | `navi-skill-decision-records` |
+| `tasks` | `tasks.md` | `navi-skill-task-decomposition` |
+| `handoffs` | `handoffs.md` | `navi-skill-handoff-protocol` |
+
+`--change <slug>` targets a change other than the one in flight.
+
+**It never overwrites.** A file that already exists holds work this command did not do, and
+the refusal is the point:
+
+```text
+design.md already exists — refusing to overwrite. Delete it first if you meant to start again.
+```
+
+`design.md` is the one worth scaffolding rather than writing from memory: its nine headings
+are G3's exit criteria, and nine skills fill named sections of it.
 
 ---
 

@@ -4,7 +4,7 @@
 Agents hold the judgment. Skills hold the rules.
 
 The framework ships 11 persona agents carrying each discipline's judgment, and 50
-skills across 13 disciplines carrying each discipline's rules. An eight-verb CLI
+skills across 13 disciplines carrying each discipline's rules. A nine-verb CLI
 scaffolds the lifecycle into your repo and records what actually happened at each of
 nine gates.
 
@@ -58,7 +58,7 @@ refreshes it later. What lands is `adapters/claude-code/`: the generated flat la
 carrying every agent and every skill. [`install.sh`](#other-ways-to-install) and the
 single-item copy remain supported alternatives.
 
-**2. Put the CLI on your PATH.** The eight-verb CLI is a Node script in this repository
+**2. Put the CLI on your PATH.** The nine-verb CLI is a Node script in this repository
 and is *not* part of the plugin, so this step wants the clone either way:
 
 ```bash
@@ -182,12 +182,13 @@ CI regenerates and diffs, so a hand edit fails the build.
 
 ---
 
-## The eight verbs
+## The nine verbs
 
 ```bash
 navi-delivery init                             # scaffold delivery/, copy in AGENTS.md, detect harness
-navi-delivery propose <name> --lane <lane>     # open a change from templates
-navi-delivery status                           # change, lane, gate verdicts, stale artifacts
+navi-delivery propose <name> --lane <lane>     # open a change — directories, no files
+navi-delivery scaffold <artifact>              # write one skeleton, when the work reaches it
+navi-delivery status                           # change, lane, gate verdicts, and what to do next
 navi-delivery validate [--strict]              # frontmatter, separation, traceability
 navi-delivery gate <G#> --pass --evidence <p>  # record a gate decision
 navi-delivery archive <name>                   # fold the delta into specs/, emit the insight stub
@@ -294,17 +295,18 @@ merge within months. The reasoning is in [`docs/CONCEPTS.md`](docs/CONCEPTS.md).
 
 | Discipline | Skills |
 |---|---|
+| `platform-devops` | 9 |
+| `software-development` | 9 |
 | `lifecycle-method` | 6 |
-| `spec-driven-development` | 4 |
 | `architecture` | 4 |
-| `software-development` | 5 |
-| `platform-devops` | 4 |
+| `spec-driven-development` | 4 |
 | `data-engineering` | 3 |
 | `machine-learning` | 3 |
 | `quality-engineering` | 3 |
 | `business-analysis` | 2 |
-| `product-management` | 2 |
+| `integration` | 2 |
 | `mlops` | 2 |
+| `product-management` | 2 |
 | `security` | 1 |
 
 ---

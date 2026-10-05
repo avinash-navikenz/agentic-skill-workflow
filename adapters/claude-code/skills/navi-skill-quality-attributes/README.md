@@ -14,7 +14,7 @@ It is written to trigger on: `quality attributes`, `non-functional`, `NFR`, `lat
 
 ## What it produces
 
-Fill the `## Quality attributes` section that `templates/change/design.md` ships into every `delivery/changes/<name>/design.md`.
+Fill the `## Quality attributes` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`.
 
 ## Which agents hold it (2)
 

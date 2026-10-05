@@ -4,13 +4,34 @@ const path = require("node:path");
 const { changeDir } = require("../lib/paths");
 const { readState, writeState } = require("../lib/state");
 const { isLane, gatesForLane, LANES } = require("../lib/lanes");
-const { findUnreadableTemplate, templatesRoot } = require("../lib/templates");
 const { flagValue } = require("../lib/args");
 const { GATES, evidenceHint, advise } = require("../lib/gates");
 
-const FILES = ["proposal.md", "design.md", "tasks.md", "handoffs.md"];
+// The artifacts a change produces, and the skill that carries each one's
+// template. NOT files this command writes.
+//
+// An empty scaffold makes "nobody has started" indistinguishable from "somebody
+// wrote this badly", and a gate can pass against a placeholder nobody filled in.
+// The skills already carry these templates — that is what a skill IS — so the
+// CLI creating a second copy was both redundant and a way to ship files no
+// author ever opened. The directory is structure; the files are work.
+const ARTIFACTS = [
+  { file: "proposal.md", skill: "navi-skill-change-proposal",    what: "why this change, and the outcome it commits to" },
+  { file: "design.md",   skill: "navi-skill-decision-records",   what: "the approach, and an ADR per consequential decision" },
+  { file: "tasks.md",    skill: "navi-skill-task-decomposition", what: "TASK-### bound to the REQ-### each implements" },
+  { file: "handoffs.md", skill: "navi-skill-handoff-protocol",   what: "who hands what to whom, and what is blocked" },
+];
 
-const USAGE = "usage: navi-delivery propose <name> --lane <lane>";
+// Directories only. `specs/` holds the delta spec and `evidence/` the files
+// gates are recorded against; both are places, not content.
+const DIRS = ["specs", "evidence"];
+
+const USAGE = [
+  "usage: navi-delivery propose <name> --lane <express|standard|full|hotfix>",
+  "",
+  "  <name>   a slug: lowercase letters, digits, '.', '_', '-'  (e.g. dashboard-accent)",
+  "  --lane   how many gates this change answers to; navi-skill-lane-selection picks it",
+].join("\n");
 
 // Controller ruling 1: the change name becomes a directory segment under
 // delivery/changes/. Without validation, a name like "../../evil" escapes
@@ -23,6 +44,20 @@ const USAGE = "usage: navi-delivery propose <name> --lane <lane>";
 const SLUG_RE = /^[a-z0-9][a-z0-9._-]*$/;
 function isValidName(name) {
   return typeof name === "string" && SLUG_RE.test(name) && !name.includes("..");
+}
+
+// A developer naming a change types what they would say out loud — "accent
+// colour on the dashboard". Rejecting that with the rule alone makes them
+// derive the slug themselves; offering the slug makes the next command a
+// copy-paste. Returns "" when nothing usable survives (e.g. "???").
+function suggestName(name) {
+  const slug = String(name).toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^[^a-z0-9]+/, "")
+    .replace(/[^a-z0-9]+$/, "")
+    .replace(/\.\.+/g, ".");
+  return isValidName(slug) ? slug : "";
 }
 
 function run(argv, cwd, emit = console.log) {
@@ -70,7 +105,12 @@ function run(argv, cwd, emit = console.log) {
   const lane = laneFlag.value;
 
   if (!isValidName(name)) {
-    emit(`invalid change name '${name}' — only lowercase letters, digits, '.', '_' and '-' are allowed, starting with a letter or digit (no '..', '/' or '\\')`);
+    emit(`invalid change name '${name}' — a change name is a slug: lowercase letters, digits, '.', '_' and '-', starting with a letter or digit.`);
+    const suggestion = suggestName(name);
+    if (suggestion) {
+      emit("");
+      emit(`  navi-delivery propose ${suggestion}${laneFlag.value ? ` --lane ${laneFlag.value}` : ""}`);
+    }
     return 1;
   }
 
@@ -85,49 +125,27 @@ function run(argv, cwd, emit = console.log) {
     return 1;
   }
 
-  // Resolved per-call (not cached at module load) so NAVI_DELIVERY_TEMPLATES
-  // can be set for the duration of a single test — see lib/templates.js.
-  const templates = path.join(templatesRoot(), "change");
-
-  // Verify every template is readable BEFORE creating any directory. If a
-  // template is missing or unreadable partway through a real propose, we'd
-  // leave a half-built changes/<name>/ behind — and since this command
-  // refuses to run when that directory already exists, that half-built
-  // tree would permanently block retrying the same name.
-  const missing = findUnreadableTemplate(templates, FILES);
-  if (missing) {
-    emit(`cannot propose: template '${missing}' is missing or unreadable (expected at ${path.join(templates, missing)}). Nothing was created.`);
-    return 1;
-  }
-
-  fs.mkdirSync(path.join(dir, "specs"), { recursive: true });
+  for (const d of DIRS) fs.mkdirSync(path.join(dir, d), { recursive: true });
   const gateList = gatesForLane(lane);
   const gates = gateList.join(" · ");
-  for (const f of FILES) {
-    const body = fs.readFileSync(path.join(templates, f), "utf8")
-      .replace(/\{\{CHANGE\}\}/g, name)
-      .replace(/\{\{LANE\}\}/g, lane)
-      .replace(/\{\{GATES\}\}/g, gates);
-    fs.writeFileSync(path.join(dir, f), body);
-  }
   s.change = name; s.lane = lane; s.phase = 1; s.gates = {}; s.stale = [];
   writeState(cwd, s);
-  // Four files land and the old message named none of them, so the next move
-  // was a guess or a `find`. What a reader needs here is which file to open
-  // first and what the first gate will read.
-  const PURPOSE = {
-    "proposal.md": "why this change, and the outcome it commits to",
-    "design.md":   "the approach — one heading per G3 criterion",
-    "tasks.md":    "TASK-### bound to the REQ-### each implements",
-    "handoffs.md": "who hands what to whom, and what is blocked",
-  };
   const first = gateList[0];
 
-  emit(`Created delivery/changes/${name}  ·  lane ${lane}  ·  ${gateList.length} gates: ${gates}`);
+  emit(`Created delivery/changes/${name}/  ·  lane ${lane}  ·  ${gateList.length} gates: ${gates}`);
   emit("");
-  for (const f of FILES) emit(`  ${f.padEnd(13)} ${PURPOSE[f] || ""}`);
+  emit("  specs/      the delta spec for each capability this change touches");
+  emit("  evidence/   the files gates are recorded against");
   emit("");
-  advise([`Start with proposal.md. ${first} reads it: ${GATES[first].needs}.`,
+  emit("Write these as the work reaches them — nothing is scaffolded, so a file that");
+  emit("exists is a file somebody wrote:");
+  emit("");
+  for (const a of ARTIFACTS) emit(`  ${a.file.padEnd(13)} ${a.what.padEnd(52)} ${a.skill}`);
+  emit("");
+  emit("  navi-delivery scaffold <proposal|design|tasks|handoffs>   writes one skeleton");
+
+  advise(["",
+          `Start with proposal.md. ${first} reads it: ${GATES[first].needs}.`,
           "",
           `Then:  navi-delivery gate ${first} --pass --evidence ${evidenceHint(first, name)}`]);
   return 0;

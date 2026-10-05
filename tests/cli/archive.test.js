@@ -201,16 +201,24 @@ test("ruling C: archiving is refused the same way when no change is active at al
 
 test("added: re-archiving the same name on the same day is refused, not overwritten", () => {
   const root = proposeC(repo(), "express");
+  // propose scaffolds nothing, so the history this test protects has to be
+  // written first — which makes the assertion stronger: it proves specific
+  // content survived, not merely that a file still exists.
+  fs.writeFileSync(path.join(root, "delivery", "changes", "c", "proposal.md"),
+                   "# c\n\nThe first attempt, which must survive the second.\n");
   passAll(root, ["G2", "G6", "G7"]);
   assert.strictEqual(archive.run(["c"], root, () => {}), 0);
 
   const today = new Date().toISOString().slice(0, 10);
   const archived = path.join(root, "delivery", "changes", "archive", `${today}-c`);
   const before = fs.readFileSync(path.join(archived, "proposal.md"), "utf8");
+  assert.match(before, /must survive the second/);
 
   // Re-propose the same name (allowed — the original changes/c/ is gone)
   // and satisfy its gates again, then try to archive it the same day.
   proposeC(root, "express");
+  fs.writeFileSync(path.join(root, "delivery", "changes", "c", "proposal.md"),
+                   "# c\n\nThe SECOND attempt, which must not reach the archive.\n");
   passAll(root, ["G2", "G6", "G7"]);
   const lines = [];
   const rc = archive.run(["c"], root, (l) => lines.push(l));

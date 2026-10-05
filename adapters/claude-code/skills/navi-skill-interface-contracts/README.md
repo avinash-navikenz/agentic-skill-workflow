@@ -14,7 +14,7 @@ It is written to trigger on: `interface contract`, `boundary`, `breaking change`
 
 ## What it produces
 
-Fill the `## Interface contracts` section that `templates/change/design.md` ships into every `delivery/changes/<name>/design.md`.
+Fill the `## Interface contracts` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`.
 
 ## Which agents hold it (2)
 

@@ -406,3 +406,31 @@ test("a pipe in an actor name is escaped, not left to shift the table", () => {
   assert.match(row, /a\\\|b/);
   assert.strictEqual(row.split(/(?<!\\)\|/).length - 1, 7);
 });
+
+test("gate with no arguments prints usage rather than 'unknown gate undefined'", () => {
+  const root = repo();
+  const lines = [];
+  assert.strictEqual(gate.run([], root, (l) => lines.push(l)), 1);
+  const out = lines.join("\n");
+  assert.match(out, /usage: navi-delivery gate/);
+  assert.doesNotMatch(out, /undefined/, "a JS undefined must never reach the user");
+});
+
+test("evidence named as it sits inside the change suggests the repo-root path", () => {
+  const root = repo();
+  const changeFile = path.join(root, "delivery", "changes", "c", "proposal.md");
+  fs.writeFileSync(changeFile, "# outcome\n");
+  const lines = [];
+  assert.strictEqual(gate.run(["G2", "--pass", "--evidence", "proposal.md"], root, (l) => lines.push(l)), 1);
+  assert.match(lines.join("\n"), /--evidence delivery\/changes\/c\/proposal\.md/,
+               "the error should name the path that works");
+});
+
+test("evidence that exists nowhere names the path it looked in", () => {
+  const root = repo();
+  const lines = [];
+  assert.strictEqual(gate.run(["G2", "--pass", "--evidence", "nope.md"], root, (l) => lines.push(l)), 1);
+  const out = lines.join("\n");
+  assert.match(out, /looked in .*nope\.md/);
+  assert.doesNotMatch(out, /You meant/, "there is nothing to suggest when the file exists nowhere");
+});

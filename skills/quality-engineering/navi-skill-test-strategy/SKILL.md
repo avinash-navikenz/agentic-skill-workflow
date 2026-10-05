@@ -32,7 +32,7 @@ duration budget; or a release decision needs to know what was deliberately left 
 
 1. Write the strategy at `delivery/changes/<name>/test-strategy.md`, link
    `./test-design.md` from it, and add a row for the strategy to the `## Linked artifacts` table
-   that `templates/change/design.md` ships into every `design.md`. The design links the
+   in `design.md`, which `navi-delivery scaffold design` writes. The design links the
    strategy; the strategy links the cases.
    Write it at Phase 2, alongside the spec review for testability — `references/gates.md` makes
    it G6's **entry** criterion, so a strategy first written at Phase 6 is written after the

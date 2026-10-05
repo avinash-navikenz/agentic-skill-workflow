@@ -87,12 +87,20 @@ function describeNonFile(st) {
   return "not a regular file";
 }
 
-function evidenceError(cwd, value) {
+function evidenceError(cwd, value, change) {
   let st;
   try {
     st = fs.statSync(path.resolve(cwd, value));
   } catch {
-    return `evidence file not found: ${value}\n  paths are relative to the repository root, so a file inside the change is \n  delivery/changes/<change>/<file> — see \`navi-delivery status\` for the path this gate expects`;
+    // The common mistake is naming the file as it sits inside the change
+    // ("proposal.md") while this path is resolved from the repository root.
+    // When that file does exist under the change, name the path that works
+    // rather than describing the rule and leaving the reader to apply it.
+    const inChange = change ? path.posix.join("delivery/changes", change, value) : "";
+    if (inChange && fs.existsSync(path.resolve(cwd, inChange))) {
+      return `evidence file not found: ${value}\n  paths are relative to the repository root. You meant:\n  --evidence ${inChange}`;
+    }
+    return `evidence file not found: ${value}\n  looked in ${path.resolve(cwd, value)}\n  paths are relative to the repository root, so a file inside the change is\n  delivery/changes/${change || "<change>"}/<file>`;
   }
   if (st.isDirectory()) {
     return `evidence must be a file, not a directory: ${value} — name the file inside it that records the decision`;
@@ -108,6 +116,13 @@ function evidenceError(cwd, value) {
 
 function run(argv, cwd, emit = console.log, adviseWrite = undefined) {
   const gate = argv[0];
+  if (gate === undefined) {
+    emit("usage: navi-delivery gate <G1-G9> --pass|--fail --evidence <path> [--actor <name>]");
+    emit("       navi-delivery gate <G1-G9> --waive <reason> --expires <YYYY-MM-DD> [--actor <name>]");
+    emit("");
+    emit("  run `navi-delivery status` for the gates this lane enforces, and which is next");
+    return 1;
+  }
   if (!ALL_GATES.includes(gate)) { emit(`unknown gate '${gate}' — valid: ${ALL_GATES.join(", ")}`); return 1; }
 
   const s = readState(cwd);
@@ -184,7 +199,7 @@ function run(argv, cwd, emit = console.log, adviseWrite = undefined) {
 
   const evidence = flagValue(argv, "--evidence");
   if (!evidence.value) { emit("--evidence is required to record a gate decision"); return 1; }
-  const evidenceProblem = evidenceError(cwd, evidence.value);
+  const evidenceProblem = evidenceError(cwd, evidence.value, s.change);
   if (evidenceProblem) { emit(evidenceProblem); return 1; }
 
   const verdict = passed ? "pass" : "fail";

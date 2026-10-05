@@ -32,7 +32,8 @@ backfilled or restated; or a late record has arrived and nobody has decided what
 ## Rules
 
 1. Write the pipeline document at `delivery/changes/<name>/pipeline.md` and add a row for it to
-   the `## Linked artifacts` table that `templates/change/design.md` ships into every
+   the `## Linked artifacts` table in `design.md`, which `navi-delivery scaffold design`
+   writes into
    `design.md`. That table is a design's one home for outward links; a change-scoped artifact
    never earns a heading of its own. G3 and G4 are read against the design; a file nothing
    links to is a file nobody opens.

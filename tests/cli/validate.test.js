@@ -33,7 +33,8 @@ function writeWellFormedSpec(root) {
   );
 }
 
-// The change's own tasks.md. templates/change/tasks.md ships its example with
+// The change's own tasks.md, written by the test because propose scaffolds none.
+// It carries its example with
 // `TASK-###` / `REQ-###` placeholders that no validator rule matches, so a
 // freshly proposed change carries no live task at all — see the note in that
 // template. A fixture that wants one writes it.

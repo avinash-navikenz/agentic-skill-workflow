@@ -60,8 +60,8 @@ class TestDocCounts(unittest.TestCase):
                         "docs/CLI.md no longer opens with its title")
         self.assertIn(f"{word} verbs.", self.cli_doc,
                       f"docs/CLI.md does not say '{word} verbs.'; cli/index.js dispatches {n}")
-        self.assertIn("## The " + {8: "eight"}.get(n, str(n)) + " verbs", self.readme,
-                      f"README.md's verb section heading does not say {n}")
+        self.assertIn(f"## The {word.lower()} verbs", self.readme,
+                      f"README.md's verb section heading does not say {word.lower()}")
 
     def test_every_dispatched_verb_has_a_reference_section(self):
         for verb in verb_names():
@@ -86,6 +86,17 @@ class TestDocCounts(unittest.TestCase):
         for rule in sorted(emitted):
             self.assertIn(f"| `{rule}` |", self.cli_doc,
                           f"docs/CLI.md's rule table omits {rule}, which the validator emits")
+
+    def test_the_disciplines_table_matches_the_skills_tree(self):
+        """The table is hand-maintained and the tree is not. It silently fell four
+        skills behind in two disciplines, and omitted `integration` entirely."""
+        block = re.search(r"\| Discipline \| Skills \|\n\|---\|---\|\n((?:\|.*\n)+)", self.readme)
+        self.assertIsNotNone(block, "README.md has no disciplines table")
+        listed = {n: int(c) for n, c in re.findall(r"\| `([a-z-]+)` \| (\d+) \|", block.group(1))}
+        actual = {d.name: len(list(d.glob("*/SKILL.md")))
+                  for d in (ROOT / "skills").iterdir() if d.is_dir()}
+        self.assertEqual(listed, actual,
+                         "README.md's disciplines table disagrees with skills/")
 
 
 if __name__ == "__main__":

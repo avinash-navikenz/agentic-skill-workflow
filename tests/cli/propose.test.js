@@ -33,38 +33,44 @@ function withDeltaSpec(root, name) {
 // missing/bad-template failure operate on a disposable copy instead, via
 // the NAVI_DELIVERY_TEMPLATES override — restored afterwards so no test
 // leaks the override to another test in this file.
-function withTemplatesOverride(fn) {
-  const copy = fs.mkdtempSync(path.join(os.tmpdir(), "nd-templates-"));
-  fs.cpSync(path.join(__dirname, "..", "..", "templates"), copy, { recursive: true });
-  const prev = process.env.NAVI_DELIVERY_TEMPLATES;
-  process.env.NAVI_DELIVERY_TEMPLATES = copy;
-  try {
-    fn(copy);
-  } finally {
-    if (prev === undefined) delete process.env.NAVI_DELIVERY_TEMPLATES;
-    else process.env.NAVI_DELIVERY_TEMPLATES = prev;
-  }
-}
-
-test("propose creates the change folder and records lane", () => {
+test("propose creates the structure and records the lane, and writes no content", () => {
+  // Directories are places; the files are work. An empty scaffold makes
+  // "nobody has started" indistinguishable from "somebody wrote this badly",
+  // and lets a gate pass against a placeholder nobody filled in.
   const root = repo();
   assert.strictEqual(propose.run(["add-dark-mode", "--lane", "standard"], root, () => {}), 0);
   const dir = path.join(root, "delivery", "changes", "add-dark-mode");
-  for (const f of ["proposal.md", "tasks.md", "handoffs.md"]) {
-    assert.ok(fs.existsSync(path.join(dir, f)), `missing ${f}`);
+
+  for (const d of ["specs", "evidence"]) {
+    assert.ok(fs.statSync(path.join(dir, d)).isDirectory(), `missing ${d}/`);
   }
+  for (const f of ["proposal.md", "design.md", "tasks.md", "handoffs.md"]) {
+    assert.ok(!fs.existsSync(path.join(dir, f)), `${f} was scaffolded; it should be written by its skill`);
+  }
+
   const s = readState(root);
   assert.strictEqual(s.change, "add-dark-mode");
   assert.strictEqual(s.lane, "standard");
   assert.strictEqual(s.phase, 1);
 });
 
-test("proposal.md records the lane and its gate set", () => {
+test("propose names each artifact and the skill that carries its template", () => {
+  // The reader has to know what to write and where the template lives. The
+  // skills carry those templates — that is what a skill is — so the CLI points
+  // at them rather than shipping a second copy.
   const root = repo();
-  propose.run(["x", "--lane", "express"], root, () => {});
-  const text = fs.readFileSync(path.join(root, "delivery", "changes", "x", "proposal.md"), "utf8");
-  assert.match(text, /lane: express/);
-  assert.match(text, /G2 · G6 · G7/);
+  const lines = [];
+  propose.run(["x", "--lane", "express"], root, (s) => lines.push(String(s)));
+  const out = lines.join("\n");
+
+  for (const [file, skill] of [["proposal.md", "navi-skill-change-proposal"],
+                               ["design.md", "navi-skill-decision-records"],
+                               ["tasks.md", "navi-skill-task-decomposition"],
+                               ["handoffs.md", "navi-skill-handoff-protocol"]]) {
+    assert.match(out, new RegExp(`${file.replace(".", "\\.")}.*${skill}`), `${file} does not name ${skill}`);
+  }
+  assert.match(out, /lane express/);
+  assert.match(out, /G2 · G6 · G7/);
 });
 
 test("an unknown lane is rejected and lists the valid ones", () => {
@@ -206,16 +212,46 @@ test("propose <name> with no --lane flag prints usage and fails", () => {
 
 // --- Fix round 1: template preflight, mirroring init's ---
 
-test("propose with a template path that is a directory (not a file) creates nothing and fails clearly", () => {
+test("a refused propose leaves nothing behind", () => {
+  // propose no longer reads templates, so the old "unreadable template" failure
+  // is gone with them. What still matters is the property that test protected:
+  // a propose that fails must not leave a half-built changes/<name>/, because
+  // this command refuses to run when that directory exists and the name would
+  // be permanently blocked.
   const root = repo();
-  withTemplatesOverride((templatesCopy) => {
-    const proposalTemplate = path.join(templatesCopy, "change", "proposal.md");
-    fs.rmSync(proposalTemplate);
-    fs.mkdirSync(proposalTemplate); // stand-in: a directory where a file is expected
-    const lines = [];
-    const code = propose.run(["x", "--lane", "full"], root, (s) => lines.push(s));
-    assert.strictEqual(code, 1);
-    assert.ok(lines.join("\n").includes("proposal.md"), "error should name the offending template");
-    assert.ok(!fs.existsSync(path.join(root, "delivery", "changes", "x")), "changes/x must not exist after a failed propose");
-  });
+  propose.run(["x", "--lane", "express"], root, () => {});
+  const lines = [];
+  assert.strictEqual(propose.run(["y", "--lane", "express"], root, (s) => lines.push(s)), 1);
+  assert.match(lines.join("\n"), /already active/);
+  assert.ok(!fs.existsSync(path.join(root, "delivery", "changes", "y")),
+            "a refused propose created a directory");
+});
+
+test("a prose change name is rejected with the slug that would have worked", () => {
+  const root = repo();
+  const lines = [];
+  assert.strictEqual(
+    propose.run(["accent colour on the dashboard", "--lane", "standard"], root, (l) => lines.push(l)),
+    1);
+  const out = lines.join("\n");
+  assert.match(out, /invalid change name/i);
+  assert.match(out, /navi-delivery propose accent-colour-on-the-dashboard --lane standard/,
+               "the error should hand back a runnable command, not just the rule");
+});
+
+test("a name with nothing sluggable in it gets the rule and no suggestion", () => {
+  const root = repo();
+  const lines = [];
+  assert.strictEqual(propose.run(["???", "--lane", "standard"], root, (l) => lines.push(l)), 1);
+  const out = lines.join("\n");
+  assert.match(out, /invalid change name/i);
+  assert.doesNotMatch(out, /navi-delivery propose /,
+                      "suggesting an empty or still-invalid slug would be worse than silence");
+});
+
+test("the propose usage line names the lanes", () => {
+  const root = repo();
+  const lines = [];
+  assert.strictEqual(propose.run([], root, (l) => lines.push(l)), 1);
+  assert.match(lines.join("\n"), /express\|standard\|full\|hotfix/);
 });

@@ -34,7 +34,7 @@ full switch.
 ## Rules
 
 1. Write the rollout at `delivery/changes/<name>/rollout.md` and add a row for it to the
-   `## Linked artifacts` table that `templates/change/design.md` ships into every `design.md`.
+   `## Linked artifacts` table in `design.md`, which `navi-delivery scaffold design` writes.
    That table is a design's one home for outward links; a change-scoped artifact never earns a
    heading of its own.
 2. Open with `## Blast radius`: the population affected if this change is wrong, as a **count**

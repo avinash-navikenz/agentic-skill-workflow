@@ -523,7 +523,7 @@ footer{padding-block:30px 44px;border-top:1px solid var(--line);color:var(--mute
     <p class="lede">
       The framework ships <span data-total="agents">11</span> persona agents carrying each discipline's
       judgment, and <span data-total="skills">50</span> skills across <span data-total="disciplines">13</span>
-      disciplines carrying each discipline's rules. An eight-verb CLI scaffolds the lifecycle into
+      disciplines carrying each discipline's rules. A nine-verb CLI scaffolds the lifecycle into
       your repo and records what actually happened at each of nine gates &mdash; so a phase that
       emitted no telemetry did not happen, and a gate whose verdict was never recorded was
       never passed.
@@ -985,7 +985,7 @@ Next:
     <code>realpath</code> — so it runs on both the Linux and macOS runners CI uses.</p>
 
     <h3 style="margin-top:26px">2 · Put the CLI on your PATH</h3>
-    <p class="small">The eight-verb CLI is a Node script in this repository and is <em>not</em>
+    <p class="small">The nine-verb CLI is a Node script in this repository and is <em>not</em>
     part of the plugin, so this step wants the clone either way.</p>
     <div class="term">
       <div class="term-head"><span class="dot"></span>the CLI<button class="copybtn" type="button" data-copy aria-label="Copy the commands"><svg class="ico" aria-hidden="true"><use href="#i-copy"></use></svg></button></div>
@@ -4114,7 +4114,7 @@ lane:   standard
     "G9"
    ],
    "description": "Use when a design draws a boundary — a call, an event, a shared table, a file drop — and the two sides need something to build against, or when a change to an existing interface has to be classified as breaking or not. Defines the CONTRACT-### entry, its required fields, the breaking-change test, and the versioning and retirement rules.",
-   "hay": "navi-skill-interface-contracts interface contracts architecture use when a design draws a boundary — a call, an event, a shared table, a file drop — and the two sides need something to build against, or when a change to an existing interface has to be classified as breaking or not. defines the contract-### entry, its required fields, the breaking-change test, and the versioning and retirement rules. architecture contracts boundaries compatibility versioning a design names a boundary between components, an existing interface is being changed, or a consumer needs something to build against before the producer exists. interface contract boundary breaking change backward compatible consumer producer schema change deprecate an interface contract test fill the `## interface contracts` section that `templates/change/design.md` ships into every `delivery/changes/<name>/design.md`: the undeclared table. meaning changed in place. the happy-path contract. retry on a non-idempotent write. navi-agent-architect navi-agent-fullstack-developer architect fullstack developer",
+   "hay": "navi-skill-interface-contracts interface contracts architecture use when a design draws a boundary — a call, an event, a shared table, a file drop — and the two sides need something to build against, or when a change to an existing interface has to be classified as breaking or not. defines the contract-### entry, its required fields, the breaking-change test, and the versioning and retirement rules. architecture contracts boundaries compatibility versioning a design names a boundary between components, an existing interface is being changed, or a consumer needs something to build against before the producer exists. interface contract boundary breaking change backward compatible consumer producer schema change deprecate an interface contract test fill the `## interface contracts` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`: the undeclared table. meaning changed in place. the happy-path contract. retry on a non-idempotent write. navi-agent-architect navi-agent-fullstack-developer architect fullstack developer",
    "readme": {
     "kind": "skill",
     "label": "Interface contracts",
@@ -4132,7 +4132,7 @@ lane:   standard
      "deprecate an interface",
      "contract test"
     ],
-    "produces": "Fill the `## Interface contracts` section that `templates/change/design.md` ships into every `delivery/changes/<name>/design.md`.",
+    "produces": "Fill the `## Interface contracts` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`.",
     "holders": [
      {
       "name": "navi-agent-architect",
@@ -4189,7 +4189,7 @@ lane:   standard
     "G9"
    ],
    "description": "Use when a design has to state what it optimises for, when a non-functional requirement arrives as an adjective, or when G6 needs a threshold it can measure. Defines the QAS-### scenario form, the ranking that forces a trade-off, and the cost every attribute charges.",
-   "hay": "navi-skill-quality-attributes quality attributes architecture use when a design has to state what it optimises for, when a non-functional requirement arrives as an adjective, or when g6 needs a threshold it can measure. defines the qas-### scenario form, the ranking that forces a trade-off, and the cost every attribute charges. architecture quality-attributes nfr performance availability trade-offs a design is being chosen and the criteria that discriminate between the options must be written down; a requirement names a quality as an adjective; or g6 is about to measure a non-functional threshold and needs to know the instrument. quality attributes non-functional nfr latency budget availability target scalability performance target trade-off qas what does this cost fill the `## quality attributes` section that `templates/change/design.md` ships into every `delivery/changes/<name>/design.md`: the adjective list. the mean. the unranked list. the free attribute. navi-agent-architect navi-agent-qa-engineer architect qa engineer",
+   "hay": "navi-skill-quality-attributes quality attributes architecture use when a design has to state what it optimises for, when a non-functional requirement arrives as an adjective, or when g6 needs a threshold it can measure. defines the qas-### scenario form, the ranking that forces a trade-off, and the cost every attribute charges. architecture quality-attributes nfr performance availability trade-offs a design is being chosen and the criteria that discriminate between the options must be written down; a requirement names a quality as an adjective; or g6 is about to measure a non-functional threshold and needs to know the instrument. quality attributes non-functional nfr latency budget availability target scalability performance target trade-off qas what does this cost fill the `## quality attributes` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`: the adjective list. the mean. the unranked list. the free attribute. navi-agent-architect navi-agent-qa-engineer architect qa engineer",
    "readme": {
     "kind": "skill",
     "label": "Quality attributes",
@@ -4208,7 +4208,7 @@ lane:   standard
      "QAS",
      "what does this cost"
     ],
-    "produces": "Fill the `## Quality attributes` section that `templates/change/design.md` ships into every `delivery/changes/<name>/design.md`.",
+    "produces": "Fill the `## Quality attributes` section of `design.md`, which `navi-delivery scaffold design` writes into `delivery/changes/<name>/design.md`.",
     "holders": [
      {
       "name": "navi-agent-architect",

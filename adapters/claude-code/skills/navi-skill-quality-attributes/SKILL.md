@@ -31,7 +31,7 @@ non-functional threshold and needs to know the instrument.
 
 1. Write every quality attribute as a `QAS-###` scenario in `delivery/changes/<name>/design.md`
    under the `## Quality attributes` heading, numbered sequentially within the change.
-   `templates/change/design.md` ships that heading, so fill it in place. Never append a second
+   `navi-delivery scaffold design` writes that heading, so fill it in place. Never append a second
    `## Quality attributes` — two headings of the same name make G3's reader pick one, and the
    ranking in the other is then unread.
 2. Give every scenario all six fields, in order: `Source`, `Stimulus`, `Environment`,
@@ -87,7 +87,7 @@ non-functional threshold and needs to know the instrument.
 
 ## Template
 
-Fill the `## Quality attributes` section that `templates/change/design.md` ships into every
+Fill the `## Quality attributes` section of `design.md`, which `navi-delivery scaffold design` writes into
 `delivery/changes/<name>/design.md`:
 
 ```markdown

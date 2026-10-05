@@ -31,7 +31,7 @@ or G9 is about to compare the prediction with the measurement.
 ## Rules
 
 1. Write every outcome as a `KPI-###` in `delivery/changes/<name>/proposal.md` under `## Why`.
-   `navi-delivery propose` scaffolds that file from `templates/change/proposal.md`, and
+   `navi-delivery scaffold proposal` writes that file from its template, and
    `references/gates.md`'s G1 exit criterion requires at least one measurable outcome there —
    a KPI, an `SLI-###`, or a named behaviour change.
 2. Give every `KPI-###` seven fields: `Measures`, `Instrument`, `Baseline`, `Target`,

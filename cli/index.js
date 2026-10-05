@@ -7,6 +7,7 @@ const pkg = require("../package.json");
 const COMMANDS = {
   init: () => require("./commands/init"),
   propose: () => require("./commands/propose"),
+  scaffold: () => require("./commands/scaffold"),
   status: () => require("./commands/status"),
   gate: () => require("./commands/gate"),
   validate: () => require("./commands/validate"),

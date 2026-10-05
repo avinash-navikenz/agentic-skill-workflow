@@ -31,7 +31,7 @@ consumer needs something to build against before the producer exists.
 
 1. Write one `CONTRACT-###` entry per boundary in `delivery/changes/<name>/design.md` under the
    `## Interface contracts` heading, numbered sequentially within the change.
-   `templates/change/design.md` ships that heading, so fill it in place rather than appending a
+   `navi-delivery scaffold design` writes that heading, so fill it in place rather than appending a
    second one. G3 reads the design for a contract at each boundary it draws.
 2. Treat as a boundary anything crossed by two components with different deploy cadences or
    different on-call owners: a synchronous call, a published event, a shared database table,
@@ -91,7 +91,7 @@ consumer needs something to build against before the producer exists.
 
 ## Template
 
-Fill the `## Interface contracts` section that `templates/change/design.md` ships into every
+Fill the `## Interface contracts` section of `design.md`, which `navi-delivery scaffold design` writes into
 `delivery/changes/<name>/design.md`:
 
 ```markdown
