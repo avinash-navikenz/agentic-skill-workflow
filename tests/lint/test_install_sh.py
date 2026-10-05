@@ -96,6 +96,29 @@ class InstallScriptTest(unittest.TestCase):
         self.assertEqual(p.returncode, 2)
         self.assertIn("needs a name", p.stderr)
 
+    def test_every_install_flag_the_docs_advertise_actually_exists(self):
+        """The page and the README print install commands as copyable text. Nothing
+        runs them, so a flag that was renamed or never existed reads as working
+        instructions — which is how the catalogue came to advertise a per-item
+        install that did not work."""
+        accepted = set(re.findall(r"^\s*(--[a-z-]+)[|)]", INSTALL.read_text(encoding="utf8"), re.M))
+        accepted |= set(re.findall(r"\|(--[a-z-]+)\)", INSTALL.read_text(encoding="utf8")))
+        self.assertIn("--agent", accepted, "install.sh must accept --agent")
+        for doc in (ROOT / "docs" / "index.html", ROOT / "README.md"):
+            text = doc.read_text(encoding="utf8")
+            for flag in set(re.findall(r"\./install\.sh\s+(--[a-z-]+)", text)):
+                self.assertIn(flag, accepted,
+                              f"{doc.name} shows `install.sh {flag}`, which install.sh rejects")
+
+    def test_the_page_offers_the_scoped_install_not_a_hand_copy(self):
+        """Both hand-written install sections — the home teaser and the install
+        page — drifted behind the generated panes once already."""
+        page = (ROOT / "docs" / "index.html").read_text(encoding="utf8")
+        self.assertNotIn("cp -R adapters/claude-code/skills/navi-skill-&lt;name&gt;", page,
+                         "the page still tells people to copy a skill by hand")
+        self.assertEqual(page.count("./install.sh --agent navi-agent-&lt;name&gt;"), 2,
+                         "both install sections should offer the scoped agent install")
+
 
 if __name__ == "__main__":
     unittest.main()

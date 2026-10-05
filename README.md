@@ -120,19 +120,28 @@ what you want when you are changing the framework rather than using it, and it i
 form CI runs.
 
 ```bash
-./install.sh              # interactive, symlinks (edits to the repo take effect live)
-./install.sh --yes        # no prompt — this is the CI form
-./install.sh --copy       # copy instead of symlink, for a frozen install
-./install.sh --uninstall  # remove exactly what it installed
+./install.sh                          # interactive, symlinks (edits take effect live)
+./install.sh --agent navi-agent-qa-engineer   # that agent and only the skills it holds
+./install.sh --skill navi-skill-commit-craft  # that skill on its own
+./install.sh --yes                    # no prompt — this is the CI form
+./install.sh --copy                   # copy instead of symlink, for a frozen install
+./install.sh --uninstall              # remove exactly what it installed
 ./install.sh --help
 ```
 
 `CLAUDE_SKILLS_DIR` and `CLAUDE_AGENTS_DIR` override the destinations, which default to
 `$HOME/.claude/skills` and `$HOME/.claude/agents`.
 
-A single skill or agent, without the rest, is a copy out of that same tree — every skill
-and agent README carries the exact command and the caveat that comes with it: a skill
-installed alone has no agent holding it, and nothing will invoke it.
+`--agent` and `--skill` may be repeated and combined, and `--uninstall` takes the same
+selection. An agent brings the skills named in its own file, so the pair is usable on its
+own — the Architect installs 16 of the 50, not all of them and not one of them. Because
+most skills are held by several agents, a scoped uninstall keeps any skill another
+installed agent still holds, and says how many it kept.
+
+A skill installed on its own is inert in the lifecycle — no phase loads it and no gate
+depends on it, because it is an agent that decides when a skill applies — but you can
+still name it directly in a session. Every skill and agent README carries its own exact
+command.
 
 The CLI runs fine by path from any working directory if you would rather not install it
 globally:
